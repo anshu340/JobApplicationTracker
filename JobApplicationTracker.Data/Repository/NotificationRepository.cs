@@ -1,7 +1,8 @@
 using Dapper;
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.Interface;
 using System.Data;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
 
 namespace JobApplicationTracker.Data.Repository;
 
@@ -12,7 +13,7 @@ public class NotificationsRepository : INotificationsRepository
     {
         _connectionService = connectionService;
     }
-    public async Task<IEnumerable<NotificationsDto>> GetAllNotificationsAsync()
+    public async Task<IEnumerable<NotificationsDataModel>> GetAllNotificationsAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -27,10 +28,10 @@ public class NotificationsRepository : INotificationsRepository
               FROM Notifications
               """;
 
-        return await connection.QueryAsync<NotificationsDto>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<NotificationsDataModel>(sql).ConfigureAwait(false);
     }
 
-    public async Task<NotificationsDto> GetNotificationsByIdAsync(int notificationsId)
+    public async Task<NotificationsDataModel> GetNotificationsByIdAsync(int notificationsId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -50,9 +51,9 @@ public class NotificationsRepository : INotificationsRepository
         var parameters = new DynamicParameters();
         parameters.Add("@NotificationId", notificationsId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<NotificationsDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<NotificationsDataModel>(sql, parameters).ConfigureAwait(false);
     }
-    public async Task<ResponseDto> SubmitNotificationsAsync(NotificationsDto notificationsDto)
+    public async Task<ResponseDto> SubmitNotificationsAsync(NotificationsDataModel notificationsDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -110,7 +111,7 @@ public class NotificationsRepository : INotificationsRepository
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Notification submitted successfully." : "Failed to submit notification."
+            Message = affectedRows > 0 ? "Notifications submitted successfully." : "Failed to submit notification."
         };
     }
 
@@ -140,7 +141,7 @@ public class NotificationsRepository : INotificationsRepository
         return new ResponseDto
         {
             IsSuccess = true,
-            Message = "Notification deleted successfully."
+            Message = "Notifications deleted successfully."
         };
     }
 }

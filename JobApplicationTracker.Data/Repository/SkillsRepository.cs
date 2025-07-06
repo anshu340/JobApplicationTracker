@@ -1,7 +1,8 @@
 using Dapper;
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.Interface;
 using System.Data;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
 
 namespace JobApplicationTracker.Data.Repository;
 
@@ -12,7 +13,7 @@ public class SkillsRepository : ISkillsRepository
     {
         _connectionService = connectionService;
     }
-    public async Task<IEnumerable<SkillsDto>> GetAllSkillsAsync()
+    public async Task<IEnumerable<SkillsDataModel>> GetAllSkillsAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -23,10 +24,10 @@ public class SkillsRepository : ISkillsRepository
                   FROM Skills
                   """;
 
-        return await connection.QueryAsync<SkillsDto>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<SkillsDataModel>(sql).ConfigureAwait(false);
     }
 
-    public async Task<SkillsDto> GetSkillsByIdAsync(int skillId)
+    public async Task<SkillsDataModel> GetSkillsByIdAsync(int skillId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
         // write the SQL query to fetch a skill by ID
@@ -42,9 +43,9 @@ public class SkillsRepository : ISkillsRepository
         var parameters = new DynamicParameters();
         parameters.Add("@SkillId", skillId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<SkillsDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<SkillsDataModel>(sql, parameters).ConfigureAwait(false);
     }
-    public async Task<ResponseDto> SubmitSkillsAsync(SkillsDto skillsDto)
+    public async Task<ResponseDto> SubmitSkillsAsync(SkillsDataModel skillsDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -79,7 +80,7 @@ public class SkillsRepository : ISkillsRepository
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Job type submitted successfully." : "Failed to submit job type."
+            Message = affectedRows > 0 ? "Jobs type submitted successfully." : "Failed to submit job type."
         };
     }
 

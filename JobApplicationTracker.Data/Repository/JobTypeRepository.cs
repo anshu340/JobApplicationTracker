@@ -1,7 +1,8 @@
 using Dapper;
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.Interface;
 using System.Data;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
 
 namespace JobApplicationTracker.Data.Repository;
 
@@ -12,7 +13,7 @@ public class JobTypeRepository : IJobTypeRepository
     {
         _connectionService = connectionService;
     }
-    public async Task<IEnumerable<JobTypeDto>> GetAllJobTypesAsync()
+    public async Task<IEnumerable<JobTypesDataModel>> GetAllJobTypesAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -23,10 +24,10 @@ public class JobTypeRepository : IJobTypeRepository
                   FROM JobTypes
                   """;
 
-        return await connection.QueryAsync<JobTypeDto>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<JobTypesDataModel>(sql).ConfigureAwait(false);
     }
 
-    public async Task<JobTypeDto> GetJobTypeByIdAsync(int jobTypeId)
+    public async Task<JobTypesDataModel> GetJobTypeByIdAsync(int jobTypeId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
         // write the SQL query to fetch a job type by ID
@@ -41,9 +42,9 @@ public class JobTypeRepository : IJobTypeRepository
         var parameters = new DynamicParameters();
         parameters.Add("@JobTypeId", jobTypeId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<JobTypeDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<JobTypesDataModel>(sql, parameters).ConfigureAwait(false);
     }
-    public async Task<ResponseDto> SubmitJobTypeAsync(JobTypeDto jobTypeDto)
+    public async Task<ResponseDto> SubmitJobTypeAsync(JobTypesDataModel jobTypeDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -70,7 +71,7 @@ public class JobTypeRepository : IJobTypeRepository
 
         var parameters = new DynamicParameters();
         parameters.Add("JobTypeId", jobTypeDto.JobTypeId, DbType.Int32);
-        parameters.Add("TypeName", jobTypeDto.TypeName, DbType.String);
+        parameters.Add("TypeName", jobTypeDto.Name, DbType.String);
         parameters.Add("Description", jobTypeDto.Description, DbType.String);
 
         var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
@@ -78,7 +79,7 @@ public class JobTypeRepository : IJobTypeRepository
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Job type submitted successfully." : "Failed to submit job type."
+            Message = affectedRows > 0 ? "Jobs type submitted successfully." : "Failed to submit job type."
         };
     }
 
@@ -107,7 +108,7 @@ public class JobTypeRepository : IJobTypeRepository
         return new ResponseDto
         {
             IsSuccess = true,
-            Message = "Job type deleted successfully."
+            Message = "Jobs type deleted successfully."
         };
     }
 }

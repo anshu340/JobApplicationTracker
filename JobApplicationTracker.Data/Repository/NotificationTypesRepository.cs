@@ -1,7 +1,8 @@
 using Dapper;
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.Interface;
 using System.Data;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
 
 namespace JobApplicationTracker.Api.Data.Service;
 
@@ -12,7 +13,7 @@ public class NotificationTypesRepository : INotificationsTypesRepository
     {
         _connectionService = connectionService;
     }
-    public async Task<IEnumerable<NotificationTypesDto>> GetAllNotificationTypesAsync()
+    public async Task<IEnumerable<NotificationTypesDataModel>> GetAllNotificationTypesAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -24,10 +25,10 @@ public class NotificationTypesRepository : INotificationsTypesRepository
                   FROM NotificationTypes
                   """;
 
-        return await connection.QueryAsync< NotificationTypesDto >(sql).ConfigureAwait(false);
+        return await connection.QueryAsync< NotificationTypesDataModel >(sql).ConfigureAwait(false);
     }
 
-    public async Task<NotificationTypesDto> GetNotificationTypesByIdAsync(int notificationTypeId)
+    public async Task<NotificationTypesDataModel> GetNotificationTypesByIdAsync(int notificationTypeId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -44,9 +45,9 @@ public class NotificationTypesRepository : INotificationsTypesRepository
         var parameters = new DynamicParameters();
         parameters.Add("@NotificationTypeId", notificationTypeId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<NotificationTypesDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<NotificationTypesDataModel>(sql, parameters).ConfigureAwait(false);
     }
-    public async Task<ResponseDto> SubmitNotificationTypesAsync(NotificationTypesDto notificationTypesDto)
+    public async Task<ResponseDto> SubmitNotificationTypesAsync(NotificationTypesDataModel notificationTypesDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -84,7 +85,7 @@ public class NotificationTypesRepository : INotificationsTypesRepository
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Notification type submitted successfully." : "Failed to submit notification type."
+            Message = affectedRows > 0 ? "Notifications type submitted successfully." : "Failed to submit notification type."
         };
     }
     public async Task<ResponseDto> DeleteNotificationTypesAsync(int notificationTypesId)
@@ -117,14 +118,14 @@ public class NotificationTypesRepository : INotificationsTypesRepository
             return new ResponseDto
             {
                 IsSuccess = false,
-                Message = "Notification type not found or could not be deleted."
+                Message = "Notifications type not found or could not be deleted."
             };
         }
 
         return new ResponseDto
         {
             IsSuccess = true,
-            Message = "Notification type deleted successfully."
+            Message = "Notifications type deleted successfully."
         };
     }
 }

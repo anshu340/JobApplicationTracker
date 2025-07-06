@@ -1,12 +1,13 @@
 
-using JobApplicationTracke.Data.Dto;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
 
-namespace JobApplicationTracke.Data.Interface;
+namespace JobApplicationTracker.Data.Interface;
 
 public interface INotificationsRepository
 {
-    Task<IEnumerable<NotificationsDto>> GetAllNotificationsAsync();
-    Task<NotificationsDto> GetNotificationsByIdAsync(int notificationsId);
-    Task<ResponseDto> SubmitNotificationsAsync(NotificationsDto notificationsDto);
+    Task<IEnumerable<NotificationsDataModel>> GetAllNotificationsAsync();
+    Task<NotificationsDataModel> GetNotificationsByIdAsync(int notificationsId);
+    Task<ResponseDto> SubmitNotificationsAsync(NotificationsDataModel notificationsDto);
     Task<ResponseDto> DeleteNotificationsAsync(int notificationsId);
 }

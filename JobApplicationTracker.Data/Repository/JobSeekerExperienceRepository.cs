@@ -1,7 +1,8 @@
 using Dapper;
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.Interface;
 using System.Data;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
 
 namespace JobApplicationTracker.Data.Repository;
 
@@ -13,7 +14,7 @@ public class JobSeekerExperienceRepository : IJobSeekerExperienceRepository
     {
         _connectionService = connectionService;
     }
-    public async Task<IEnumerable<JobSeekerExperienceDto>> GetAllJobSeekerExperienceAsync()
+    public async Task<IEnumerable<JobSeekerExperience>> GetAllJobSeekerExperienceAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -28,10 +29,10 @@ public class JobSeekerExperienceRepository : IJobSeekerExperienceRepository
           FROM JobSeekerExperience
           """;
 
-        return await connection.QueryAsync<JobSeekerExperienceDto>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<JobSeekerExperience>(sql).ConfigureAwait(false);
     }
 
-    public async Task<JobSeekerExperienceDto> GetJobSeekerExperienceByIdAsync(int jobSeekerExperienceId)
+    public async Task<JobSeekerExperience> GetJobSeekerExperienceByIdAsync(int jobSeekerExperienceId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -51,9 +52,9 @@ public class JobSeekerExperienceRepository : IJobSeekerExperienceRepository
         var parameters = new DynamicParameters();
         parameters.Add("@ExperienceId", jobSeekerExperienceId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<JobSeekerExperienceDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<JobSeekerExperience>(sql, parameters).ConfigureAwait(false);
     }
-    public async Task<ResponseDto> SubmitJobSeekerExperienceAsync(JobSeekerExperienceDto jobSeekerExperienceDto)
+    public async Task<ResponseDto> SubmitJobSeekerExperienceAsync(JobSeekerExperience jobSeekerExperienceDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -110,7 +111,7 @@ public class JobSeekerExperienceRepository : IJobSeekerExperienceRepository
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Job seeker experience submitted successfully." : "Failed to submit job seeker experience."
+            Message = affectedRows > 0 ? "Jobs seeker experience submitted successfully." : "Failed to submit job seeker experience."
         };
     }
     public async Task<ResponseDto> DeleteJobSeekerExperienceAsync(int jobSeekerExperienceId)
@@ -137,7 +138,7 @@ public class JobSeekerExperienceRepository : IJobSeekerExperienceRepository
         return new ResponseDto
         {
             IsSuccess = true,
-            Message = "Job seeker experience deleted successfully."
+            Message = "Jobs seeker experience deleted successfully."
         };
     }
 }

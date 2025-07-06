@@ -1,5 +1,6 @@
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
+using JobApplicationTracker.Data.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.Company;
@@ -29,7 +30,7 @@ public class CompaniesController(ICompaniesRepository companyService) : Controll
 
     [HttpPost]
     [Route("/submitcompany")]
-    public async Task<IActionResult> SubmitCompany([FromBody] CompaniesDto companyDto)
+    public async Task<IActionResult> SubmitCompany([FromBody] CompaniesDataModel companyDto)
     {
         if (companyDto == null)
         {

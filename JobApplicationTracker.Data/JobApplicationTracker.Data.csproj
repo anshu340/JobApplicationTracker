@@ -16,4 +16,8 @@
     <ProjectReference Include="..\JobApplicationTracker.Core\JobApplicationTracker.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Dto\UserDtos\" />
+  </ItemGroup>
+
 </Project>

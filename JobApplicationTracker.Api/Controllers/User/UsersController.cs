@@ -1,5 +1,7 @@
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dto.AuthDto;
+using JobApplicationTracker.Data.Dtos.Responses;
+using JobApplicationTracker.Data.Interface;
 using JobApplicationTracker.Service.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,17 +22,17 @@ public class UsersController(IUserRepository userService, IPasswordHasherService
     [Route("/getusersbyid")]
     public async Task<IActionResult> GetUsersById(int id)
     {
-        var userr = await userService.GetUsersByIdAsync(id);
-        if (userr == null)
+        var user = await userService.GetUsersByIdAsync(id);
+        if (user == null)
         {
             return NotFound();
         }
-        return Ok(userr);
+        return Ok(user);
     }
 
     [HttpPost]
     [Route("/submitusers")]
-    public async Task<IActionResult> SubmitUsers([FromBody] UsersDto usersDto)
+    public async Task<IActionResult> SubmitUsers([FromBody] UsersDataModel usersDto)
     {
         if (usersDto == null)
         {
@@ -53,11 +55,11 @@ public class UsersController(IUserRepository userService, IPasswordHasherService
 
     [HttpPost]
     [Route("/signup")]
-    public async Task<IActionResult> CreateUser(SignupDto credentials)
+    public async Task<IActionResult> CreateUser(SignUpDto? credentials)
     {
         if (!ModelState.IsValid)
         {
-            ModelState.AddModelError("Error","Error occured.Please enter all credentails.");
+            ModelState.AddModelError("Error","Error occured.Please enter all credentials.");
             return BadRequest(ModelState);
         }
 

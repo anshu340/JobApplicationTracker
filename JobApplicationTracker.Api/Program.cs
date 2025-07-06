@@ -3,7 +3,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 using JobApplicationTracker.Api.GlobalExceptionHandler;
-using JobApplicationTracker.Api.Configuration;
 
 using JobApplicationTracker.Service;
 using JobApplicationTracker.Service.Configuration;
@@ -63,8 +62,6 @@ builder.Services.AddServiceLayer(builder.Configuration);
 // add global exception handler service
 builder.Services.AddExceptionHandler<AppExceptionHandler>();
 
-JobApplicationTrackerConfig.ConnectionString = builder.Configuration.GetValue<string>("ConnectionString");
-
 var app = builder.Build();
 
 // enable the exception handler service early in the pipeline with default options
@@ -75,7 +72,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Job Application Tracker API V1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Jobs Applications Tracker API V1");
         options.RoutePrefix = string.Empty; // This makes Swagger UI the root
     });
 }

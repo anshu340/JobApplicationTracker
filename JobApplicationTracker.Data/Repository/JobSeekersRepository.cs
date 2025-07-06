@@ -1,7 +1,8 @@
 using Dapper;
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.Interface;
 using System.Data;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
 
 namespace JobApplicationTracker.Data.Repository;
 
@@ -12,7 +13,7 @@ public class JobSeekerRepository : IJobSeekersRepository
     {
         _connectionService = connectionService;
     }
-    public async Task<IEnumerable<JobSeekersDto>> GetAllJobSeekersAsync()
+    public async Task<IEnumerable<JobSeekersDataModel>> GetAllJobSeekersAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -35,10 +36,10 @@ public class JobSeekerRepository : IJobSeekersRepository
 
 
 
-        return await connection.QueryAsync<JobSeekersDto>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<JobSeekersDataModel>(sql).ConfigureAwait(false);
     }
 
-    public async Task<JobSeekersDto> GetJobSeekersByIdAsync(int jobSeekerId)
+    public async Task<JobSeekersDataModel> GetJobSeekersByIdAsync(int jobSeekerId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
         // SQL query to fetch a job seeker by ID
@@ -61,9 +62,9 @@ public class JobSeekerRepository : IJobSeekersRepository
         var parameters = new DynamicParameters();
         parameters.Add("@JobSeekerId", jobSeekerId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<JobSeekersDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<JobSeekersDataModel>(sql, parameters).ConfigureAwait(false);
     }
-    public async Task<ResponseDto> SubmitJobSeekersAsync(JobSeekersDto jobSeekerDto)
+    public async Task<ResponseDto> SubmitJobSeekersAsync(JobSeekersDataModel jobSeekerDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -101,13 +102,13 @@ public class JobSeekerRepository : IJobSeekersRepository
         parameters.Add("@JobSeekerId", jobSeekerDto.JobSeekerId, DbType.Int32);
         parameters.Add("@FirstName", jobSeekerDto.FirstName, DbType.String);
         parameters.Add("@LastName", jobSeekerDto.LastName, DbType.String);
-        parameters.Add("@Phone", jobSeekerDto.Phone, DbType.String);
+        parameters.Add("@Phone", jobSeekerDto.PhoneNumber, DbType.String);
         parameters.Add("@Location", jobSeekerDto.Location, DbType.String);
         parameters.Add("@DateOfBirth", jobSeekerDto.DateOfBirth, DbType.DateTime);
         parameters.Add("@ProfilePicture", jobSeekerDto.ProfilePicture, DbType.String);
-        parameters.Add("@Resume", jobSeekerDto.Resume, DbType.String);
+        parameters.Add("@Resume", jobSeekerDto.ResumeUrl, DbType.String);
         parameters.Add("@Bio", jobSeekerDto.Bio, DbType.String);
-        parameters.Add("@CreatedAt", jobSeekerDto.CreatedAt, DbType.DateTime);
+        // parameters.Add("@CreatedAt", jobSeekerDto., DbType.DateTime);
         parameters.Add("@UpdatedAt", DateTime.UtcNow, DbType.DateTime);
 
         var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
@@ -115,7 +116,7 @@ public class JobSeekerRepository : IJobSeekersRepository
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Job type submitted successfully." : "Failed to submit job type."
+            Message = affectedRows > 0 ? "Jobs type submitted successfully." : "Failed to submit job type."
         };
     }
     public async Task<ResponseDto> DeleteJobSeekersAsync(int jobSeekerId)
@@ -142,7 +143,7 @@ public class JobSeekerRepository : IJobSeekersRepository
         return new ResponseDto
         {
             IsSuccess = true,
-            Message = "Job seeker deleted successfully."
+            Message = "Jobs seeker deleted successfully."
         };
     }
 }

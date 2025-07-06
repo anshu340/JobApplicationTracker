@@ -1,5 +1,5 @@
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.Admin;
@@ -29,7 +29,7 @@ public class AdminLogsController(IAdminLogsRepository adminLogRepository) : Cont
 
     [HttpPost]
     [Route("/submitAdminLogs")]
-    public async Task<IActionResult> SubmitAdminLogs([FromBody] AdminLogsDto adminLogsDto)
+    public async Task<IActionResult> SubmitAdminLogs([FromBody] AdminLogsDataModel adminLogsDto)
     {
         if (adminLogsDto == null)
         {

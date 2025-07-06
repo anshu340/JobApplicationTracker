@@ -1,11 +1,11 @@
-﻿using JobApplicationTracke.Data.Dto;
-using JobApplicationTracker.Service.Configuration;
+﻿using JobApplicationTracker.Service.Configuration;
 using JobApplicationTracker.Service.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using JobApplicationTracker.Data.DataModels;
 
 namespace JobApplicationTracker.Service.Services.Service;
 
@@ -17,7 +17,7 @@ public class AuthenticationService : IAuthenticationService
     {
         _jwtSettings = settings.Value;
     }
-    public string GenerateJwtToken(UsersDto user)
+    public string GenerateJwtToken(UsersDataModel user)
     {
         var claims = new Claim[]
        {

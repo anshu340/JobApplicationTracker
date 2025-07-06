@@ -1,6 +1,5 @@
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
-using JobApplicationTracker.Api.Data.Service;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.Notifications;
@@ -30,7 +29,7 @@ public class NotificationTypesController(INotificationsTypesRepository notificat
 
     [HttpPost]
     [Route("/submitnotificationTypes")]
-    public async Task<IActionResult> SubmitNotificationTypes([FromBody] NotificationTypesDto notificationTypesDto)
+    public async Task<IActionResult> SubmitNotificationTypes([FromBody] NotificationTypesDataModel notificationTypesDto)
     {
         if (notificationTypesDto == null)
         {

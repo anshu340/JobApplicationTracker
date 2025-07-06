@@ -1,7 +1,8 @@
 using Dapper;
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
 using System.Data;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
+using JobApplicationTracker.Data.Interface;
 
 namespace JobApplicationTracker.Data.Repository;
 
@@ -13,7 +14,7 @@ public class AdminLogsRepository : IAdminLogsRepository
     {
         _connectionService = connectionService;
     }
-    public async Task<IEnumerable<AdminLogsDto>> GetAllAdminLogsAsync()
+    public async Task<IEnumerable<AdminLogsDataModel>> GetAllAdminLogsAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -26,11 +27,11 @@ public class AdminLogsRepository : IAdminLogsRepository
               FROM AdminLogs
               """;
 
-        return await connection.QueryAsync<AdminLogsDto>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<AdminLogsDataModel>(sql).ConfigureAwait(false);
     }
 
 
-    public async Task<AdminLogsDto> GetAdminLogsByIdAsync(int adminLogId)
+    public async Task<AdminLogsDataModel> GetAdminLogsByIdAsync(int adminLogId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -48,10 +49,10 @@ public class AdminLogsRepository : IAdminLogsRepository
         var parameters = new DynamicParameters();
         parameters.Add("@LogId", adminLogId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<AdminLogsDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<AdminLogsDataModel>(sql, parameters).ConfigureAwait(false);
 
     }
-    public async Task<ResponseDto> SubmitAdminLogsAsync(AdminLogsDto adminLogsDto)
+    public async Task<ResponseDto> SubmitAdminLogsAsync(AdminLogsDataModel adminLogsDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -83,9 +84,9 @@ public class AdminLogsRepository : IAdminLogsRepository
         var parameters = new DynamicParameters();
         parameters.Add("@LogId", adminLogsDto.LogId, DbType.Int32);
         parameters.Add("@AdminId", adminLogsDto.AdminId, DbType.Int32);
-        parameters.Add("@ActionId", adminLogsDto.ActionId, DbType.Int32);
+        // parameters.Add("@ActionId", adminLogsDto.ActionId, DbType.Int32);
         parameters.Add("@Description", adminLogsDto.Description, DbType.String);
-        parameters.Add("@ActionDate", adminLogsDto.ActionDate, DbType.DateTime);
+        // parameters.Add("@ActionDate", adminLogsDto.ActionDate, DbType.DateTime);
 
         var affectedRows = 0;
 
@@ -105,7 +106,7 @@ public class AdminLogsRepository : IAdminLogsRepository
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Admin log submitted successfully." : "Failed to submit admin log."
+            Message = affectedRows > 0 ? "Admins log submitted successfully." : "Failed to submit admin log."
         };
     }
 
@@ -134,7 +135,7 @@ public class AdminLogsRepository : IAdminLogsRepository
         return new ResponseDto
         {
             IsSuccess = true,
-            Message = "Admin log deleted successfully."
+            Message = "Admins log deleted successfully."
         };
     }
 }

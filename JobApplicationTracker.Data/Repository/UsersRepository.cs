@@ -1,7 +1,10 @@
 using Dapper;
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
 using System.Data;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dto.AuthDto;
+using JobApplicationTracker.Data.Dtos.Responses;
+using JobApplicationTracker.Data.Interface;
+
 namespace JobApplicationTracker.Data.Repository;
 
 public class UsersRepository : IUserRepository
@@ -11,7 +14,7 @@ public class UsersRepository : IUserRepository
     {
         _connectionService = connectionService;
     }
-    public async Task<IEnumerable<UsersDto>> GetAllUsersAsync()
+    public async Task<IEnumerable<UsersDataModel>> GetAllUsersAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -27,10 +30,10 @@ public class UsersRepository : IUserRepository
                   FROM Users
                   """; 
 
-        return await connection.QueryAsync<UsersDto>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<UsersDataModel>(sql).ConfigureAwait(false);
     }
 
-    public async Task<UsersDto> GetUsersByIdAsync(int usersId)
+    public async Task<UsersDataModel> GetUsersByIdAsync(int usersId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
         // write the SQL query to fetch a Users by ID
@@ -43,21 +46,20 @@ public class UsersRepository : IUserRepository
         var parameters = new DynamicParameters();
         parameters.Add("@UsersId", usersId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<UsersDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<UsersDataModel>(sql, parameters).ConfigureAwait(false);
     }
-    public async Task<ResponseDto> SubmitUsersAsync(UsersDto userDto)
+    public async Task<ResponseDto> SubmitUsersAsync(UsersDataModel userDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
         string sql;
-        //Encryption of PasswordHash is assumed to be handled before this method is called
 
         if (userDto.UserId <= 0)
         {
             // Insert new users (assumes userId is auto-incremented)
             sql = """
-                  INSERT INTO Users (Email, PasswordHash, UserType, CreatedAt, UpdatedAt, IsActive)
-                  VALUES (@Email, @PasswordHash, @UserType, @CreatedAt, @UpdatedAt, @IsActive)
+                  INSERT INTO Users (Email, PasswordHash, UserType, CreatedAt, UpdatedAt)
+                  VALUES (@Email, @PasswordHash, @UserType, @CreatedAt, @UpdatedAt)
                   """;
         }
         else
@@ -68,9 +70,7 @@ public class UsersRepository : IUserRepository
                     SET Email = @Email,
                         PasswordHash = @PasswordHash,
                         UserType = @UserType,
-                        IsAdmin = @IsAdmin,
                         UpdatedAt = @UpdatedAt,
-                        IsActive = @IsActive
                     WHERE UserId = @UserId
                     """;
         }
@@ -80,10 +80,8 @@ public class UsersRepository : IUserRepository
         parameters.Add("Email", userDto.Email, DbType.String);
         parameters.Add("PasswordHash", userDto.PasswordHash, DbType.String);
         parameters.Add("UserType", userDto.UserType, DbType.String);
-        parameters.Add("IsAdmin", userDto.IsAdmin, DbType.Boolean);
         parameters.Add("UpdatedAt", DateTime.UtcNow, DbType.DateTime); 
         parameters.Add("CreatedAt", DateTime.UtcNow, DbType.DateTime);
-        parameters.Add("IsActive", userDto.IsActive, DbType.Boolean);
 
         var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
 
@@ -124,7 +122,7 @@ public class UsersRepository : IUserRepository
         };
     }
 
-    public async Task<ResponseDto> CreateUserAsync(SignupDto credentials)
+    public async Task<ResponseDto> CreateUserAsync(SignUpDto credentials)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -171,7 +169,7 @@ public class UsersRepository : IUserRepository
         return result.HasValue;
     }
 
-    public async Task<UsersDto?> GetUserByEmail(string email)
+    public async Task<UsersDataModel?> GetUserByEmail(string email)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -180,7 +178,7 @@ public class UsersRepository : IUserRepository
         var parameters = new DynamicParameters();
         parameters.Add("@Email", email, DbType.String);
 
-        return await connection.QueryFirstOrDefaultAsync<UsersDto>(query,parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<UsersDataModel>(query,parameters).ConfigureAwait(false);
     }
 }
    

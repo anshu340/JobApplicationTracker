@@ -1,5 +1,5 @@
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.Skills;
@@ -29,7 +29,7 @@ public class SkillsController(ISkillsRepository skillService) : ControllerBase
 
     [HttpPost]
     [Route("/submitskills")]
-    public async Task<IActionResult> SubmitSkills([FromBody] SkillsDto skillsDto)
+    public async Task<IActionResult> SubmitSkills([FromBody] SkillsDataModel skillsDto)
     {
         if (skillsDto == null)
         {

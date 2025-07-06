@@ -1,13 +1,14 @@
 
-using JobApplicationTracke.Data.Dto;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
 
-namespace JobApplicationTracke.Data.Interface;
+namespace JobApplicationTracker.Data.Interface;
 
 public interface IAdminActionRepository
 {
-    Task<IEnumerable<AdminActionsDto>> GetAllAdminActionAsync();
-    Task<AdminActionsDto> GetAdminActionByIdAsync(int adminActionId);
-    Task<ResponseDto> SubmitAdminActionAsync(AdminActionsDto adminActionDto);
+    Task<IEnumerable<AdminLogsDataModel>> GetAllAdminActionAsync();
+    Task<AdminLogsDataModel> GetAdminActionByIdAsync(int adminActionId);
+    Task<ResponseDto> SubmitAdminActionAsync(AdminLogsDataModel adminActionDto);
     Task<ResponseDto> DeleteAdminActionAsync(int actionId);
 }
 

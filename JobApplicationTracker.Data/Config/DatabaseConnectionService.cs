@@ -1,4 +1,4 @@
-﻿using JobApplicationTracke.Data.Interface;
+﻿using JobApplicationTracker.Data.Interface;
 using JobApplicationTracker.Data.Config;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;

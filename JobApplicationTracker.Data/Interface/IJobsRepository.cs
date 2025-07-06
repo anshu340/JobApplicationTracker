@@ -1,12 +1,13 @@
 
-using JobApplicationTracke.Data.Dto;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
 
-namespace JobApplicationTracke.Data.Interface;
+namespace JobApplicationTracker.Data.Interface;
 
 public interface IJobsRepository
 {
-    Task<IEnumerable<JobsDto>> GetAllJobsAsync();
-    Task<JobsDto> GetJobsByIdAsync(int jobId);
-    Task<ResponseDto> SubmitJobAsync(JobsDto jobsDto);
+    Task<IEnumerable<JobsDataModel>> GetAllJobsAsync();
+    Task<JobsDataModel> GetJobsByIdAsync(int jobId);
+    Task<ResponseDto> SubmitJobAsync(JobsDataModel jobsDto);
     Task<ResponseDto> DeleteJobAsync(int jobsId);
 }

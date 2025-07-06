@@ -1,9 +1,9 @@
 ﻿
-using JobApplicationTracke.Data.Dto;
+using JobApplicationTracker.Data.DataModels;
 
 namespace JobApplicationTracker.Service.Services.Interfaces;
 
 public interface IAuthenticationService
 {
-    string GenerateJwtToken(UsersDto user);
+    string GenerateJwtToken(UsersDataModel user);
 }

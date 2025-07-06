@@ -1,7 +1,8 @@
 using Dapper;
 using System.Data;
-using JobApplicationTracke.Data.Interface;
-using JobApplicationTracke.Data.Dto;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
+using JobApplicationTracker.Data.Interface;
 
 namespace JobApplicationTracker.Data.Repository;
 
@@ -12,7 +13,7 @@ public class CompaniesRepository : ICompaniesRepository
     {
         _connectionService = connectionService;
     }
-    public async Task<IEnumerable<CompaniesDto>> GetAllCompaniesAsync()
+    public async Task<IEnumerable<CompaniesDataModel>> GetAllCompaniesAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -30,10 +31,10 @@ public class CompaniesRepository : ICompaniesRepository
                   FROM Companies
                   """;
 
-        return await connection.QueryAsync<CompaniesDto>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<CompaniesDataModel>(sql).ConfigureAwait(false);
     }
 
-    public async Task<CompaniesDto> GetCompaniesByIdAsync(int companiesId)
+    public async Task<CompaniesDataModel> GetCompaniesByIdAsync(int companiesId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -55,9 +56,9 @@ public class CompaniesRepository : ICompaniesRepository
         var parameters = new DynamicParameters();
         parameters.Add("@companiesId", companiesId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<CompaniesDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<CompaniesDataModel>(sql, parameters).ConfigureAwait(false);
     }
-    public async Task<ResponseDto> SubmitCompaniesAsync(CompaniesDto companiesDto)
+    public async Task<ResponseDto> SubmitCompaniesAsync(CompaniesDataModel companiesDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -107,11 +108,12 @@ public class CompaniesRepository : ICompaniesRepository
 
         var parameters = new DynamicParameters();
         //parameters.Add("@CompanyId", companiesDto.CompanyId, DbType.Int32);
-        parameters.Add("@CompanyName", companiesDto.CompanyName, DbType.String);
-        parameters.Add("@CompanyLogo", companiesDto.CompanyLogo, DbType.String);
-        parameters.Add("@IndustryId", companiesDto.IndustryId, DbType.Int32);
+        parameters.Add("@CompanyName", companiesDto.Name, DbType.String);
+        parameters.Add("@CompanyLogo", companiesDto.LogoUrl, DbType.String);
+        parameters.Add("@Industry", companiesDto.Industry, DbType.Int32);
         //parameters.Add("@CompanySizeId", companiesDto.CompanySizeId, DbType.Int32);
-        parameters.Add("@Website", companiesDto.Website, DbType.String);
+        parameters.Add("@WebsiteUrl", companiesDto.WebsiteUrl, DbType.String);
+        parameters.Add("@HeadQuarters", companiesDto.Headquarters, DbType.String);
         parameters.Add("@Location", companiesDto.Location, DbType.String);
         parameters.Add("@Description", companiesDto.Description, DbType.String);
 
@@ -122,19 +124,17 @@ public class CompaniesRepository : ICompaniesRepository
             var newId = await connection.QuerySingleAsync<int>(sql, parameters).ConfigureAwait(false);
             affectedRows = newId > 0 ? 1 : 0;
             companiesDto.CompanyId = newId;
-            companiesDto.CreatedAt = DateTime.UtcNow;
         }
         else
         {
             affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
-            companiesDto.UpdatedAt = DateTime.UtcNow;
         }
 
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
             Message = affectedRows > 0
-                ? (isInsert ? "Company created successfully." : "Company updated successfully.")
+                ? (isInsert ? "Companies created successfully." : "Companies updated successfully.")
                 : "Failed to submit company.",
             
         };
@@ -169,14 +169,14 @@ public class CompaniesRepository : ICompaniesRepository
             return new ResponseDto
             {
                 IsSuccess = false,
-                Message = "Company not found or could not be deleted."
+                Message = "Companies not found or could not be deleted."
             };
         }
 
         return new ResponseDto
         {
             IsSuccess = true,
-            Message = "Company deleted successfully.",
+            Message = "Companies deleted successfully.",
 
         };
     }

@@ -1,5 +1,6 @@
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.Jobs;
@@ -29,7 +30,7 @@ public class JobTypeController(IJobTypeRepository jobTypeService) : ControllerBa
 
     [HttpPost]
     [Route("/submitjobtype")]
-    public async Task<IActionResult> SubmitJobType([FromBody] JobTypeDto jobTypeDto)
+    public async Task<IActionResult> SubmitJobType([FromBody] JobTypesDataModel jobTypeDto)
     {
         if (jobTypeDto == null)
         {

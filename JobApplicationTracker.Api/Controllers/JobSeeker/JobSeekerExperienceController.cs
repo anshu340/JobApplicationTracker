@@ -1,5 +1,5 @@
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.JobSeeker;
@@ -29,7 +29,7 @@ public class JobSeekerExperienceController(IJobSeekerExperienceRepository jobSee
 
     [HttpPost]
     [Route("/submitjobseekerexperience")]
-    public async Task<IActionResult> SubmitJobSeekerExperience([FromBody] JobSeekerExperienceDto jobSeekerExperienceDto)
+    public async Task<IActionResult> SubmitJobSeekerExperience([FromBody] JobSeekerExperience jobSeekerExperienceDto)
     {
         if (jobSeekerExperienceDto == null)
         {

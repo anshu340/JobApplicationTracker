@@ -1,12 +1,13 @@
 
-using JobApplicationTracke.Data.Dto;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
 
-namespace JobApplicationTracke.Data.Interface;
+namespace JobApplicationTracker.Data.Interface;
 
 public interface ISkillsRepository
 {
-    Task<IEnumerable<SkillsDto>> GetAllSkillsAsync();
-    Task<SkillsDto> GetSkillsByIdAsync(int skillsId);
-    Task<ResponseDto> SubmitSkillsAsync(SkillsDto skillsDto);
+    Task<IEnumerable<SkillsDataModel>> GetAllSkillsAsync();
+    Task<SkillsDataModel> GetSkillsByIdAsync(int skillsId);
+    Task<ResponseDto> SubmitSkillsAsync(SkillsDataModel skillsDto);
     Task<ResponseDto> DeleteSkillsAsync(int skillsId);
 }

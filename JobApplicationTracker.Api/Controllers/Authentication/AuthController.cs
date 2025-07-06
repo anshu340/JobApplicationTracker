@@ -1,5 +1,7 @@
-﻿using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+﻿
+using JobApplicationTracker.Data.Dto.AuthDto;
+using JobApplicationTracker.Data.Dtos.Responses;
+using JobApplicationTracker.Data.Interface;
 using JobApplicationTracker.Service.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,9 +9,20 @@ namespace JobApplicationTracker.Api.Controllers.Authentication
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController(IUserRepository _usersService, ICookieService _cookieService, 
-        IAuthenticationService _authenticationService) : ControllerBase
+    public class AuthController : ControllerBase
     {
+        private readonly IUserRepository _usersService;
+        private readonly ICookieService _cookieService;
+        private readonly IAuthenticationService _authenticationService;
+
+        public AuthController(IUserRepository usersService, ICookieService cookieService, 
+            IAuthenticationService authenticationService)
+        {
+            _usersService = usersService;
+            _cookieService = cookieService;
+            _authenticationService = authenticationService;
+        }
+
         [HttpPost]
         [Route("/login")]
         public async Task<IActionResult> Login(LoginDto credentials)

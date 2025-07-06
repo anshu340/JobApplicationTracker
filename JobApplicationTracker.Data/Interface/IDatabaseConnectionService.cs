@@ -1,6 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 
-namespace JobApplicationTracke.Data.Interface;
+namespace JobApplicationTracker.Data.Interface;
     public interface IDatabaseConnectionService
     {
         Task<SqlConnection> GetDatabaseConnectionAsync();

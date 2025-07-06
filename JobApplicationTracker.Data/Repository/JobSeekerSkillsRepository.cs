@@ -1,7 +1,8 @@
 using Dapper;
-using JobApplicationTracke.Data.Dto;
-using JobApplicationTracke.Data.Interface;
+using JobApplicationTracker.Data.Interface;
 using System.Data;
+using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dtos.Responses;
 
 namespace JobApplicationTracker.Data.Repository;
 
@@ -12,7 +13,7 @@ public class JobSeekerSkillsRepository : IJobSeekersSkillsRepository
     {
         _connectionService = connectionService;
     }
-    public async Task<IEnumerable<JobSeekerSkillsDto>> GetAllJobSeekerSkillsAsync()
+    public async Task<IEnumerable<JobSeekerSkills>> GetAllJobSeekerSkillsAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -27,10 +28,10 @@ public class JobSeekerSkillsRepository : IJobSeekersSkillsRepository
                   """;
 
 
-        return await connection.QueryAsync<JobSeekerSkillsDto>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<JobSeekerSkills>(sql).ConfigureAwait(false);
     }
 
-    public async Task<JobSeekerSkillsDto> GetJobSeekerSkillsByIdAsync(int jobSeekerSkillsId)
+    public async Task<JobSeekerSkills> GetJobSeekerSkillsByIdAsync(int jobSeekerSkillsId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
         // write the SQL query to fetch a job Seeker by ID
@@ -47,9 +48,9 @@ public class JobSeekerSkillsRepository : IJobSeekersSkillsRepository
         var parameters = new DynamicParameters();
         parameters.Add("@JobSeekerSkillsId", jobSeekerSkillsId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<JobSeekerSkillsDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<JobSeekerSkills>(sql, parameters).ConfigureAwait(false);
     }
-    public async Task<ResponseDto> SubmitJobSeekerSkillsAsync(JobSeekerSkillsDto jobSeekerSkillsDto)
+    public async Task<ResponseDto> SubmitJobSeekerSkillsAsync(JobSeekerSkills jobSeekerSkillsDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -101,7 +102,7 @@ public class JobSeekerSkillsRepository : IJobSeekersSkillsRepository
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Job seeker skill submitted successfully." : "Failed to submit job seeker skill."
+            Message = affectedRows > 0 ? "Jobs seeker skill submitted successfully." : "Failed to submit job seeker skill."
         };
     }
     public async Task<ResponseDto> DeleteJobSeekerSkillsAsync(int jobSeekerSkillsId)
@@ -128,7 +129,7 @@ public class JobSeekerSkillsRepository : IJobSeekersSkillsRepository
         return new ResponseDto
         {
             IsSuccess = true,
-            Message = "Job seeker skill deleted successfully."
+            Message = "Jobs seeker skill deleted successfully."
         };
     }
 }
