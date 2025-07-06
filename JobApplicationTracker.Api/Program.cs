@@ -11,10 +11,17 @@ using JobApplicationTracker.Service.Services.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers(config =>
+{
+    config.Filters.AddService<GlobalExceptionHandler>();
+});
+
+// registering GlobalExceptionHandler as a service as it has ILogger as a dependency    
+builder.Services.AddScoped<GlobalExceptionHandler>(); 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("jwtSettings"));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
+
 
 // authentication service
 builder.Services.AddAuthentication(options =>
@@ -56,16 +63,16 @@ builder.Services.AddScoped<IPasswordHasherService, PasswordHasherService>();
 builder.Services.AddScoped<ICookieService, CookieService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
-// Callng the extension method to register all services from Service and Data layers
+// Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
 
 // add global exception handler service
-builder.Services.AddExceptionHandler<AppExceptionHandler>();
+// builder.Services.AddExceptionHandler<AppExceptionHandler>();
+// enable the exception handler service early in the pipeline with default options
+// app.UseExceptionHandler(_ => { });
 
 var app = builder.Build();
 
-// enable the exception handler service early in the pipeline with default options
-app.UseExceptionHandler(_ => { });
 
 if (app.Environment.IsDevelopment())
 {
