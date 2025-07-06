@@ -7,6 +7,9 @@
 **/[Oo]bj/
 # Ignore appsettings.json only in the API project
 JobApplicationTracker.Api/appsettings.json
+.idea
+.vs
+
 
 
 # User-specific files
