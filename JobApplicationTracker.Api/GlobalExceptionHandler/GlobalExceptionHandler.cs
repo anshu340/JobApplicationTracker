@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using JobApplicationTracker.Service.Exceptions; 
 using Microsoft.AspNetCore.Mvc;
@@ -10,8 +11,10 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger, IHos
 {
     public void OnException(ExceptionContext context)
     {
-        // Log the exception
-        logger.LogError(context.Exception, "An unhandled exception occurred: {Message}", context.Exception.Message);
+        
+        var traceId = Activity.Current?.Id ?? context.HttpContext.TraceIdentifier;
+
+        logger.LogError(context.Exception, $"An exception occured {context.Exception.Message ?? ""} with traceId ", traceId);
 
         // Prevent further exception handling by other filters/middleware 
         context.ExceptionHandled = true;
@@ -60,7 +63,6 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger, IHos
             Instance = context.HttpContext.Request.Path 
         };
         
-        
         if (errors.Any())
         {
             response.Extensions["errors"] = errors;
@@ -71,4 +73,17 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger, IHos
             StatusCode = (int)statusCode 
         };
     }
+
+
+    // private (string title, HttpStatusCode statusCode, string details) GetProblemDetails(Exception exception)
+    // {
+    //     return exception switch
+    //     {
+    //         NotFoundException => ($"Sorry. We could not find what you are looking for. Try checking again later. {exception.Message}",
+    //             HttpStatusCode.NotFound,hostEnvironment.IsDevelopment() ? exception.ToString() : exception.Message),
+    //         ValidationException => ($"Please check all the details again. Try again later. {exception.Message}", 
+    //             HttpStatusCode.BadRequest, hostEnvironment.IsDevelopment() ? exception.ToString() : exception.Message )
+    //         
+    //     };
+    // }
 }

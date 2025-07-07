@@ -11,7 +11,9 @@ public interface IUserRepository
     Task<UsersDataModel?> GetUserByEmail(string email);
     Task<UsersDataModel> GetUsersByIdAsync(int userId);
     Task<ResponseDto> SubmitUsersAsync(UsersDataModel userDto);
+    Task<int> CreateUserAsync(UsersDataModel userDto);
     Task<ResponseDto> DeleteUsersAsync(int userId);
     Task<ResponseDto> CreateUserAsync(SignUpDto credentials);
     Task<bool> DoesEmailExists(string email);
+    Task<UsersDataModel?> GetUserByPhone(string phone);
 }

@@ -21,7 +21,7 @@ namespace JobApplicationTracker.Service
             services.AddScoped<IJobSeekersRepository, JobSeekerRepository>();
             services.AddScoped<IJobSeekersSkillsRepository, JobSeekerSkillsRepository>();
             services.AddScoped<ISkillsRepository, SkillsRepository>();
-            // services.AddScoped<IUserRepository, UsersRepository>();
+            services.AddScoped<IUserRepository, UsersRepository>();
 
             services.AddScoped<IDatabaseConnectionService, DatabaseConnectionService>();
 

@@ -52,28 +52,19 @@ public class UsersRepository : IUserRepository
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-        string sql;
-
-        if (userDto.UserId <= 0)
-        {
-            // Insert new users (assumes userId is auto-incremented)
-            sql = """
-                  INSERT INTO Users (Email, PasswordHash, UserType, CreatedAt, UpdatedAt)
-                  VALUES (@Email, @PasswordHash, @UserType, @CreatedAt, @UpdatedAt)
-                  """;
-        }
-        else
-        {
-            // Update existing user
-            sql = """
-                    UPDATE Users
-                    SET Email = @Email,
-                        PasswordHash = @PasswordHash,
-                        UserType = @UserType,
-                        UpdatedAt = @UpdatedAt,
-                    WHERE UserId = @UserId
-                    """;
-        }
+        string sql = 
+            
+            userDto.UserId <= 0 ?   
+            
+            @"INSERT INTO Users (Email, PasswordHash, UserType, CreatedAt, UpdatedAt) 
+                                     VALUES (@Email, @PasswordHash, @UserType, @CreatedAt, @UpdatedAt)"
+            :   @" UPDATE Users
+                      SET Email = @Email,
+                          PasswordHash = @PasswordHash,
+                          UserType = @UserType,
+                          UpdatedAt = @UpdatedAt,
+                      WHERE UserId = @UserId
+                      ";
 
         var parameters = new DynamicParameters();
         parameters.Add("UserId", userDto.UserId, DbType.Int32);
@@ -94,6 +85,21 @@ public class UsersRepository : IUserRepository
 
 
 
+    public async Task<int> CreateUserAsync(UsersDataModel userDto)
+    {
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+        var query = @"INSERT INTO Users (Email, PasswordHash, UserType, CreatedAt, UpdatedAt) 
+                                   VALUES (@Email, @PasswordHash, @UserType, @CreatedAt, @UpdatedAt)";
+        var parameters = new DynamicParameters();
+        parameters.Add("Email", userDto.Email, DbType.String);
+        parameters.Add("PasswordHash", userDto.PasswordHash, DbType.String);
+        parameters.Add("UserType", userDto.UserType, DbType.String);
+        parameters.Add("CreatedAt", DateTime.UtcNow, DbType.DateTime);
+        parameters.Add("UpdatedAt", DateTime.UtcNow, DbType.DateTime);
+        
+        return await connection.ExecuteScalarAsync<int>(query, parameters).ConfigureAwait(false);
+    }
+    
     public async Task<ResponseDto> DeleteUsersAsync(int userId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
@@ -167,6 +173,18 @@ public class UsersRepository : IUserRepository
         var result = await connection.ExecuteScalarAsync<int?>(query,parameters).ConfigureAwait(false);
 
         return result.HasValue;
+    }
+
+    public async Task<UsersDataModel?> GetUserByPhone(string phone)
+    {
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        var query = """SELECT * FROM Users WHERE PhoneNumber = @PhoneNumber""";
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@PhoneNumber", phone, DbType.String);
+
+        return await connection.QueryFirstOrDefaultAsync<UsersDataModel>(query,parameters).ConfigureAwait(false);
     }
 
     public async Task<UsersDataModel?> GetUserByEmail(string email)

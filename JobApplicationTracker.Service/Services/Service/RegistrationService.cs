@@ -4,6 +4,7 @@ using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Dtos.Responses;
 using JobApplicationTracker.Data.Interface;
 using JobApplicationTracker.Service.DTO.Requests;
+using JobApplicationTracker.Service.Exceptions;
 using JobApplicationTracker.Service.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 
@@ -17,10 +18,19 @@ public class RegistrationService(
 {
     public async Task<ResponseDto> RegisterJobSeekerAsync(RegisterJobSeekerRequestDto request)
     {
-        var existingUser = await userRepository.GetUserByEmail(request.Email);
-        if (existingUser != null)
+        // the email should always be unique
+        if (await userRepository.GetUserByEmail(request.Email) != null)
         {
-            throw new ApplicationException("Email is already registered.");
+            throw new DuplicateEmailException("Email is already registered.");
+        }
+
+        // user might not enter the phone number while registering
+        if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+        {
+            if (await userRepository.GetUserByPhone(request.PhoneNumber) != null)
+            {
+                throw new DuplicatePhoneNumberException("This phone number is already in use. Try logging in.");
+            }
         }
 
         var passwordHash = passwordHasherService.HashPassword(request.Password);
@@ -31,10 +41,22 @@ public class RegistrationService(
             PasswordHash = passwordHash,
             UserType = UserTypes.JOBSEEKER.ToString()
         };
+        
+        int userId = await userRepository.CreateUserAsync(newUser);
+        Console.WriteLine(userId.ToString());
+        // if (userId < 1)
+        // {
+        //     return new ResponseDto()
+        //     {
+        //         IsSuccess = false,
+        //         StatusCode = StatusCodes.Status500InternalServerError,
+        //         Message = "Registration failed. Try again later.!"
+        //     };
+        // }
 
-        // create a job seeker
+        // create a JobSeeker
         var jobSeeker = new JobSeekersDataModel{
-            UserId = newUser.UserId, // Link to the created user
+            UserId = userId, // Link to the created user
             FirstName = request.FirstName,
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
@@ -49,8 +71,8 @@ public class RegistrationService(
             PreferredExperienceLevels = request?.PreferredExperienceLevels?.ToString()
         };
         
-        await userRepository.SubmitUsersAsync(newUser); 
-        await jobSeekerRepository.SubmitJobSeekersAsync(jobSeeker);
+      
+        await jobSeekerRepository.CreateJobSeekersAsync(jobSeeker);
         
         return new ResponseDto()
         {

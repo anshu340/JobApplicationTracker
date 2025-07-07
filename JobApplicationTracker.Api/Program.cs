@@ -62,6 +62,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IPasswordHasherService, PasswordHasherService>();
 builder.Services.AddScoped<ICookieService, CookieService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
