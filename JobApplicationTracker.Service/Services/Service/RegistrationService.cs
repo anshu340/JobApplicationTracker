@@ -44,15 +44,15 @@ public class RegistrationService(
         
         int userId = await userRepository.CreateUserAsync(newUser);
         Console.WriteLine(userId.ToString());
-        // if (userId < 1)
-        // {
-        //     return new ResponseDto()
-        //     {
-        //         IsSuccess = false,
-        //         StatusCode = StatusCodes.Status500InternalServerError,
-        //         Message = "Registration failed. Try again later.!"
-        //     };
-        // }
+        if (userId < 1)
+        {
+            return new ResponseDto()
+            {
+                IsSuccess = false,
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Message = "Registration failed. Try again later.!"
+            };
+        }
 
         // create a JobSeeker
         var jobSeeker = new JobSeekersDataModel{
