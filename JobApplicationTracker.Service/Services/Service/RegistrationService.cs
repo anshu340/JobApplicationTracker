@@ -81,4 +81,9 @@ public class RegistrationService(
            Message = "User successfully registered!"
         };
     }
+
+    public Task<ResponseDto> RegisterCompanyAsync(RegisterCompanyRequestDto request)
+    {
+        throw new NotImplementedException();
+    }
 }

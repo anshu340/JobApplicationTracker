@@ -21,7 +21,13 @@ builder.Services.AddScoped<GlobalExceptionHandler>();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("jwtSettings"));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddCors( options =>
+{
+    options.AddPolicy("Policy", policy =>
+    {
+        policy.AllowAnyHeader().AllowAnyMethod().AllowCredentials().AllowAnyOrigin();
+    });
+});
 
 // authentication service
 builder.Services.AddAuthentication(options =>
@@ -85,7 +91,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-
 app.UseHttpsRedirection();
+app.UseCors("Policy");
+app.UseAuthentication();
 app.MapControllers();
 app.Run();

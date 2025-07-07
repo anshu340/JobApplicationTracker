@@ -1,3 +1,4 @@
+using JobApplicationTracker.Api.ApiResponses;
 using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Interface;
 using JobApplicationTracker.Service.DTO.Requests;
@@ -48,7 +49,13 @@ public class
         var response = await registrationService.RegisterJobSeekerAsync(request);
         if (response.IsSuccess)
         {
-            return Created();
+            return Created(
+                string.Empty,
+                new ApiResponse{
+                    StatusCode = response.StatusCode,
+                    Message = response.Message,
+                    IsSuccess = response.IsSuccess}
+                );
         }
 
         return BadRequest("The server is busy at the moment. Please try again later.");
