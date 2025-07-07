@@ -21,13 +21,12 @@ builder.Services.AddScoped<GlobalExceptionHandler>();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("jwtSettings"));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddCors( options =>
-{
-    options.AddPolicy("Policy", policy =>
-    {
-        policy.AllowAnyHeader().AllowAnyMethod().AllowCredentials().AllowAnyOrigin();
-    });
-});
+// adding the cors policy for all origins default.
+builder.Services.AddCors(options =>
+    options.AddPolicy("AllowAllOrigins",
+        builder => builder.AllowAnyHeader().AllowAnyMethod()
+            .AllowCredentials().WithOrigins("http://localhost:5173"))
+);
 
 // authentication service
 builder.Services.AddAuthentication(options =>
