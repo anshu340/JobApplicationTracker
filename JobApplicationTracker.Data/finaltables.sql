@@ -1,4 +1,4 @@
-USE [master]
+    USE [master]
 GO
 
 IF DB_ID (N'JobApplicationTrackerDB') IS NOT NULL
