@@ -89,13 +89,16 @@ public class UsersRepository : IUserRepository
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
         var query = @"INSERT INTO Users (Email, PasswordHash, UserType, CreatedAt, UpdatedAt) 
-                                   VALUES (@Email, @PasswordHash, @UserType, @CreatedAt, @UpdatedAt)";
+                                   VALUES (@Email, @PasswordHash, @UserType, @CreatedAt, @UpdatedAt);
+                    SELECT SCOPE_IDENTITY();";
+        
         var parameters = new DynamicParameters();
         parameters.Add("Email", userDto.Email, DbType.String);
         parameters.Add("PasswordHash", userDto.PasswordHash, DbType.String);
         parameters.Add("UserType", userDto.UserType, DbType.String);
         parameters.Add("CreatedAt", DateTime.UtcNow, DbType.DateTime);
         parameters.Add("UpdatedAt", DateTime.UtcNow, DbType.DateTime);
+        
         
         return await connection.ExecuteScalarAsync<int>(query, parameters).ConfigureAwait(false);
     }
