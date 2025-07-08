@@ -37,9 +37,9 @@ namespace JobApplicationTracker.Api.Controllers.Authentication
                 return BadRequest(ModelState);
             }
 
-            var user = await _usersService.GetUserByEmail(credentials.Email);
+            var user = await _usersService.GetUserForLoginAsync(credentials.Email);
 
-            // check for user existance
+            // check for user existence
             if (user == null)
             {
                 return BadRequest(new ResponseDto()

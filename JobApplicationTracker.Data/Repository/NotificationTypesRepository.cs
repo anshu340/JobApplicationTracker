@@ -17,13 +17,7 @@ public class NotificationTypesRepository : INotificationsTypesRepository
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-        var sql = """
-                  SELECT NotificationTypeId, 
-                         TypeName, 
-                         Description 
-                         Priority
-                  FROM NotificationTypes
-                  """;
+        var sql = @"SELECT NotificationTypeId, TypeName, Description ,Priority FROM NotificationTypes";
 
         return await connection.QueryAsync< NotificationTypesDataModel >(sql).ConfigureAwait(false);
     }
@@ -31,16 +25,13 @@ public class NotificationTypesRepository : INotificationsTypesRepository
     public async Task<NotificationTypesDataModel> GetNotificationTypesByIdAsync(int notificationTypeId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-
         // SQL query to fetch a notification type by ID
-        var sql = """
-              SELECT NotificationTypeId, 
-                     TypeName, 
-                     Description, 
-                     Priority
+        var sql = @"
+              SELECT 
+              NotificationTypeId, TypeName, Description, Priority 
               FROM NotificationTypes
               WHERE NotificationTypeId = @NotificationTypeId
-              """;
+              ";
 
         var parameters = new DynamicParameters();
         parameters.Add("@NotificationTypeId", notificationTypeId, DbType.Int32);
@@ -93,7 +84,7 @@ public class NotificationTypesRepository : INotificationsTypesRepository
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
         // Check referential integrity 
-        var refCheckSql = "SELECT COUNT(1) FROM SomeRelatedTable WHERE NotificationTypeId = @NotificationTypeId"; // Adjust table name as needed
+        var refCheckSql = "SELECT COUNT(1) FROM NotificationTypes WHERE NotificationTypeId = @NotificationTypeId"; // Adjust table name as needed
         var hasDependencies = await connection.ExecuteScalarAsync<int>(refCheckSql, new { NotificationTypeId = notificationTypesId });
 
         if (hasDependencies > 0)

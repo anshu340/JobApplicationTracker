@@ -24,8 +24,10 @@ builder.Services.AddSwaggerGen();
 // adding the cors policy for all origins default.
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowAllOrigins",
-        builder => builder.AllowAnyHeader().AllowAnyMethod()
-            .AllowCredentials().WithOrigins("http://localhost:5173"))
+        options => options.WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials())
 );
 
 // authentication service
@@ -78,6 +80,7 @@ builder.Services.AddServiceLayer(builder.Configuration);
 // app.UseExceptionHandler(_ => { });
 
 var app = builder.Build();
+app.UseCors("AllowAllOrigins");
 
 
 if (app.Environment.IsDevelopment())
@@ -91,7 +94,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("Policy");
 app.UseAuthentication();
 app.MapControllers();
 app.Run();

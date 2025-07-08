@@ -17,12 +17,7 @@ public class SkillsRepository : ISkillsRepository
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-        var sql = """
-                  SELECT SkillId, 
-                         SkillName, 
-                         Category 
-                  FROM Skills
-                  """;
+        var sql = @"SELECT SkillId, SkillName, Category FROM Skills";
 
         return await connection.QueryAsync<SkillsDataModel>(sql).ConfigureAwait(false);
     }
@@ -73,7 +68,7 @@ public class SkillsRepository : ISkillsRepository
         var parameters = new DynamicParameters();
         parameters.Add("SkillId", skillsDto.SkillId, DbType.Int32);
         parameters.Add("SkillName", skillsDto.SkillName, DbType.String);
-        parameters.Add("Description", skillsDto.Category, DbType.String);
+        parameters.Add("Category", skillsDto.Category, DbType.String);
 
         var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
 
