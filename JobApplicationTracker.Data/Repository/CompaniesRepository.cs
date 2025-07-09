@@ -142,28 +142,21 @@ public class CompaniesRepository : ICompaniesRepository
     }
 
 
-    public async Task<ResponseDto> CreateCompanyAsync(CompaniesDataModel request)
+    public async Task<int> CreateCompanyAsync(CompaniesDataModel request)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-        var query = @"INSERT INTO Companies (UserId, Name, Description, Location) 
-                    VALUES (@UserId, @Name, @Description, @Location)";
+        var query = @"INSERT INTO Companies (Name, Description, Location) 
+                    VALUES (@Name, @Description, @Location);
+                    SELECT SCOPE_IDENTITY();";
         
         var parameters = new DynamicParameters();
-        parameters.Add("@UserId", request.UserId, DbType.String);
         parameters.Add("@Name", request.Name, DbType.String);
         parameters.Add("@Description", request.Description, DbType.String);
         parameters.Add("@Location", request.Location, DbType.String);
         
-       int affectedRows =  await connection.ExecuteAsync(query, parameters).ConfigureAwait(false);
-       return new ResponseDto
-       {
-           IsSuccess = affectedRows > 0,
-           Message = affectedRows > 0
-               ? "Company registered successfully." : "Company could not be registered right now. Please try again later.",
-           StatusCode = (int)HttpStatusCode.OK
-       };
-       
+     int companyId =   await connection.ExecuteScalarAsync<int>(query, parameters).ConfigureAwait(false);
+     return companyId;
     }
     
     

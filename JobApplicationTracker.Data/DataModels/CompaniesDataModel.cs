@@ -3,7 +3,6 @@
 public class CompaniesDataModel
 {
     public int CompanyId { get; set; }
-    public int? UserId { get; set; } // Foreign Key (nullable in DB)
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? WebsiteUrl { get; set; }

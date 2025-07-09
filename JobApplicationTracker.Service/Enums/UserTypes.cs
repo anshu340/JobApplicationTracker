@@ -2,8 +2,9 @@
 {
     public enum UserTypes
     {
-        ADMIN,
-        JOBSEEKER,
-        COMPANY
+        JobSeeker = 1,
+        Admin = 2,
+        Company = 3,
+        Recruiter = 4,
     }
 }
