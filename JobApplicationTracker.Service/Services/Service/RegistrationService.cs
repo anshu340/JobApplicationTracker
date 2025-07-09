@@ -13,6 +13,7 @@ namespace JobApplicationTracker.Service.Services.Service;
 public class RegistrationService(
     IUserRepository userRepository,
     IJobSeekersRepository jobSeekerRepository,
+    ICompaniesRepository companiesRepository,
     IPasswordHasherService passwordHasherService)
     : IRegistrationService
 {
@@ -43,7 +44,6 @@ public class RegistrationService(
         };
         
         int userId = await userRepository.CreateUserAsync(newUser);
-        Console.WriteLine(userId.ToString());
         if (userId < 1)
         {
             return new ResponseDto()
@@ -82,8 +82,52 @@ public class RegistrationService(
         };
     }
 
-    public Task<ResponseDto> RegisterCompanyAsync(RegisterCompanyRequestDto request)
+    public async Task<ResponseDto> RegisterCompanyAsync(RegisterCompanyRequestDto request)
     {
-        throw new NotImplementedException();
+        if (await userRepository.GetUserByEmail(request.Email) != null)
+        {
+            throw new DuplicateEmailException("Email is already registered.");
+        }
+        
+        // user might not enter the phone number while registering
+        if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+        {
+            if (await userRepository.GetUserByPhone(request.PhoneNumber) != null)
+            {
+                throw new DuplicatePhoneNumberException("This phone number is already in use. Try logging in.");
+            }
+        }
+        
+        var passwordHash = passwordHasherService.HashPassword(request.Password);
+     
+        var newUser = new UsersDataModel
+        {
+            Email = request.Email,
+            PasswordHash = passwordHash,
+            UserType = UserTypes.JOBSEEKER.ToString()
+        };
+        
+        int userId = await userRepository.CreateUserAsync(newUser);
+        if (userId < 1)
+        {
+            return new ResponseDto()
+            {
+                IsSuccess = false,
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Message = "Registration failed. Try again later.!"
+            };
+        }
+
+        var company = new CompaniesDataModel()
+        {
+            UserId = userId,
+            Name = request.CompanyName,
+            Location = request.Location,
+            Description = request.Description,
+        };
+        
+        var response = await companiesRepository.CreateCompanyAsync(company);
+
+        return response;
     }
 }

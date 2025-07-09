@@ -1,5 +1,6 @@
 using Dapper;
 using System.Data;
+using System.Net;
 using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Dtos.Responses;
 using JobApplicationTracker.Data.Interface;
@@ -139,6 +140,33 @@ public class CompaniesRepository : ICompaniesRepository
             
         };
     }
+
+
+    public async Task<ResponseDto> CreateCompanyAsync(CompaniesDataModel request)
+    {
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        var query = @"INSERT INTO Companies (UserId, Name, Description, Location) 
+                    VALUES (@UserId, @Name, @Description, @Location)";
+        
+        var parameters = new DynamicParameters();
+        parameters.Add("@UserId", request.UserId, DbType.String);
+        parameters.Add("@Name", request.Name, DbType.String);
+        parameters.Add("@Description", request.Description, DbType.String);
+        parameters.Add("@Location", request.Location, DbType.String);
+        
+       int affectedRows =  await connection.ExecuteAsync(query, parameters).ConfigureAwait(false);
+       return new ResponseDto
+       {
+           IsSuccess = affectedRows > 0,
+           Message = affectedRows > 0
+               ? "Company registered successfully." : "Company could not be registered right now. Please try again later.",
+           StatusCode = (int)HttpStatusCode.OK
+       };
+       
+    }
+    
+    
     public async Task<ResponseDto> DeleteCompanyAsync(int companiesId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
