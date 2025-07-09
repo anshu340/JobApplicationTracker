@@ -53,38 +53,38 @@ public class UsersController(IUserRepository userService, IPasswordHasherService
         return response.IsSuccess ? Ok(response) : BadRequest(response);
     }
 
-    [HttpPost]
-    [Route("/signup")]
-    public async Task<IActionResult> CreateUser(SignUpDto? credentials)
-    {
-        if (!ModelState.IsValid)
-        {
-            ModelState.AddModelError("Error","Error occured.Please enter all credentials.");
-            return BadRequest(ModelState);
-        }
-
-        if (credentials is null)
-        {
-            return BadRequest();
-        }
-
-        // check if the user already exists
-        if (await userService.DoesEmailExists(credentials.Email))
-        {
-            return BadRequest(new ResponseDto()
-            {   
-                IsSuccess = false,
-                StatusCode = StatusCodes.Status400BadRequest,
-                Message = "The email already exists."
-            });
-        }
-
-        // hash the password
-        credentials.PasswordHash = _passwordHasher.HashPassword(credentials.PasswordHash);
-
-        // return ok response
-        var response = await userService.CreateUserAsync(credentials);
-        return response.IsSuccess ? Ok(response) : BadRequest(response);
-    }
+    // [HttpPost]
+    // [Route("/signup")]
+    // public async Task<IActionResult> CreateUser(SignUpDto? credentials)
+    // {
+    //     if (!ModelState.IsValid)
+    //     {
+    //         ModelState.AddModelError("Error","Error occured.Please enter all credentials.");
+    //         return BadRequest(ModelState);
+    //     }
+    //
+    //     if (credentials is null)
+    //     {
+    //         return BadRequest();
+    //     }
+    //
+    //     // check if the user already exists
+    //     if (await userService.DoesEmailExists(credentials.Email))
+    //     {
+    //         return BadRequest(new ResponseDto()
+    //         {   
+    //             IsSuccess = false,
+    //             StatusCode = StatusCodes.Status400BadRequest,
+    //             Message = "The email already exists."
+    //         });
+    //     }
+    //
+    //     // hash the password
+    //     credentials.PasswordHash = _passwordHasher.HashPassword(credentials.PasswordHash);
+    //
+    //     // return ok response
+    //     var response = await userService.CreateUserAsync(credentials);
+    //     return response.IsSuccess ? Ok(response) : BadRequest(response);
+    // }
     
 }

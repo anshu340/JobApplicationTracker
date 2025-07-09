@@ -2,43 +2,42 @@ using Dapper;
 using System.Data;
 using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Dto.AuthDto;
+using JobApplicationTracker.Data.Dto.Responses;
 using JobApplicationTracker.Data.Dtos.Responses;
 using JobApplicationTracker.Data.Interface;
 
 namespace JobApplicationTracker.Data.Repository;
 
-public class UsersRepository : IUserRepository
+public class UsersRepository(IDatabaseConnectionService connectionService) : IUserRepository
 {
-    private readonly IDatabaseConnectionService _connectionService;
-    public UsersRepository(IDatabaseConnectionService connectionService)
+    public async Task<IEnumerable<UsersDtoResponse>> GetAllUsersAsync()
     {
-        _connectionService = connectionService;
-    }
-    public async Task<IEnumerable<UsersDataModel>> GetAllUsersAsync()
-    {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
         var sql = """
                   SELECT UserId, 
                          Email, 
-                         PasswordHash
-                         UserTypeId
-                         IsAdmin
-                         CreatedAt
-                         UpdatedAt
-                         IsActive
+                         UserType,
+                         PhoneNumber,
+                         CreatedAt,
+                         UpdatedAt,
                   FROM Users
                   """; 
 
-        return await connection.QueryAsync<UsersDataModel>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<UsersDtoResponse>(sql).ConfigureAwait(false);
     }
 
-    public async Task<UsersDataModel> GetUsersByIdAsync(int usersId)
+    public async Task<UsersDtoResponse?> GetUsersByIdAsync(int usersId)
     {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
         // write the SQL query to fetch a Users by ID
         var sql = """
-                    SELECT * 
+                    SELECT UserId,
+                           Email,
+                           UserType,
+                           PhoneNumber,
+                           CreatedAt,
+                           UpdatedAt
                     FROM Users 
                     WHERE UserId = @UserId
                     """;
@@ -46,11 +45,11 @@ public class UsersRepository : IUserRepository
         var parameters = new DynamicParameters();
         parameters.Add("@UsersId", usersId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<UsersDataModel>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<UsersDtoResponse>(sql, parameters).ConfigureAwait(false);
     }
     public async Task<ResponseDto> SubmitUsersAsync(UsersDataModel userDto)
     {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
         string sql = 
             
@@ -82,12 +81,10 @@ public class UsersRepository : IUserRepository
             Message = affectedRows > 0 ? "User updated successfully." : "Failed to update user."
         };
     }
-
-
-
+    
     public async Task<int> CreateUserAsync(UsersDataModel userDto)
     {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
         var query = @"INSERT INTO Users (Email, PasswordHash, UserType, CreatedAt, UpdatedAt) 
                                    VALUES (@Email, @PasswordHash, @UserType, @CreatedAt, @UpdatedAt);
                     SELECT SCOPE_IDENTITY();";
@@ -105,7 +102,7 @@ public class UsersRepository : IUserRepository
     
     public async Task<ResponseDto> DeleteUsersAsync(int userId)
     {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
         // Write the SQL query to delete a user by ID
         var sql = "DELETE FROM Users WHERE UserId = @UserId";
@@ -130,45 +127,12 @@ public class UsersRepository : IUserRepository
             Message = "User deleted successfully."
         };
     }
-
-    public async Task<ResponseDto> CreateUserAsync(SignUpDto credentials)
-    {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-
-        var query = 
-            @" 
-                INSERT INTO Users (Email, PasswordHash, UserTypeId, IsAdmin, CreatedAt, UpdatedAt, IsActive)
-                VALUES(@Email, @PasswordHash, @UserTypeId, @IsAdmin, @CreatedAt, @UpdatedAt, @IsActive)
-            ";
-
-
-        var parameters = new DynamicParameters();
-        parameters.Add("Email", credentials.Email, DbType.String);
-        parameters.Add("PasswordHash", credentials.PasswordHash, DbType.String);
-
-        var affectedRows = await connection.ExecuteAsync(query, parameters).ConfigureAwait(false);
-
-        if (affectedRows <= 0)
-        {
-            return new ResponseDto
-            {
-                IsSuccess = false,
-                Message = "Failed to create user."
-            };
-        }
-
-        return new ResponseDto
-        {
-            IsSuccess = true,
-            Message = "User created successfully."
-        };
-    }
-
+    
     public async Task<bool> DoesEmailExists(string email)
     {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
-        var query = """SELECT 1 FROM Users WHERE LOWER(Email) = LOWER(@Email)""";
+        var query = @"SELECT 1 FROM Users WHERE LOWER(Email) = LOWER(@Email)";
 
         var parameters = new DynamicParameters();
         parameters.Add("@Email",email, DbType.String);
@@ -178,28 +142,51 @@ public class UsersRepository : IUserRepository
         return result.HasValue;
     }
 
-    public async Task<UsersDataModel?> GetUserByPhone(string phone)
+    public async Task<UsersDtoResponse?> GetUserByPhone(string phone)
     {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
-        var query = """SELECT * FROM Users WHERE PhoneNumber = @PhoneNumber""";
-
+        var query = @"SELECT UserId,
+                             Email,
+                             UserType,
+                             PhoneNumber,
+                             CreatedAt,
+                             UpdatedAt 
+                              FROM Users WHERE PhoneNumber = @PhoneNumber";
         var parameters = new DynamicParameters();
         parameters.Add("@PhoneNumber", phone, DbType.String);
 
-        return await connection.QueryFirstOrDefaultAsync<UsersDataModel>(query,parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<UsersDtoResponse>(query,parameters).ConfigureAwait(false);
     }
 
-    public async Task<UsersDataModel?> GetUserByEmail(string email)
+    public async Task<UsersDtoResponse?> GetUserByEmail(string email)
     {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
-        var query = """SELECT * FROM Users WHERE Email = @Email""";
+        var query = @"SELECT 
+                          UserId,
+                         Email,
+                         UserType,
+                         PhoneNumber,
+                         CreatedAt,
+                         UpdatedAt
+                       FROM Users WHERE Email = @Email";
 
         var parameters = new DynamicParameters();
         parameters.Add("@Email", email, DbType.String);
 
-        return await connection.QueryFirstOrDefaultAsync<UsersDataModel>(query,parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<UsersDtoResponse>(query,parameters).ConfigureAwait(false);
+    }
+    
+    public async Task<UsersDataModel?> GetUserForLoginAsync(string email)
+    {
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
+        var query = @"SELECT UserId, Email, PasswordHash, UserType FROM Users WHERE Email = @Email";
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@Email", email, DbType.String);
+        
+        return await connection.QueryFirstOrDefaultAsync<UsersDataModel>(query, parameters).ConfigureAwait(false);
     }
 }
    
