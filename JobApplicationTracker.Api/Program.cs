@@ -14,6 +14,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers(config =>
 {
     config.Filters.AddService<GlobalExceptionHandler>();
+}).AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
 // registering GlobalExceptionHandler as a service as it has ILogger as a dependency    

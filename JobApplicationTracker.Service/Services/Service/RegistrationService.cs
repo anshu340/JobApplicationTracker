@@ -60,15 +60,15 @@ public class RegistrationService(
             FirstName = request.FirstName,
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
-            ResumeUrl = request.ResumeUrl,
-            PortfolioUrl = request.PortfolioUrl,
-            LinkedinProfile = request.LinkedinUrl,
             Location = request.Location,
-            Headline = request.Headline,
-            Bio = request.Bio,
-            DateOfBirth = request.DateOfBirth,
-            PreferredJobTypes = request?.PreferredJobTypes?.ToString(),
-            PreferredExperienceLevels = request?.PreferredExperienceLevels?.ToString()
+            // ResumeUrl = request.ResumeUrl,
+            // PortfolioUrl = request.PortfolioUrl,
+            // LinkedinProfile = request.LinkedinUrl,
+            // Headline = request.Headline,
+            // Bio = request.Bio,
+            // DateOfBirth = request.DateOfBirth,
+            // PreferredJobTypes = request?.PreferredJobTypes?.ToString(),
+            // PreferredExperienceLevels = request?.PreferredExperienceLevels?.ToString()
         };
         
       
