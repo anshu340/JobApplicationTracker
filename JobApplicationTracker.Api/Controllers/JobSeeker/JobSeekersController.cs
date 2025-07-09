@@ -34,7 +34,7 @@ public class
 
     [HttpPost]
     [Route("/addjobseeker")]
-    public async Task<IActionResult> AddJobSeeker([FromForm] RegisterJobSeekerRequestDto request)
+    public async Task<IActionResult> AddJobSeeker([FromBody] RegisterJobSeekerRequestDto request)
     {
         if (!ModelState.IsValid)
         {

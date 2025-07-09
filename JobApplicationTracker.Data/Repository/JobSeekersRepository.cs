@@ -89,11 +89,6 @@ public class JobSeekerRepository : IJobSeekersRepository
             LastName = @LastName,
             Phone = @Phone,
             Location = @Location,
-            DateOfBirth = @DateOfBirth,
-            ProfilePicture = @ProfilePicture,
-            Resume = @Resume,
-            Bio = @Bio,
-            UpdatedAt = @UpdatedAt
         WHERE JobSeekerId = @JobSeekerId
         """;
         }
@@ -103,10 +98,10 @@ public class JobSeekerRepository : IJobSeekersRepository
         parameters.Add("@FirstName", jobSeekerDto.FirstName, DbType.String);
         parameters.Add("@LastName", jobSeekerDto.LastName, DbType.String);
         parameters.Add("@Location", jobSeekerDto.Location, DbType.String);
-        parameters.Add("@DateOfBirth", jobSeekerDto.DateOfBirth, DbType.DateTime);
-        parameters.Add("@ProfilePicture", jobSeekerDto.ProfilePicture, DbType.String);
-        parameters.Add("@ResumeUrl", jobSeekerDto.ResumeUrl, DbType.String);
-        parameters.Add("@Bio", jobSeekerDto.Bio, DbType.String);
+        // parameters.Add("@DateOfBirth", jobSeekerDto.DateOfBirth, DbType.DateTime);
+        // parameters.Add("@ProfilePicture", jobSeekerDto.ProfilePicture, DbType.String);
+        // parameters.Add("@ResumeUrl", jobSeekerDto.ResumeUrl, DbType.String);
+        // parameters.Add("@Bio", jobSeekerDto.Bio, DbType.String);
 
         var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
 
@@ -120,26 +115,24 @@ public class JobSeekerRepository : IJobSeekersRepository
     public async Task<ResponseDto> CreateJobSeekersAsync(JobSeekersDataModel reqeust)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-        string sql = @"INSERT INTO JobSeekers (UserId, FirstName, LastName, ProfilePicture, ResumeUrl, PortfolioUrl, LinkedinProfile,
-                        Location, Headline, Bio, DateOfBirth,PreferredJobTypes,PreferredExperienceLevels)
-                     VALUES (@UserId, @FirstName, @LastName, @ProfilePicture, @ResumeUrl, @PortfolioUrl, @LinkedinProfile,
-                            @Location, @Headline, @Bio, @DateOfBirth, @PreferredJobTypes, @PreferredExperienceLevels);
+        string sql = @"INSERT INTO JobSeekers (UserId, FirstName, LastName, Location)
+                     VALUES (@UserId, @FirstName, @LastName, @Location);
         SELECT CAST(SCOPE_IDENTITY() AS INT)";
         
         var parameters = new DynamicParameters();
         parameters.Add("@UserId", reqeust.UserId, DbType.Int32);
         parameters.Add("@FirstName", reqeust.FirstName, DbType.String);
         parameters.Add("@LastName", reqeust.LastName, DbType.String);
-        parameters.Add("@ProfilePicture", reqeust.ProfilePicture, DbType.String);
-        parameters.Add("@ResumeUrl", reqeust.ResumeUrl, DbType.String);
-        parameters.Add("@PortfolioUrl", reqeust.PortfolioUrl, DbType.String);
-        parameters.Add("@LinkedinProfile", reqeust.LinkedinProfile, DbType.String);
         parameters.Add("@Location", reqeust.Location, DbType.String);
-        parameters.Add("@Headline", reqeust.Headline, DbType.String);
-        parameters.Add("@Bio", reqeust.Bio, DbType.String);
-        parameters.Add("@DateOfBirth", reqeust.DateOfBirth, DbType.DateTime);
-        parameters.Add("@PreferredJobTypes", reqeust.PreferredJobTypes, DbType.String);
-        parameters.Add("@PreferredExperienceLevels", reqeust.PreferredExperienceLevels, DbType.String);
+        // parameters.Add("@ProfilePicture", reqeust.ProfilePicture, DbType.String);
+        // parameters.Add("@ResumeUrl", reqeust.ResumeUrl, DbType.String);
+        // parameters.Add("@PortfolioUrl", reqeust.PortfolioUrl, DbType.String);
+        // parameters.Add("@LinkedinProfile", reqeust.LinkedinProfile, DbType.String);
+        // parameters.Add("@Headline", reqeust.Headline, DbType.String);
+        // parameters.Add("@Bio", reqeust.Bio, DbType.String);
+        // parameters.Add("@DateOfBirth", reqeust.DateOfBirth, DbType.DateTime);
+        // parameters.Add("@PreferredJobTypes", reqeust.PreferredJobTypes, DbType.String);
+        // parameters.Add("@PreferredExperienceLevels", reqeust.PreferredExperienceLevels, DbType.String);
         
         int affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
         
