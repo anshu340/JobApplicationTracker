@@ -62,13 +62,20 @@ namespace JobApplicationTracker.Api.Controllers.Authentication
             }
 
             var jwtToken = _authenticationService.GenerateJwtToken(user);
-            _cookieService.AppendCookies(Response, jwtToken);
+            // _cookieService.AppendCookies(Response, jwtToken);
 
-            return Ok(new ResponseDto()
+            var response = new ResponseDto()
             {
                 IsSuccess = true,
                 StatusCode = StatusCodes.Status200OK,
                 Message = "Login Successful."
+            };
+
+            return Ok(new
+            {
+               response,
+               jwtToken, 
+               user.UserType
             });
         }
     }
