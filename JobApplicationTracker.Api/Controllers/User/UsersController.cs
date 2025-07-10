@@ -1,14 +1,17 @@
 using JobApplicationTracker.Data.DataModels;
-using JobApplicationTracker.Data.Dto.AuthDto;
-using JobApplicationTracker.Data.Dtos.Responses;
 using JobApplicationTracker.Data.Interface;
+using JobApplicationTracker.Service.DTO.Requests;
 using JobApplicationTracker.Service.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.User;
 
 [Route("api/users")]
-public class UsersController(IUserRepository userService, IPasswordHasherService _passwordHasher) : ControllerBase
+public class UsersController(
+    IUserRepository userService,
+    IPasswordHasherService passwordHasher,
+    IRegistrationService registrationService
+    ) : ControllerBase
 {
     [HttpGet]
     [Route("/getallusers")]
@@ -39,7 +42,7 @@ public class UsersController(IUserRepository userService, IPasswordHasherService
             return BadRequest();
         }
 
-        usersDto.PasswordHash = _passwordHasher.HashPassword(usersDto.PasswordHash);
+        usersDto.PasswordHash = passwordHasher.HashPassword(usersDto.PasswordHash);
 
         var response = await userService.SubmitUsersAsync(usersDto);
         return response.IsSuccess ? Ok(response) : BadRequest(response);
@@ -52,39 +55,23 @@ public class UsersController(IUserRepository userService, IPasswordHasherService
         var response = await userService.DeleteUsersAsync(id);
         return response.IsSuccess ? Ok(response) : BadRequest(response);
     }
-
-    // [HttpPost]
-    // [Route("/signup")]
-    // public async Task<IActionResult> CreateUser(SignUpDto? credentials)
-    // {
-    //     if (!ModelState.IsValid)
-    //     {
-    //         ModelState.AddModelError("Error","Error occured.Please enter all credentials.");
-    //         return BadRequest(ModelState);
-    //     }
-    //
-    //     if (credentials is null)
-    //     {
-    //         return BadRequest();
-    //     }
-    //
-    //     // check if the user already exists
-    //     if (await userService.DoesEmailExists(credentials.Email))
-    //     {
-    //         return BadRequest(new ResponseDto()
-    //         {   
-    //             IsSuccess = false,
-    //             StatusCode = StatusCodes.Status400BadRequest,
-    //             Message = "The email already exists."
-    //         });
-    //     }
-    //
-    //     // hash the password
-    //     credentials.PasswordHash = _passwordHasher.HashPassword(credentials.PasswordHash);
-    //
-    //     // return ok response
-    //     var response = await userService.CreateUserAsync(credentials);
-    //     return response.IsSuccess ? Ok(response) : BadRequest(response);
-    // }
+    
+    
+    /*
+     * Route for registering a new user (jobseeker) or a company with it's recuriter
+     */
+    [HttpPost]
+    [Route("/register-user")]
+    public async Task<IActionResult> Register([FromBody] RegisterDto request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+            
+        request.Password = passwordHasher.HashPassword(request.Password);
+        var response = await registrationService.RegisterUserAsync(request);  
+        return response.IsSuccess ? Ok(response) : BadRequest(response);
+    }
     
 }

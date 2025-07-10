@@ -12,9 +12,6 @@
 	  <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.4" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\JobApplicationTracker.Core\JobApplicationTracker.Core.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Dto\UserDtos\" />

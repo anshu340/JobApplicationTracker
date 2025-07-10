@@ -3,15 +3,15 @@
 public class CompaniesDataModel
 {
     public int CompanyId { get; set; }
-    public int? UserId { get; set; } // Foreign Key (nullable in DB)
-    public string Name { get; set; } = string.Empty;
+    public string CompanyName { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? WebsiteUrl { get; set; }
-    public string? LogoUrl { get; set; }
+    public string? CompanyLogo { get; set; }
     public string? Industry { get; set; }
     public string? Headquarters { get; set; }
     public string? Location { get; set; }
     public string? ContactEmail { get; set; }
     public DateTime? FoundedDate { get; set; }
     public string Status { get; set; } = string.Empty;
+
 }

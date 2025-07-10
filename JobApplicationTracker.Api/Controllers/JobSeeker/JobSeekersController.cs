@@ -33,35 +33,6 @@ public class
     }
 
     [HttpPost]
-    [Route("/addjobseeker")]
-    public async Task<IActionResult> AddJobSeeker([FromBody] RegisterJobSeekerRequestDto request)
-    {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        if (request == null)
-        {
-            return BadRequest("Request body cannot be empty.");
-        }
-        
-        var response = await registrationService.RegisterJobSeekerAsync(request);
-        if (response.IsSuccess)
-        {
-            return Created(
-                string.Empty,
-                new ApiResponse{
-                    StatusCode = response.StatusCode,
-                    Message = response.Message,
-                    IsSuccess = response.IsSuccess}
-                );
-        }
-
-        return BadRequest("The server is busy at the moment. Please try again later.");
-    }
-
-    [HttpPost]
     [Route("/submitjobSeeker")]
     public async Task<IActionResult> SubmitJobSeeker([FromBody] JobSeekersDataModel jobSeekersDto)
     {

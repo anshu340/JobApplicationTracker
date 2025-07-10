@@ -5,7 +5,5 @@ namespace JobApplicationTracker.Service.Services.Interfaces;
 
 public interface IRegistrationService
 {
-    Task<ResponseDto> RegisterJobSeekerAsync(RegisterJobSeekerRequestDto request);
-    Task<ResponseDto> RegisterCompanyAsync(RegisterCompanyRequestDto request);
-    // Task<ResponseDto> RegisterAdminAsync(RegisterAdminRequestDto request);
+    Task<ResponseDto> RegisterUserAsync(RegisterDto request);
 }

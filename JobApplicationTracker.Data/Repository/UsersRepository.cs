@@ -85,17 +85,23 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
     public async Task<int> CreateUserAsync(UsersDataModel userDto)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
-        var query = @"INSERT INTO Users (Email, PasswordHash, UserType, CreatedAt, UpdatedAt) 
-                                   VALUES (@Email, @PasswordHash, @UserType, @CreatedAt, @UpdatedAt);
+        var query = @"INSERT INTO Users (FirstName, LastName, Email, PasswordHash,CompanyId,
+                                    PhoneNumber, UserType, Location,  CreatedAt, UpdatedAt) 
+                                   VALUES (@FirstName, @LastName,  @Email, @PasswordHash, @CompanyId,
+                                           @PhoneNumber, @UserType, @Location, @CreatedAt, @UpdatedAt);
                     SELECT SCOPE_IDENTITY();";
         
         var parameters = new DynamicParameters();
+        parameters.Add("FirstName", userDto.FirstName, DbType.String);
+        parameters.Add("LastName", userDto.LastName, DbType.String);
         parameters.Add("Email", userDto.Email, DbType.String);
         parameters.Add("PasswordHash", userDto.PasswordHash, DbType.String);
-        parameters.Add("UserType", userDto.UserType, DbType.String);
+        parameters.Add("CompanyId", userDto.CompanyId, DbType.Int32);
+        parameters.Add("PhoneNumber", userDto.PhoneNumber, DbType.String);
+        parameters.Add("UserType", userDto.UserType, DbType.Int32);
+        parameters.Add("Location", userDto.Location, DbType.String);
         parameters.Add("CreatedAt", DateTime.UtcNow, DbType.DateTime);
         parameters.Add("UpdatedAt", DateTime.UtcNow, DbType.DateTime);
-        
         
         return await connection.ExecuteScalarAsync<int>(query, parameters).ConfigureAwait(false);
     }
@@ -144,26 +150,26 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
 
     public async Task<UsersDtoResponse?> GetUserByPhone(string phone)
     {
-        await using var connection = await connectionService.GetDatabaseConnectionAsync();
+            await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
-        var query = @"SELECT UserId,
+            var query = @"SELECT TOP 1 UserId,
                              Email,
                              UserType,
                              PhoneNumber,
                              CreatedAt,
                              UpdatedAt 
                               FROM Users WHERE PhoneNumber = @PhoneNumber";
-        var parameters = new DynamicParameters();
-        parameters.Add("@PhoneNumber", phone, DbType.String);
+            var parameters = new DynamicParameters();
+            parameters.Add("@PhoneNumber", phone, DbType.String);
 
-        return await connection.QueryFirstOrDefaultAsync<UsersDtoResponse>(query,parameters).ConfigureAwait(false);
+            return await connection.QueryFirstOrDefaultAsync<UsersDtoResponse>(query,parameters).ConfigureAwait(false);
     }
 
     public async Task<UsersDtoResponse?> GetUserByEmail(string email)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
-        var query = @"SELECT 
+        var query = @"SELECT TOP 1
                           UserId,
                          Email,
                          UserType,

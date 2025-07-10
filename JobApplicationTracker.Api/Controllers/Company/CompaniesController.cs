@@ -31,52 +31,6 @@ public class CompaniesController(ICompaniesRepository companyService, IRegistrat
         }
         return Ok(company);
     }
-
-    [HttpPost]
-    [Route("/addcompany")]
-    public async Task<IActionResult> AddJobSeeker([FromBody] RegisterCompanyRequestDto request)
-    {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        if (request == null)
-        {
-            return BadRequest("Request body cannot be empty.");
-        }
-        
-        var response = await registrationService.RegisterCompanyAsync(request);
-        if (response.IsSuccess)
-        {
-            return Created(
-                string.Empty,
-                new ApiResponse{
-                    StatusCode = response.StatusCode,
-                    Message = response.Message,
-                    IsSuccess = response.IsSuccess}
-            );
-        }
-
-        return BadRequest("The server is busy at the moment. Please try again later.");
-    }
-    
-    // [HttpPost]
-    // [Route("/submitcompany")]
-    // public async Task<IActionResult> SubmitCompany([FromBody] CompaniesDataModel companyDto)
-    // {
-    //     if (companyDto == null)
-    //     {
-    //         return BadRequest();
-    //     }
-    //
-    //     var response = await companyService.SubmitCompaniesAsync(companyDto);
-    //     if (response is ResponseDto responseDto) // Ensure the response is cast to the correct type
-    //     {
-    //         return responseDto.IsSuccess ? Ok(responseDto) : BadRequest(responseDto);
-    //     }
-    //     return BadRequest("Invalid response type.");
-    // }
     
     [HttpDelete]
     [Route("/deletecompany")]

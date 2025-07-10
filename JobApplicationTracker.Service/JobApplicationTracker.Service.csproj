@@ -19,4 +19,8 @@
     <ProjectReference Include="..\JobApplicationTracker.Data\JobApplicationTracker.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTO\Response\" />
+  </ItemGroup>
+
 </Project>
