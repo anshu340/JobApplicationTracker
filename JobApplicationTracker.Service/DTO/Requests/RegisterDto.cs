@@ -9,7 +9,7 @@ public class RegisterDto
     public string Email { get; set; } = null!;
     public string Password { get; set; } = null!;
     public string PhoneNumber { get; set; } = null!;
-    public string Location { get; set; } = null!;
+    public string? Location { get; set; } = null!;
     public int? CompanyId { get; set; }
     public CompaniesDataModel? CompanyDto { get; set; }
     public DateTime? CreateDateTime { get; set; }
