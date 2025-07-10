@@ -21,45 +21,51 @@ public class CompaniesRepository : ICompaniesRepository
         var sql = """
                   SELECT CompanyId,
                          CompanyName,
-                         CompanyLogo,
-                         IndustryId,
-                         CompanySizeId,
-                         Website,
-                         Location,
                          Description,
-                         CreatedAt,
-                         UpdatedAt
+                         WebsiteUrl,
+                         CompanyLogo,
+                         Industry,
+                         Headquarters,
+                         Location,
+                         ContactEmail,
+                         FoundedDate,
+                         Status,
+                         CreateDateTime
                   FROM Companies
                   """;
 
         return await connection.QueryAsync<CompaniesDataModel>(sql).ConfigureAwait(false);
     }
 
+
     public async Task<CompaniesDataModel> GetCompaniesByIdAsync(int companiesId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
         var sql = """
-              SELECT CompanyId,
-                     CompanyName,
-                     CompanyLogo,
-                     IndustryId,
-                     CompanySizeId,
-                     Website,
-                     Location,
-                     Description,
-                     CreatedAt,
-                     UpdatedAt
-              FROM Companies
-              WHERE CompanyId = @companiesId
-              """;
+                  SELECT CompanyId,
+                         CompanyName,
+                         Description,
+                         WebsiteUrl,
+                         CompanyLogo,
+                         Industry,
+                         Headquarters,
+                         Location,
+                         ContactEmail,
+                         FoundedDate,
+                         Status,
+                         CreateDateTime
+                  FROM Companies
+                  WHERE CompanyId = @companiesId
+                  """;
 
         var parameters = new DynamicParameters();
         parameters.Add("@companiesId", companiesId, DbType.Int32);
 
         return await connection.QueryFirstOrDefaultAsync<CompaniesDataModel>(sql, parameters).ConfigureAwait(false);
     }
-    public async Task<ResponseDto> SubmitCompaniesAsync(CompaniesDataModel companiesDto)
+
+       public async Task<ResponseDto> SubmitCompaniesAsync(CompaniesDataModel companiesDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -68,58 +74,51 @@ public class CompaniesRepository : ICompaniesRepository
 
         if (isInsert)
         {
-            // Insert new company
             sql = """
-        INSERT INTO Companies (
-            CompanyName, 
-            CompanyLogo,
-            IndustryId,
-            Website,
-            Location,
-            Description
-        )
-        VALUES (
-            @CompanyName,
-            @CompanyLogo,
-            @IndustryId,
-            @Website,
-            @Location,
-            @Description
-        );
-        SELECT CAST(SCOPE_IDENTITY() AS INT);
-        """;
+                  INSERT INTO Companies (
+                      CompanyName, Description, WebsiteUrl, CompanyLogo, Industry,
+                      Headquarters, Location, ContactEmail, FoundedDate, Status, CreateDateTime
+                  )
+                  VALUES (
+                      @CompanyName, @Description, @WebsiteUrl, @CompanyLogo, @Industry,
+                      @Headquarters, @Location, @ContactEmail, @FoundedDate, @Status, GETUTCDATE()
+                  );
+                  SELECT CAST(SCOPE_IDENTITY() AS INT);
+                  """;
         }
         else
         {
-            // Update existing company
             sql = """
-        UPDATE Companies
-        SET 
-            CompanyName = @CompanyName,
-            CompanyLogo = @CompanyLogo,
-            IndustryId = @IndustryId,
-            CompanySizeId = @CompanySizeId,
-            Website = @Website,
-            Location = @Location,
-            Description = @Description,
-            UpdatedAt = GETUTCDATE()
-        WHERE CompanyId = @CompanyId
-        """;
+                  UPDATE Companies
+                  SET 
+                      CompanyName = @CompanyName,
+                      Description = @Description,
+                      WebsiteUrl = @WebsiteUrl,
+                      CompanyLogo = @CompanyLogo,
+                      Industry = @Industry,
+                      Headquarters = @Headquarters,
+                      Location = @Location,
+                      ContactEmail = @ContactEmail,
+                      FoundedDate = @FoundedDate,
+                      Status = @Status
+                  WHERE CompanyId = @CompanyId
+                  """;
         }
 
         var parameters = new DynamicParameters();
-        //parameters.Add("@CompanyId", companiesDto.CompanyId, DbType.Int32);
-        parameters.Add("@CompanyName", companiesDto.Name, DbType.String);
-        parameters.Add("@CompanyLogo", companiesDto.LogoUrl, DbType.String);
-        parameters.Add("@Industry", companiesDto.Industry, DbType.Int32);
-        //parameters.Add("@CompanySizeId", companiesDto.CompanySizeId, DbType.Int32);
-        parameters.Add("@WebsiteUrl", companiesDto.WebsiteUrl, DbType.String);
-        parameters.Add("@HeadQuarters", companiesDto.Headquarters, DbType.String);
-        parameters.Add("@Location", companiesDto.Location, DbType.String);
-        parameters.Add("@Description", companiesDto.Description, DbType.String);
+        parameters.Add("@CompanyId", companiesDto.CompanyId);
+        parameters.Add("@CompanyName", companiesDto.CompanyName);
+        parameters.Add("@Description", companiesDto.Description);
+        parameters.Add("@WebsiteUrl", companiesDto.WebsiteUrl);
+        parameters.Add("@CompanyLogo", companiesDto.CompanyLogo);
+        parameters.Add("@Industry", companiesDto.Industry);
+        parameters.Add("@Headquarters", companiesDto.Headquarters);
+        parameters.Add("@Location", companiesDto.Location);
+        parameters.Add("@ContactEmail", companiesDto.ContactEmail);
+        parameters.Add("@FoundedDate", companiesDto.FoundedDate);
+        parameters.Add("@Status", companiesDto.Status);
 
-        var affectedRows = 0;
-
+        int affectedRows;
         if (isInsert)
         {
             var newId = await connection.QuerySingleAsync<int>(sql, parameters).ConfigureAwait(false);
@@ -135,23 +134,23 @@ public class CompaniesRepository : ICompaniesRepository
         {
             IsSuccess = affectedRows > 0,
             Message = affectedRows > 0
-                ? (isInsert ? "Companies created successfully." : "Companies updated successfully.")
-                : "Failed to submit company.",
-            
+                ? (isInsert ? "Company created successfully." : "Company updated successfully.")
+                : "Failed to submit company."
         };
     }
+
 
 
     public async Task<int> CreateCompanyAsync(CompaniesDataModel request)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-        var query = @"INSERT INTO Companies (Name, Description, Location) 
-                    VALUES (@Name, @Description, @Location);
+        var query = @"INSERT INTO Companies (CompanyName, Description, Location) 
+                    VALUES (@CompanyName, @Description, @Location);
                     SELECT SCOPE_IDENTITY();";
         
         var parameters = new DynamicParameters();
-        parameters.Add("@Name", request.Name, DbType.String);
+        parameters.Add("@CompanyName", request.CompanyName, DbType.String);
         parameters.Add("@Description", request.Description, DbType.String);
         parameters.Add("@Location", request.Location, DbType.String);
         

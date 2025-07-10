@@ -69,7 +69,7 @@ public class UsersController(
             return BadRequest(ModelState);
         }
             
-        request.PasswordHash = passwordHasher.HashPassword(request.PasswordHash);
+        request.Password = passwordHasher.HashPassword(request.Password);
         var response = await registrationService.RegisterUserAsync(request);  
         return response.IsSuccess ? Ok(response) : BadRequest(response);
     }

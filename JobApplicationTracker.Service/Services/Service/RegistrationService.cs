@@ -44,7 +44,7 @@ public class RegistrationService(
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 PhoneNumber = request.PhoneNumber,
-                PasswordHash = request.PasswordHash,
+                PasswordHash = request.Password,
                 CompanyId = createdCompanyId,
                 Email = request.Email,
                 UserType = (int) UserTypes.Recruiter
@@ -77,7 +77,7 @@ public class RegistrationService(
             FirstName =    request.FirstName,
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
-            PasswordHash = request.PasswordHash,
+            PasswordHash = request.Password,
             Location = request.Location,
             UserType = (int) UserTypes.JobSeeker,
             CreatedAt = request.CreateDateTime ?? DateTime.Now,
