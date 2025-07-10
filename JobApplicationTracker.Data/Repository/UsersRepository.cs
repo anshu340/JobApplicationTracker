@@ -20,7 +20,7 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                          UserType,
                          PhoneNumber,
                          CreatedAt,
-                         UpdatedAt,
+                         UpdatedAt
                   FROM Users
                   """; 
 

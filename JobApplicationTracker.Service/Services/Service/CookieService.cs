@@ -24,7 +24,7 @@ public class CookieService : ICookieService
     {
         return new CookieOptions()
         {
-            HttpOnly = true,
+            HttpOnly = false,
             SameSite = SameSiteMode.None,
             Secure = true,
             IsEssential = true,
