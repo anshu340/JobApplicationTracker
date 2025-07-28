@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.Jobs;
 
-[Route("api/jobs")]
+[Route("api/[controller]")]
+[ApiController]
 public class
     JobsController(IJobsRepository jobsService) : ControllerBase
 {

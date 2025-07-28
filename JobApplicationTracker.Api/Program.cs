@@ -1,13 +1,16 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-
+﻿using JobApplicationTracke.Data.Database;
 using JobApplicationTracker.Api.GlobalExceptionHandler;
-
+using JobApplicationTracker.Data.Interface;
+using JobApplicationTracker.Data.Repository;
 using JobApplicationTracker.Service;
 using JobApplicationTracker.Service.Configuration;
 using JobApplicationTracker.Service.Services.Interfaces;
 using JobApplicationTracker.Service.Services.Service;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,10 +23,42 @@ builder.Services.AddControllers(config =>
 });
 
 // registering GlobalExceptionHandler as a service as it has ILogger as a dependency    
-builder.Services.AddScoped<GlobalExceptionHandler>(); 
+builder.Services.AddScoped<GlobalExceptionHandler>();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("jwtSettings"));
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// ✅ Register your repository & DB connection service
+builder.Services.AddScoped<IJobsRepository, JobRepository>();
+builder.Services.AddScoped<IDatabaseConnectionService, DatabaseConnectionService>();
+
+
+builder.Services.AddSwaggerGen(opt =>
+{
+    opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter Token",
+        Name = "Token",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "bearer"
+    });
+    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 // adding the cors policy for all origins default.
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowAllOrigins",
@@ -36,7 +71,8 @@ builder.Services.AddCors(options =>
 // authentication service
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
     .AddJwtBearer(options =>
     {
@@ -50,7 +86,6 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = jwtSettings?.Issuer,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.Key ?? "")),
             ValidateIssuerSigningKey = true,
-
             ClockSkew = TimeSpan.Zero,
         };
 
@@ -66,8 +101,6 @@ builder.Services.AddAuthentication(options =>
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     });
 
-
-
 // Add service layer dependency
 builder.Services.AddScoped<IPasswordHasherService, PasswordHasherService>();
 builder.Services.AddScoped<ICookieService, CookieService>();
@@ -77,14 +110,8 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
 
-// add global exception handler service
-// builder.Services.AddExceptionHandler<AppExceptionHandler>();
-// enable the exception handler service early in the pipeline with default options
-// app.UseExceptionHandler(_ => { });
-
 var app = builder.Build();
 app.UseCors("AllowAllOrigins");
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -98,5 +125,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.Run();

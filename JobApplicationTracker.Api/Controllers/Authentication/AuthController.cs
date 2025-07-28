@@ -73,10 +73,13 @@ namespace JobApplicationTracker.Api.Controllers.Authentication
 
             return Ok(new
             {
-               response,
-               jwtToken, 
-               user.UserType
+                response,
+                jwtToken,
+                user.UserType,
+                firstName = user.FirstName,
+                lastName = user.LastName
             });
+
         }
     }
 }

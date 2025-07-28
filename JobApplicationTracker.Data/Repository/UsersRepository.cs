@@ -1,16 +1,17 @@
-using Dapper;
-using System.Data;
+﻿using Dapper;
+using JobApplicationTracker.Api.Enums;
 using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Dto.AuthDto;
 using JobApplicationTracker.Data.Dto.Responses;
 using JobApplicationTracker.Data.Dtos.Responses;
 using JobApplicationTracker.Data.Interface;
+using System.Data;
 
 namespace JobApplicationTracker.Data.Repository;
 
 public class UsersRepository(IDatabaseConnectionService connectionService) : IUserRepository
 {
-    public async Task<IEnumerable<UsersDtoResponse>> GetAllUsersAsync()
+    public async Task<IEnumerable<UsersDtoResponse>> GetAllUsersAsync(int companyId)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
@@ -21,56 +22,123 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                          PhoneNumber,
                          CreatedAt,
                          UpdatedAt
-                  FROM Users
-                  """; 
+                  FROM Users where (CompanyId =@companyId or @companyId = 0)
+                  """;
+        var parameters = new DynamicParameters();
+        parameters.Add("@companyId", companyId, DbType.Int32); // ✅ FIXED
+        return await connection.QueryAsync<UsersDtoResponse>(sql, parameters).ConfigureAwait(false);
+    }
 
-        return await connection.QueryAsync<UsersDtoResponse>(sql).ConfigureAwait(false);
+    public async Task<UserProfileDto?> GetUserProfileAsync(int userId)
+    {
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
+
+        // Step 1: Get basic user info
+        var userQuery = """
+            SELECT UserId, CompanyId, Email, UserType, CreatedAt, UpdatedAt
+            FROM Users
+            WHERE UserId = @UserId
+        """;
+
+        var user = await connection.QueryFirstOrDefaultAsync<UsersDataModel>(
+            userQuery, new { UserId = userId });
+
+        if (user is null) return null;
+
+        var profile = new UserProfileDto
+        {
+            UserId = user.UserId,
+            Email = user.Email,
+            UserType = user.UserType,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt
+        };
+        // Step 2: Fetch profile based on UserType
+        switch ((UserTypes)user.UserType)
+        {
+            case UserTypes.Company when user.CompanyId.HasValue:
+                var companyQuery = "SELECT * FROM Companies WHERE CompanyId = @CompanyId";
+                var company = await connection.QueryFirstOrDefaultAsync<CompanyProfileDto>(
+                    companyQuery, new { CompanyId = user.CompanyId.Value });
+                profile.CompanyProfile = company;
+                var jobSeekerQuery = "SELECT * FROM Users WHERE UserId = @UserId";
+                var jobSeeker = await connection.QueryFirstOrDefaultAsync<JobSeekersProfileDto>(
+                    jobSeekerQuery, new { UserId = user.UserId });
+                profile.JobSeekerProfile = jobSeeker;
+                break;
+
+            case UserTypes.JobSeeker:
+                jobSeekerQuery = "SELECT * FROM Users WHERE UserId = @UserId";
+                jobSeeker = await connection.QueryFirstOrDefaultAsync<JobSeekersProfileDto>(
+                   jobSeekerQuery, new { UserId = user.UserId });
+                profile.JobSeekerProfile = jobSeeker;
+                break;
+
+                //case UserTypes.Staff:
+                //    // If you plan to fetch recruiter/staff profile later
+                //    var staffQuery = "SELECT * FROM Staffs WHERE UserId = @UserId";
+                //    var staff = await connection.QueryFirstOrDefaultAsync<StaffProfileDto>(
+                //        staffQuery, new { UserId = user.UserId });
+                //    profile.StaffProfile = staff;
+                //    break;
+
+                //case UserTypes.Admin:
+                //    // Currently no specific profile to fetch for Admin, so break silently
+                //    break;
+
+                //default:
+                //    // Optional: log or handle unknown UserType
+                //    break;
+        }
+
+
+
+        return profile;
     }
 
     public async Task<UsersDtoResponse?> GetUsersByIdAsync(int usersId)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
-        // write the SQL query to fetch a Users by ID
+
         var sql = """
-                    SELECT UserId,
-                           Email,
-                           UserType,
-                           PhoneNumber,
-                           CreatedAt,
-                           UpdatedAt
-                    FROM Users 
-                    WHERE UserId = @UserId
-                    """;
+            SELECT UserId,
+                   Email,
+                   UserType,
+                   PhoneNumber,
+                   CreatedAt,
+                   UpdatedAt
+            FROM Users 
+            WHERE UserId = @UserId
+        """;
 
         var parameters = new DynamicParameters();
-        parameters.Add("@UsersId", usersId, DbType.Int32);
+        parameters.Add("@UserId", usersId, DbType.Int32); // ✅ FIXED
 
         return await connection.QueryFirstOrDefaultAsync<UsersDtoResponse>(sql, parameters).ConfigureAwait(false);
     }
+
     public async Task<ResponseDto> SubmitUsersAsync(UsersDataModel userDto)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
-        string sql = 
-            
-            userDto.UserId <= 0 ?   
-            
+        string sql =
+            userDto.UserId <= 0 ?
             @"INSERT INTO Users (Email, PasswordHash, UserType, CreatedAt, UpdatedAt) 
-                                     VALUES (@Email, @PasswordHash, @UserType, @CreatedAt, @UpdatedAt)"
-            :   @" UPDATE Users
-                      SET Email = @Email,
-                          PasswordHash = @PasswordHash,
-                          UserType = @UserType,
-                          UpdatedAt = @UpdatedAt,
-                      WHERE UserId = @UserId
-                      ";
+            VALUES (@Email, @PasswordHash, @UserType, @CreatedAt, @UpdatedAt)"
+            :
+            @"UPDATE Users
+            SET Email = @Email,
+                PasswordHash = @PasswordHash,
+                UserType = @UserType,
+                UpdatedAt = @UpdatedAt
+            WHERE UserId = @UserId"; // ✅ FIXED trailing comma
 
         var parameters = new DynamicParameters();
         parameters.Add("UserId", userDto.UserId, DbType.Int32);
         parameters.Add("Email", userDto.Email, DbType.String);
         parameters.Add("PasswordHash", userDto.PasswordHash, DbType.String);
-        parameters.Add("UserType", userDto.UserType, DbType.String);
-        parameters.Add("UpdatedAt", DateTime.UtcNow, DbType.DateTime); 
+        parameters.Add("UserType", userDto.UserType, DbType.Int32);
+        parameters.Add("UpdatedAt", DateTime.UtcNow, DbType.DateTime);
         parameters.Add("CreatedAt", DateTime.UtcNow, DbType.DateTime);
 
         var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
@@ -81,16 +149,26 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             Message = affectedRows > 0 ? "User updated successfully." : "Failed to update user."
         };
     }
-    
+
     public async Task<int> CreateUserAsync(UsersDataModel userDto)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
-        var query = @"INSERT INTO Users (FirstName, LastName, Email, PasswordHash,CompanyId,
-                                    PhoneNumber, UserType, Location,  CreatedAt, UpdatedAt) 
-                                   VALUES (@FirstName, @LastName,  @Email, @PasswordHash, @CompanyId,
-                                           @PhoneNumber, @UserType, @Location, @CreatedAt, @UpdatedAt);
-                    SELECT SCOPE_IDENTITY();";
-        
+        var query =
+             userDto.UserId <= 0 ?
+             @"
+            INSERT INTO Users (FirstName, LastName, Email, PasswordHash, CompanyId,
+                               PhoneNumber, UserType, Location, CreatedAt, UpdatedAt) 
+            VALUES (@FirstName, @LastName, @Email, @PasswordHash, @CompanyId,
+                    @PhoneNumber, @UserType, @Location, @CreatedAt, @UpdatedAt);
+            SELECT SCOPE_IDENTITY();"
+            :
+            @"UPDATE Users
+              SET Email = @Email,
+                 -- PasswordHash = @PasswordHash,
+                  UserType = @UserType,;
+                  UpdatedAt = @UpdatedAt
+              WHERE UserId = @UserId";
+
         var parameters = new DynamicParameters();
         parameters.Add("FirstName", userDto.FirstName, DbType.String);
         parameters.Add("LastName", userDto.LastName, DbType.String);
@@ -102,15 +180,14 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
         parameters.Add("Location", userDto.Location, DbType.String);
         parameters.Add("CreatedAt", DateTime.UtcNow, DbType.DateTime);
         parameters.Add("UpdatedAt", DateTime.UtcNow, DbType.DateTime);
-        
+
         return await connection.ExecuteScalarAsync<int>(query, parameters).ConfigureAwait(false);
     }
-    
+
     public async Task<ResponseDto> DeleteUsersAsync(int userId)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
-        // Write the SQL query to delete a user by ID
         var sql = "DELETE FROM Users WHERE UserId = @UserId";
 
         var parameters = new DynamicParameters();
@@ -118,82 +195,74 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
 
         var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
 
-        if (affectedRows <= 0)
-        {
-            return new ResponseDto
-            {
-                IsSuccess = false,
-                Message = "Failed to delete user."
-            };
-        }
-
         return new ResponseDto
         {
-            IsSuccess = true,
-            Message = "User deleted successfully."
+            IsSuccess = affectedRows > 0,
+            Message = affectedRows > 0 ? "User deleted successfully." : "Failed to delete user."
         };
     }
-    
+
     public async Task<bool> DoesEmailExists(string email)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
         var query = @"SELECT 1 FROM Users WHERE LOWER(Email) = LOWER(@Email)";
-
         var parameters = new DynamicParameters();
-        parameters.Add("@Email",email, DbType.String);
+        parameters.Add("@Email", email, DbType.String);
 
-        var result = await connection.ExecuteScalarAsync<int?>(query,parameters).ConfigureAwait(false);
-
+        var result = await connection.ExecuteScalarAsync<int?>(query, parameters).ConfigureAwait(false);
         return result.HasValue;
     }
 
     public async Task<UsersDtoResponse?> GetUserByPhone(string phone)
     {
-            await using var connection = await connectionService.GetDatabaseConnectionAsync();
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
-            var query = @"SELECT TOP 1 UserId,
-                             Email,
-                             UserType,
-                             PhoneNumber,
-                             CreatedAt,
-                             UpdatedAt 
-                              FROM Users WHERE PhoneNumber = @PhoneNumber";
-            var parameters = new DynamicParameters();
-            parameters.Add("@PhoneNumber", phone, DbType.String);
+        var query = """
+            SELECT TOP 1 UserId,
+                         Email,
+                         UserType,
+                         PhoneNumber,
+                         CreatedAt,
+                         UpdatedAt 
+            FROM Users WHERE PhoneNumber = @PhoneNumber
+        """;
 
-            return await connection.QueryFirstOrDefaultAsync<UsersDtoResponse>(query,parameters).ConfigureAwait(false);
+        var parameters = new DynamicParameters();
+        parameters.Add("@PhoneNumber", phone, DbType.String);
+
+        return await connection.QueryFirstOrDefaultAsync<UsersDtoResponse>(query, parameters).ConfigureAwait(false);
     }
 
     public async Task<UsersDtoResponse?> GetUserByEmail(string email)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
-        var query = @"SELECT TOP 1
-                          UserId,
-                         Email,
-                         UserType,
-                         PhoneNumber,
-                         CreatedAt,
-                         UpdatedAt
-                       FROM Users WHERE Email = @Email";
+        var query = """
+            SELECT TOP 1
+                   UserId,
+                   Email,
+                   UserType,
+                   PhoneNumber,
+                   CreatedAt,
+                   UpdatedAt
+            FROM Users WHERE Email = @Email
+        """;
 
         var parameters = new DynamicParameters();
         parameters.Add("@Email", email, DbType.String);
 
-        return await connection.QueryFirstOrDefaultAsync<UsersDtoResponse>(query,parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<UsersDtoResponse>(query, parameters).ConfigureAwait(false);
     }
-    
+
     public async Task<UsersDataModel?> GetUserForLoginAsync(string email)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
-        var query = @"SELECT UserId, Email, PasswordHash, UserType FROM Users WHERE Email = @Email";
 
+        var query = "SELECT UserId, Email, PasswordHash, UserType, FirstName, LastName FROM Users WHERE Email = @Email";
         var parameters = new DynamicParameters();
         parameters.Add("@Email", email, DbType.String);
-        
+
         return await connection.QueryFirstOrDefaultAsync<UsersDataModel>(query, parameters).ConfigureAwait(false);
     }
 }
-   
-
