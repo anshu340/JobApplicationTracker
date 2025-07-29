@@ -18,7 +18,7 @@ namespace JobApplicationTracker.Data.Dto.Requests
         public decimal SalaryRangeMin { get; set; }
         public decimal SalaryRangeMax { get; set; }
         public int ExperienceLevel { get; set; }
-        public bool Status { get; set; }
+        public string Status { get; set; } = string.Empty;
         public DateTime PostedAt { get; set; }
         public DateTime ApplicationDeadline { get; set; }
     }

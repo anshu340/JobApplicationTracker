@@ -1,4 +1,3 @@
-
 using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Dto.AuthDto;
 using JobApplicationTracker.Data.Dto.Responses;
@@ -11,11 +10,12 @@ public interface IUserRepository
     Task<IEnumerable<UsersDtoResponse>> GetAllUsersAsync(int companyId);
     Task<UsersDtoResponse?> GetUserByEmail(string email);
     Task<UsersDtoResponse?> GetUsersByIdAsync(int userId);
-    Task<int> CreateUserAsync(UsersDataModel userDto);
     Task<ResponseDto> SubmitUsersAsync(UsersDataModel userDto);
     Task<ResponseDto> DeleteUsersAsync(int userId);
     Task<bool> DoesEmailExists(string email);
     Task<UsersDtoResponse?> GetUserByPhone(string phone);
     Task<UsersDataModel?> GetUserForLoginAsync(string email);
     Task<UserProfileDto> GetUserProfileAsync(int userId);
+    Task<ResponseDto> UpdateUserProfilePictureAsync(int userId, string? imageUrl, string? bio);
+
 }

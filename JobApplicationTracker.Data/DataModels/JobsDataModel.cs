@@ -20,7 +20,7 @@ namespace JobApplicationTracker.Data.DataModels
         public string? Benefits { get; set; }
         public DateTime? PostedAt { get; set; }
         public DateTime? ApplicationDeadline { get; set; }
-        public bool Status { get; set; }
+        public string Status { get; set; } = string.Empty;
         public int Views { get; set; }
     }
 }

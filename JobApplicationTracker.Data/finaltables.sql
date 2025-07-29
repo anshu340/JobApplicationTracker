@@ -1,374 +1,341 @@
-    USE [master]
-GO
-
-IF DB_ID (N'JobApplicationTrackerDB') IS NOT NULL
-DROP DATABASE [JobApplicationTrackerDB];
-GO
-
-CREATE DATABASE [JobApplicationTrackerDB]
- CONTAINMENT = NONE
- ON  PRIMARY
-( NAME = N'JobApplicationTrackerDB', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\JobApplicationTrackerDB.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
- LOG ON
-( NAME = N'JobApplicationTrackerDB_log', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\JobApplicationTrackerDB_log.ldf' , SIZE = 8192KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
- WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
-GO
-
-ALTER DATABASE [JobApplicationTrackerDB] SET COMPATIBILITY_LEVEL = 160
-GO
-
-IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
-BEGIN
-EXEC [JobApplicationTrackerDB].[dbo].[sp_fulltext_database] @action = 'enable'
-END
-GO
-
-ALTER DATABASE [JobApplicationTrackerDB] SET ANSI_NULL_DEFAULT OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET ANSI_NULLS OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET ANSI_PADDING OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET ANSI_WARNINGS OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET ARITHABORT OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET AUTO_CLOSE ON
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET AUTO_SHRINK OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET AUTO_UPDATE_STATISTICS ON
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET CURSOR_CLOSE_ON_COMMIT OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET CURSOR_DEFAULT  GLOBAL
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET CONCAT_NULL_YIELDS_NULL OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET NUMERIC_ROUNDABORT OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET QUOTED_IDENTIFIER OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET RECURSIVE_TRIGGERS OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET  ENABLE_BROKER
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET AUTO_UPDATE_STATISTICS_ASYNC OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET DATE_CORRELATION_OPTIMIZATION OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET TRUSTWORTHY OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET ALLOW_SNAPSHOT_ISOLATION OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET PARAMETERIZATION SIMPLE
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET READ_COMMITTED_SNAPSHOT OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET HONOR_BROKER_PRIORITY OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET RECOVERY SIMPLE
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET  MULTI_USER
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET PAGE_VERIFY CHECKSUM
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET DB_CHAINING OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF )
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET TARGET_RECOVERY_TIME = 60 SECONDS
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET DELAYED_DURABILITY = DISABLED
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET ACCELERATED_DATABASE_RECOVERY = OFF
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET QUERY_STORE = ON
-GO
-ALTER DATABASE [JobApplicationTrackerDB] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP_POLICY = (STALE_QUERY_THRESHOLD_DAYS = 30), DATA_FLUSH_INTERVAL_SECONDS = 900, INTERVAL_LENGTH_MINUTES = 60, MAX_STORAGE_SIZE_MB = 1000, QUERY_CAPTURE_MODE = AUTO, SIZE_BASED_CLEANUP_MODE = AUTO, MAX_PLANS_PER_QUERY = 200, WAIT_STATS_CAPTURE_MODE = ON)
-GO
-
 USE [JobApplicationTrackerDB]
 GO
-
----
-
----
-
--- Table: [User]
-CREATE TABLE [dbo].[User](
-    [UserId] INT IDENTITY(1,1) NOT NULL,
-    [Email] NVARCHAR(255) NOT NULL,
-    [PasswordHash] NVARCHAR(255) NOT NULL,
-    [UserType] NVARCHAR(20) NOT NULL, -- e.g., 'jobseeker', 'company', 'admin'
-    [CreatedAt] DATETIME2(7) NOT NULL DEFAULT GETDATE(),
-    [UpdatedAt] DATETIME2(7) NOT NULL DEFAULT GETDATE(),
-PRIMARY KEY CLUSTERED
-(
-    [UserId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-CONSTRAINT [UQ_User_Email] UNIQUE NONCLUSTERED
-(
-    [Email] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
+/****** Object:  Table [dbo].[Admin]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
 GO
-
--- Table: [Admin]
+SET QUOTED_IDENTIFIER ON
+GO
 CREATE TABLE [dbo].[Admin](
-    [AdminId] INT IDENTITY(1,1) NOT NULL,
-    [UserId] INT NOT NULL,
-    [FullName] NVARCHAR(255) NOT NULL,
-    [Role] NVARCHAR(100) NULL,
-PRIMARY KEY CLUSTERED
+	[AdminId] [int] IDENTITY(1,1) NOT NULL,
+	[UserId] [int] NOT NULL,
+	[FullName] [nvarchar](255) NOT NULL,
+	[Role] [nvarchar](100) NULL,
+PRIMARY KEY CLUSTERED 
 (
-    [AdminId] ASC
+	[AdminId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-CONSTRAINT [UQ_Admin_UserId] UNIQUE NONCLUSTERED
+ CONSTRAINT [UQ_Admin_UserId] UNIQUE NONCLUSTERED 
 (
-    [UserId] ASC
+	[UserId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-
--- Table: [AdminLog]
+/****** Object:  Table [dbo].[AdminLog]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 CREATE TABLE [dbo].[AdminLog](
-    [LogId] INT IDENTITY(1,1) NOT NULL,
-    [AdminId] INT NOT NULL,
-    [ActionType] NVARCHAR(100) NOT NULL, -- e.g., 'created', 'edited', 'deleted', 'updated'
-    [EntityType] NVARCHAR(100) NULL,
-    [EntityId] INT NULL,
-    [Description] NVARCHAR(MAX) NULL,
-    [IpAddress] NVARCHAR(45) NULL,
-    [Timestamp] DATETIME2(7) NOT NULL DEFAULT GETDATE(),
-    [OldValue] NVARCHAR(MAX) NULL,
-    [NewValue] NVARCHAR(MAX) NULL,
-PRIMARY KEY CLUSTERED
+	[LogId] [int] IDENTITY(1,1) NOT NULL,
+	[AdminId] [int] NOT NULL,
+	[ActionType] [nvarchar](100) NOT NULL,
+	[EntityType] [nvarchar](100) NULL,
+	[EntityId] [int] NULL,
+	[Description] [nvarchar](max) NULL,
+	[IpAddress] [nvarchar](45) NULL,
+	[Timestamp] [datetime2](7) NOT NULL,
+	[OldValue] [nvarchar](max) NULL,
+	[NewValue] [nvarchar](max) NULL,
+PRIMARY KEY CLUSTERED 
 (
-    [LogId] ASC
+	[LogId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-
--- Table: [Company]
-CREATE TABLE [dbo].[Company](
-    [CompanyId] INT IDENTITY(1,1) NOT NULL,
-    [UserId] INT NULL, -- Can be null if company is not yet associated with a user account
-    [Name] NVARCHAR(255) NOT NULL,
-    [Description] NVARCHAR(MAX) NULL,
-    [WebsiteUrl] NVARCHAR(255) NULL,
-    [LogoUrl] NVARCHAR(255) NULL,
-    [Industry] NVARCHAR(100) NULL,
-    [Headquarters] NVARCHAR(255) NULL,
-    [Location] NVARCHAR(255) NULL, -- Added based on your DataModel
-    [ContactEmail] NVARCHAR(255) NULL,
-    [FoundedDate] DATE NULL,
-    [Status] NVARCHAR(30) NOT NULL DEFAULT 'pending_verification', -- e.g., 'pending_verification', 'inactive', 'active'
-PRIMARY KEY CLUSTERED
-(
-    [CompanyId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-CONSTRAINT [UQ_Company_Name] UNIQUE NONCLUSTERED
-(
-    [Name] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-CONSTRAINT [UQ_Company_UserId] UNIQUE NONCLUSTERED
-(
-    [UserId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+/****** Object:  Table [dbo].[Application]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
 GO
-
--- Table: [JobSeeker]
-CREATE TABLE [dbo].[JobSeeker](
-    [JobSeekerId] INT IDENTITY(1,1) NOT NULL,
-    [UserId] INT NOT NULL,
-    [FirstName] NVARCHAR(100) NOT NULL,
-    [LastName] NVARCHAR(100) NOT NULL,
-    [ProfilePicture] NVARCHAR(255) NULL,
-    [PhoneNumber] NVARCHAR(20) NULL,
-    [ResumeUrl] NVARCHAR(255) NULL,
-    [PortfolioUrl] NVARCHAR(255) NULL,
-    [LinkedinProfile] NVARCHAR(255) NULL,
-    [Location] NVARCHAR(255) NULL,
-    [Headline] NVARCHAR(255) NULL,
-    [Bio] NVARCHAR(MAX) NULL,
-    [DateOfBirth] DATE NULL,
-    [PreferredJobTypes] NVARCHAR(MAX) NULL, -- Stored as JSON or comma-separated string
-    [PreferredExperienceLevels] NVARCHAR(MAX) NULL, -- Stored as JSON or comma-separated string
-PRIMARY KEY CLUSTERED
-(
-    [JobSeekerId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-CONSTRAINT [UQ_JobSeeker_UserId] UNIQUE NONCLUSTERED
-(
-    [UserId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+SET QUOTED_IDENTIFIER ON
 GO
-
--- Table: [JobSeekerEducation]
-CREATE TABLE [dbo].[JobSeekerEducation](
-    [EducationId] INT IDENTITY(1,1) NOT NULL,
-    [JobSeekerId] INT NOT NULL,
-    [University] NVARCHAR(255) NOT NULL,
-    [College] NVARCHAR(255) NOT NULL,
-    [Degree] NVARCHAR(100) NOT NULL,
-    [FieldOfStudy] NVARCHAR(100) NULL,
-    [StartDate] DATE NOT NULL,
-    [Status] NVARCHAR(50) NOT NULL, -- Changed from BIT to NVARCHAR to allow 'ongoing', 'finished' as per your comment
-    [EndDate] DATE NULL,
-    [Gpa] DECIMAL(3,2) NULL, -- Assuming GPA can be like 3.50
-PRIMARY KEY CLUSTERED
-(
-    [EducationId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
-
--- Table: [JobSeekerExperience]
-CREATE TABLE [dbo].[JobSeekerExperience](
-    [ExperienceId] INT IDENTITY(1,1) NOT NULL,
-    [JobSeekerId] INT NOT NULL,
-    [CompanyName] NVARCHAR(255) NOT NULL,
-    [Position] NVARCHAR(255) NOT NULL,
-    [StartDate] DATE NOT NULL,
-    [EndDate] DATE NULL,
-    [Description] NVARCHAR(MAX) NULL,
-PRIMARY KEY CLUSTERED
-(
-    [ExperienceId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-GO
-
--- Table: [Skill]
-CREATE TABLE [dbo].[Skill](
-    [SkillId] INT IDENTITY(1,1) NOT NULL,
-    [SkillName] NVARCHAR(100) NOT NULL,
-    [Category] NVARCHAR(100) NOT NULL,
-PRIMARY KEY CLUSTERED
-(
-    [SkillId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-CONSTRAINT [UQ_Skill_SkillName] UNIQUE NONCLUSTERED
-(
-    [SkillName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
-
--- Table: [JobSeekerSkill]
-CREATE TABLE [dbo].[JobSeekerSkill](
-    [JobSeekerSkillId] INT IDENTITY(1,1) NOT NULL,
-    [JobSeekerId] INT NOT NULL,
-    [SkillId] INT NOT NULL,
-    [ProficiencyLevel] INT NOT NULL, -- 1 to 5 scale
-PRIMARY KEY CLUSTERED
-(
-    [JobSeekerSkillId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-CONSTRAINT [UQ_JobSeekerSkill_JobSeekerId_SkillId] UNIQUE NONCLUSTERED
-(
-    [JobSeekerId] ASC,
-    [SkillId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
-
--- Table: [JobType]
-CREATE TABLE [dbo].[JobType](
-    [JobTypeId] INT IDENTITY(1,1) NOT NULL,
-    [Name] NVARCHAR(50) NOT NULL,
-    [Description] NVARCHAR(MAX) NOT NULL, -- Added based on your DataModel
-PRIMARY KEY CLUSTERED
-(
-    [JobTypeId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-CONSTRAINT [UQ_JobType_Name] UNIQUE NONCLUSTERED
-(
-    [Name] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-GO
-
--- Table: [Job]
-CREATE TABLE [dbo].[Job](
-    [JobId] INT IDENTITY(1,1) NOT NULL,
-    [CompanyId] INT NOT NULL,
-    [PostedByUserId] INT NULL,
-    [Title] NVARCHAR(255) NOT NULL,
-    [Description] NVARCHAR(MAX) NOT NULL,
-    [Location] NVARCHAR(255) NULL,
-    [SalaryRangeMin] DECIMAL(10, 2) NULL,
-    [SalaryRangeMax] DECIMAL(10, 2) NULL,
-    [JobTypeId] INT NOT NULL,
-    [ExperienceLevel] NVARCHAR(50) NOT NULL, -- Changed from FK to direct string as per your JobsDataModel
-    [Responsibilities] NVARCHAR(MAX) NULL,
-    [Requirements] NVARCHAR(MAX) NULL,
-    [Benefits] NVARCHAR(MAX) NULL,
-    [PostedAt] DATETIME2(7) NOT NULL DEFAULT GETDATE(),
-    [ApplicationDeadline] DATETIME2(7) NULL,
-    [Status] NVARCHAR(20) NOT NULL DEFAULT 'draft', -- e.g., 'open', 'closed', 'draft', 'archived'
-    [Views] INT NOT NULL DEFAULT 0,
-PRIMARY KEY CLUSTERED
-(
-    [JobId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-GO
-
--- Table: [ApplicationStatus]
-CREATE TABLE [dbo].[ApplicationStatus](
-    [ApplicationStatusId] INT IDENTITY(1,1) NOT NULL,
-    [StatusName] NVARCHAR(50) NOT NULL,
-    [Description] NVARCHAR(MAX) NULL,
-PRIMARY KEY CLUSTERED
-(
-    [ApplicationStatusId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-CONSTRAINT [UQ_ApplicationStatus_Name] UNIQUE NONCLUSTERED
-(
-    [StatusName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-GO
-
--- Table: [Application]
 CREATE TABLE [dbo].[Application](
-    [ApplicationId] INT IDENTITY(1,1) NOT NULL,
-    [JobSeekerId] INT NOT NULL,
-    [JobId] INT NOT NULL,
-    [ApplicationStatusId] INT NOT NULL,
-    [AppliedAt] DATETIME2(7) NOT NULL DEFAULT GETDATE(),
-    [CoverLetterText] NVARCHAR(MAX) NULL,
-    [CoverLetterUrl] NVARCHAR(255) NULL,
-    [Feedback] NVARCHAR(MAX) NULL,
-    [LastUpdatedAt] DATETIME2(7) NOT NULL DEFAULT GETDATE(),
-PRIMARY KEY CLUSTERED
+	[ApplicationId] [int] IDENTITY(1,1) NOT NULL,
+	[JobSeekerId] [int] NOT NULL,
+	[JobId] [int] NOT NULL,
+	[ApplicationStatusId] [int] NOT NULL,
+	[AppliedAt] [datetime2](7) NOT NULL,
+	[CoverLetterText] [nvarchar](max) NULL,
+	[CoverLetterUrl] [nvarchar](255) NULL,
+	[Feedback] [nvarchar](max) NULL,
+	[LastUpdatedAt] [datetime2](7) NOT NULL,
+PRIMARY KEY CLUSTERED 
 (
-    [ApplicationId] ASC
+	[ApplicationId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-CONSTRAINT [UQ_Application_JobSeekerId_JobId] UNIQUE NONCLUSTERED
+ CONSTRAINT [UQ_Application_JobSeekerId_JobId] UNIQUE NONCLUSTERED 
 (
-    [JobSeekerId] ASC,
-    [JobId] ASC
+	[JobSeekerId] ASC,
+	[JobId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-
--- Table: [NotificationType]
-CREATE TABLE [dbo].[NotificationType](
-    [NotificationTypeId] INT IDENTITY(1,1) NOT NULL,
-    [TypeName] NVARCHAR(50) NOT NULL,
-    [Description] NVARCHAR(MAX) NULL,
-    [Priority] INT NOT NULL DEFAULT 1, -- Added based on your DataModel
-PRIMARY KEY CLUSTERED
+/****** Object:  Table [dbo].[ApplicationStatus]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ApplicationStatus](
+	[ApplicationStatusId] [int] IDENTITY(1,1) NOT NULL,
+	[StatusName] [nvarchar](50) NOT NULL,
+	[Description] [nvarchar](max) NULL,
+PRIMARY KEY CLUSTERED 
 (
-    [NotificationTypeId] ASC
+	[ApplicationStatusId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
-CONSTRAINT [UQ_NotificationType_TypeName] UNIQUE NONCLUSTERED
+ CONSTRAINT [UQ_ApplicationStatus_Name] UNIQUE NONCLUSTERED 
 (
-    [TypeName] ASC
+	[StatusName] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-)
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Companies]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Companies](
+	[CompanyId] [int] IDENTITY(1,1) NOT NULL,
+	[CompanyName] [nvarchar](100) NOT NULL,
+	[Description] [nvarchar](max) NULL,
+	[WebsiteUrl] [nvarchar](255) NULL,
+	[CompanyLogo] [nvarchar](255) NULL,
+	[Industry] [nvarchar](100) NULL,
+	[Headquarters] [nvarchar](100) NULL,
+	[Location] [nvarchar](100) NULL,
+	[ContactEmail] [nvarchar](100) NULL,
+	[FoundedDate] [datetime] NULL,
+	[Status] [nvarchar](50) NULL,
+	[CreateDateTime] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[CompanyId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Job]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Job](
+	[JobId] [int] IDENTITY(1,1) NOT NULL,
+	[CompanyId] [int] NOT NULL,
+	[PostedByUserId] [int] NULL,
+	[Title] [nvarchar](255) NOT NULL,
+	[Description] [nvarchar](max) NOT NULL,
+	[Location] [nvarchar](255) NULL,
+	[SalaryRangeMin] [decimal](10, 2) NULL,
+	[SalaryRangeMax] [decimal](10, 2) NULL,
+	[JobTypeId] [int] NOT NULL,
+	[ExperienceLevel] [nvarchar](50) NOT NULL,
+	[Responsibilities] [nvarchar](max) NULL,
+	[Requirements] [nvarchar](max) NULL,
+	[Benefits] [nvarchar](max) NULL,
+	[PostedAt] [datetime2](7) NOT NULL,
+	[ApplicationDeadline] [datetime2](7) NULL,
+	[Status] [nvarchar](20) NOT NULL,
+	[Views] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[JobId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[JobSeekerEducation]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[JobSeekerEducation](
+	[EducationId] [int] IDENTITY(1,1) NOT NULL,
+	[JobSeekerId] [int] NOT NULL,
+	[University] [nvarchar](255) NOT NULL,
+	[College] [nvarchar](255) NOT NULL,
+	[Degree] [nvarchar](100) NOT NULL,
+	[FieldOfStudy] [nvarchar](100) NULL,
+	[StartDate] [date] NOT NULL,
+	[Status] [nvarchar](50) NOT NULL,
+	[EndDate] [date] NULL,
+	[Gpa] [decimal](3, 2) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[EducationId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[JobSeekerExperience]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[JobSeekerExperience](
+	[ExperienceId] [int] IDENTITY(1,1) NOT NULL,
+	[JobSeekerId] [int] NOT NULL,
+	[CompanyName] [nvarchar](255) NOT NULL,
+	[Position] [nvarchar](255) NOT NULL,
+	[StartDate] [date] NOT NULL,
+	[EndDate] [date] NULL,
+	[Description] [nvarchar](max) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ExperienceId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[JobSeekerSkill]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[JobSeekerSkill](
+	[JobSeekerSkillId] [int] IDENTITY(1,1) NOT NULL,
+	[JobSeekerId] [int] NOT NULL,
+	[SkillId] [int] NOT NULL,
+	[ProficiencyLevel] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[JobSeekerSkillId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_JobSeekerSkill_JobSeekerId_SkillId] UNIQUE NONCLUSTERED 
+(
+	[JobSeekerId] ASC,
+	[SkillId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[JobType]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[JobType](
+	[JobTypeId] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](50) NOT NULL,
+	[Description] [nvarchar](max) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[JobTypeId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_JobType_Name] UNIQUE NONCLUSTERED 
+(
+	[Name] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Notifications]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Notifications](
+	[notificationId] [uniqueidentifier] NOT NULL,
+	[userId] [int] NOT NULL,
+	[notificationTypeId] [int] NOT NULL,
+	[title] [nvarchar](255) NOT NULL,
+	[message] [nvarchar](max) NOT NULL,
+	[isRead] [bit] NULL,
+	[createdAt] [datetime2](7) NULL,
+	[linkUrl] [nvarchar](255) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[notificationId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[NotificationTypes]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[NotificationTypes](
+	[NotificationTypeId] [int] IDENTITY(1,1) NOT NULL,
+	[TypeName] [nvarchar](50) NOT NULL,
+	[Description] [nvarchar](max) NULL,
+	[Priority] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[NotificationTypeId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_NotificationType_TypeName] UNIQUE NONCLUSTERED 
+(
+	[TypeName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Skill]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Skill](
+	[SkillId] [int] IDENTITY(1,1) NOT NULL,
+	[SkillName] [nvarchar](100) NOT NULL,
+	[Category] [nvarchar](100) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[SkillId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_Skill_SkillName] UNIQUE NONCLUSTERED 
+(
+	[SkillName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Users]    Script Date: 7/29/2025 12:36:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Users](
+	[UserId] [int] IDENTITY(1,1) NOT NULL,
+	[Email] [nvarchar](255) NOT NULL,
+	[PasswordHash] [nvarchar](255) NOT NULL,
+	[UserType] [int] NOT NULL,
+	[CreatedAt] [datetime2](7) NULL,
+	[UpdatedAt] [datetime2](7) NULL,
+	[PhoneNumber] [nvarchar](20) NULL,
+	[FirstName] [nvarchar](100) NULL,
+	[LastName] [nvarchar](100) NULL,
+	[ProfilePicture] [nvarchar](255) NULL,
+	[ResumeUrl] [nvarchar](255) NULL,
+	[PortfolioUrl] [nvarchar](255) NULL,
+	[LinkedinProfile] [nvarchar](255) NULL,
+	[Location] [nvarchar](100) NULL,
+	[Headline] [nvarchar](255) NULL,
+	[Bio] [nvarchar](max) NULL,
+	[DateOfBirth] [date] NULL,
+	[CompanyId] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[UserId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[Email] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[AdminLog] ADD  DEFAULT (getdate()) FOR [Timestamp]
+GO
+ALTER TABLE [dbo].[Application] ADD  DEFAULT (getdate()) FOR [AppliedAt]
+GO
+ALTER TABLE [dbo].[Application] ADD  DEFAULT (getdate()) FOR [LastUpdatedAt]
+GO
+ALTER TABLE [dbo].[Companies] ADD  DEFAULT (getdate()) FOR [CreateDateTime]
+GO
+ALTER TABLE [dbo].[Job] ADD  DEFAULT (getdate()) FOR [PostedAt]
+GO
+ALTER TABLE [dbo].[Job] ADD  DEFAULT ('draft') FOR [Status]
+GO
+ALTER TABLE [dbo].[Job] ADD  DEFAULT ((0)) FOR [Views]
+GO
+ALTER TABLE [dbo].[Notifications] ADD  DEFAULT (newid()) FOR [notificationId]
+GO
+ALTER TABLE [dbo].[Notifications] ADD  DEFAULT ((0)) FOR [isRead]
+GO
+ALTER TABLE [dbo].[Notifications] ADD  DEFAULT (getdate()) FOR [createdAt]
+GO
+ALTER TABLE [dbo].[NotificationTypes] ADD  DEFAULT ((1)) FOR [Priority]
+GO
+ALTER TABLE [dbo].[Notifications]  WITH CHECK ADD FOREIGN KEY([notificationTypeId])
+REFERENCES [dbo].[NotificationTypes] ([NotificationTypeId])
+GO

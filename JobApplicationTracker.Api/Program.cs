@@ -1,15 +1,15 @@
-﻿using JobApplicationTracke.Data.Database;
-using JobApplicationTracker.Api.GlobalExceptionHandler;
-using JobApplicationTracker.Data.Interface;
-using JobApplicationTracker.Data.Repository;
+﻿using JobApplicationTracker.Api.GlobalExceptionHandler;
 using JobApplicationTracker.Service;
 using JobApplicationTracker.Service.Configuration;
 using JobApplicationTracker.Service.Services.Interfaces;
 using JobApplicationTracker.Service.Services.Service;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,16 +22,38 @@ builder.Services.AddControllers(config =>
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
+
 // registering GlobalExceptionHandler as a service as it has ILogger as a dependency    
 builder.Services.AddScoped<GlobalExceptionHandler>();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("jwtSettings"));
+
+var jwtSettings = builder.Configuration.GetSection("jwtSettings").Get<JwtSettings>();
+
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(jwt =>
+{
+    var key = Encoding.ASCII.GetBytes(jwtSettings.Key);
+    jwt.SaveToken = true;
+    jwt.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        RoleClaimType = ClaimTypes.Role
+    };
+});
+
 builder.Services.AddEndpointsApiExplorer();
-
-// ✅ Register your repository & DB connection service
-builder.Services.AddScoped<IJobsRepository, JobRepository>();
-builder.Services.AddScoped<IDatabaseConnectionService, DatabaseConnectionService>();
-
-
+//builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerGen(opt =>
 {
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -55,10 +77,9 @@ builder.Services.AddSwaggerGen(opt =>
                 }
             },
             Array.Empty<string>()
-        }
-    });
+     }
 });
-
+});
 // adding the cors policy for all origins default.
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowAllOrigins",
@@ -69,37 +90,39 @@ builder.Services.AddCors(options =>
 );
 
 // authentication service
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-    .AddJwtBearer(options =>
-    {
-        var jwtSettings = builder.Configuration.GetSection("jwtSettings").Get<JwtSettings>();
+//builder.Services.AddAuthentication(options =>
+//{
+//    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+//})
+//    .AddJwtBearer(options =>
+//    {
+//        var jwtSettings = builder.Configuration.GetSection("jwtSettings").Get<JwtSettings>();
 
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateActor = true,
-            ValidateIssuer = true,
-            ValidAudience = jwtSettings?.Audience,
-            ValidIssuer = jwtSettings?.Issuer,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.Key ?? "")),
-            ValidateIssuerSigningKey = true,
-            ClockSkew = TimeSpan.Zero,
-        };
+//        options.TokenValidationParameters = new TokenValidationParameters
+//        {
+//            ValidateActor = true,
+//            ValidateIssuer = true,
+//            ValidAudience = jwtSettings?.Audience,
+//            ValidIssuer = jwtSettings?.Issuer,
+//            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.Key ?? "")),
+//            ValidateIssuerSigningKey = true,
 
-    })
-    .AddCookie(options =>
-    {
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-        options.AccessDeniedPath = "/";
-        options.LogoutPath = "/";
-        options.Cookie.HttpOnly = false;
-        options.Cookie.SameSite = SameSiteMode.None;
-        options.Cookie.IsEssential = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    });
+//            ClockSkew = TimeSpan.Zero,
+//        };
+
+//    })
+//    .AddCookie(options =>
+//    {
+//        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+//        options.AccessDeniedPath = "/";
+//        options.LogoutPath = "/";
+//        options.Cookie.HttpOnly = false;
+//        options.Cookie.SameSite = SameSiteMode.None;
+//        options.Cookie.IsEssential = true;
+//        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+//    });
+
+
 
 // Add service layer dependency
 builder.Services.AddScoped<IPasswordHasherService, PasswordHasherService>();
@@ -110,8 +133,15 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
 
+// add global exception handler service
+// builder.Services.AddExceptionHandler<AppExceptionHandler>();
+// enable the exception handler service early in the pipeline with default options
+// app.UseExceptionHandler(_ => { });
+
 var app = builder.Build();
 app.UseCors("AllowAllOrigins");
+app.UseStaticFiles(); // make sure this is added
+
 
 if (app.Environment.IsDevelopment())
 {

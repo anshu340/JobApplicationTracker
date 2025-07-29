@@ -10,7 +10,7 @@ public class
     JobsController(IJobsRepository jobsService) : ControllerBase
 {
     [HttpGet]
-    [Route("/getalljobs")]
+    [Route("getalljobs")]
     public async Task<IActionResult> GetAllJobs()
     {
         var jobs = await jobsService.GetAllJobsAsync();
@@ -18,7 +18,7 @@ public class
     }
 
     [HttpGet]
-    [Route("/getjobsbyid")]
+    [Route("getjobsbyid")]
     public async Task<IActionResult> GetJobsById(int id)
     {
         var jobs = await jobsService.GetJobsByIdAsync(id);
@@ -30,7 +30,7 @@ public class
     }
 
     [HttpPost]
-    [Route("/submitjobs")]
+    [Route("submitjobs")]
     public async Task<IActionResult> SubmitJobs([FromBody] JobsDataModel jobsDto)
     {
         if (jobsDto == null)
@@ -43,7 +43,7 @@ public class
     }
 
     [HttpDelete]
-    [Route("/deletejobs")]
+    [Route("deletejobs")]
     public async Task<IActionResult> DeleteJobs(int id)
     {
         var response = await jobsService.DeleteJobAsync(id);
