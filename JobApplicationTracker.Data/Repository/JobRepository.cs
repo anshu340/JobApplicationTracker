@@ -179,7 +179,7 @@ public class JobRepository : IJobsRepository
         }
         else
         {
-            // ✅ Fixed validation logic
+
             if (jobsDto.JobId <= 0)
                 return new ResponseDto { IsSuccess = false, Message = "Invalid JobId for update." };
 

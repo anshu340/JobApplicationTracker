@@ -31,7 +31,7 @@ public class
 
     [HttpPost]
     [Route("submitjobs")]
-    public async Task<IActionResult> SubmitJobs([FromBody] JobsDataModel jobsDto)
+    public async Task<IActionResult> SubmitJobs([FromBody] JobsDataModel jobsDto)//submite
     {
         if (jobsDto == null)
         {

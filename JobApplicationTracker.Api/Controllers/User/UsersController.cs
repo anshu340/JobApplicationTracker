@@ -1,29 +1,43 @@
-using JobApplicationTracker.Data.DataModels;
+﻿using JobApplicationTracker.Data.DataModels;
+using System.IO;
 using JobApplicationTracker.Data.Dto.Responses;
+using JobApplicationTracker.Data.Dtos.Responses;
 using JobApplicationTracker.Data.Interface;
 using JobApplicationTracker.Service.DTO.Requests;
 using JobApplicationTracker.Service.Services.Interfaces;
+
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Authorization;
+
+
 
 namespace JobApplicationTracker.Api.Controllers.User;
 
 [ApiController]
+//[Authorize]
 [Route("/")]
 public class UsersController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasherService _passwordHasher;
     private readonly IRegistrationService _registrationService;
+    private readonly IDatabaseConnectionService _dbConnectionService;
+    private readonly IWebHostEnvironment _env;
 
     // Proper constructor for dependency injection
     public UsersController(
-        IUserRepository userRepository,
-        IPasswordHasherService passwordHasher,
-        IRegistrationService registrationService)
+      IUserRepository userRepository,
+      IPasswordHasherService passwordHasher,
+      IRegistrationService registrationService,
+      IDatabaseConnectionService dbConnectionService,
+      IWebHostEnvironment env)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _registrationService = registrationService;
+        _dbConnectionService = dbConnectionService;
+        _env = env;
     }
 
     [HttpGet("getallusers")]
@@ -44,7 +58,8 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("submitusers")]
-    public async Task<IActionResult> SubmitUsers([FromBody] UsersDataModel usersDto)
+    [AllowAnonymous]
+    public async Task<IActionResult> SubmitUsersAsync(UsersDataModel usersDto)
     {
         if (usersDto == null)
             return BadRequest();
@@ -84,4 +99,43 @@ public class UsersController : ControllerBase
 
         return Ok(profile);
     }
+
+
+    [HttpPost("uploadProfilePicture/{userId:int}")]
+    public async Task<IActionResult> UploadProfilePicture([FromRoute] int userId, [FromForm] UploadProfileDto uploadProfileDto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        string? imageUrl = null;
+
+        if (uploadProfileDto.ProfileImage != null && uploadProfileDto.ProfileImage.Length > 0)
+        {
+            var permittedTypes = new[] { "image/jpeg", "image/png", "image/gif" };
+            if (!permittedTypes.Contains(uploadProfileDto.ProfileImage.ContentType))
+                return BadRequest("Invalid image file type.");
+
+            var ext = Path.GetExtension(uploadProfileDto.ProfileImage.FileName);
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var saveFolder = Path.Combine(_env.WebRootPath, "images", "profiles");
+            Directory.CreateDirectory(saveFolder);
+            var savePath = Path.Combine(saveFolder, fileName);
+
+            using (var stream = new FileStream(savePath, FileMode.Create))
+            {
+                await uploadProfileDto.ProfileImage.CopyToAsync(stream);
+            }
+
+            imageUrl = $"/images/profiles/{fileName}";
+        }
+
+        // ✅ Use repository method to update DB
+        var result = await _userRepository.UpdateUserProfilePictureAsync(userId, imageUrl, uploadProfileDto.Bio);
+        return result.IsSuccess ? Ok(result) : NotFound(result);
+    }
+
+
+
+
+
 }
