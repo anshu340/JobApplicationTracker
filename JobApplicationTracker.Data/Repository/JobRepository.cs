@@ -78,119 +78,76 @@ public class JobRepository : IJobsRepository
     public async Task<ResponseDto> SubmitJobAsync(JobsDataModel jobsDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-
-        string sql;
-
-        if (jobsDto.JobId <= 0)
-        {
-            // Insert new job - ✅ Fixed column mapping
-            sql = """
-                INSERT INTO Job (
-                    CompanyId,
-                    PostedByUserId,
-                    Title,
-                    Description,
-                    Location,
-                    SalaryRangeMin,
-                    SalaryRangeMax,
-                    JobTypeId,
-                    ExperienceLevel,
-                    Responsibilities,
-                    Requirements,
-                    Benefits,
-                    PostedAt,
-                    ApplicationDeadline,
-                    Status,
-                    Views
-                )
-                VALUES (
-                    @CompanyId,
-                    @PostedByUserId,
-                    @Title,
-                    @Description,
-                    @Location,
-                    @SalaryRangeMin,
-                    @SalaryRangeMax,
-                    @JobTypeId,
-                    @ExperienceLevel,
-                    @Responsibilities,
-                    @Requirements,
-                    @Benefits,
-                    @PostedAt,
-                    @ApplicationDeadline,
-                    @Status,
-                    @Views
-                );
-                SELECT CAST(SCOPE_IDENTITY() AS INT);
-                """;
-        }
-        else
-        {
-            // Update existing job - ✅ Fixed column mapping
-            sql = """
-                UPDATE Job
-                SET
-                    CompanyId = @CompanyId,
-                    PostedByUserId = @PostedByUserId,
-                    Title = @Title,
-                    Description = @Description,
-                    Location = @Location,
-                    SalaryRangeMin = @SalaryRangeMin,
-                    SalaryRangeMax = @SalaryRangeMax,
-                    JobTypeId = @JobTypeId,
-                    ExperienceLevel = @ExperienceLevel,
-                    Responsibilities = @Responsibilities,
-                    Requirements = @Requirements,
-                    Benefits = @Benefits,
-                    PostedAt = @PostedAt,
-                    ApplicationDeadline = @ApplicationDeadline,
-                    Status = @Status,
-                    Views = @Views
-                WHERE JobId = @JobId
-                """;
-        }
+        var isNewJob = jobsDto.JobId <= 0;
 
         var parameters = new DynamicParameters();
-        parameters.Add("@JobId", jobsDto.JobId, DbType.Int32);
-        parameters.Add("@CompanyId", jobsDto.CompanyId, DbType.Int32); // ✅ Fixed parameter name
-        parameters.Add("@PostedByUserId", jobsDto.PostedByUserId, DbType.Int32); // ✅ Fixed parameter
-        parameters.Add("@Title", jobsDto.Title, DbType.String);
-        parameters.Add("@Description", jobsDto.Description, DbType.String);
-        parameters.Add("@Location", jobsDto.Location, DbType.String);
-        parameters.Add("@SalaryRangeMin", jobsDto.SalaryRangeMin, DbType.Decimal);
-        parameters.Add("@SalaryRangeMax", jobsDto.SalaryRangeMax, DbType.Decimal);
-        parameters.Add("@JobTypeId", jobsDto.JobTypeId, DbType.Int32);
-        parameters.Add("@ExperienceLevel", jobsDto.ExperienceLevel, DbType.Int32);
-        parameters.Add("@Responsibilities", jobsDto.Responsibilities, DbType.String); // ✅ Added missing
-        parameters.Add("@Requirements", jobsDto.Requirements, DbType.String);
-        parameters.Add("@Benefits", jobsDto.Benefits, DbType.String); // ✅ Added missing
-        parameters.Add("@PostedAt", jobsDto.PostedAt, DbType.DateTime);
-        parameters.Add("@ApplicationDeadline", jobsDto.ApplicationDeadline, DbType.DateTime);
-        parameters.Add("@Status", jobsDto.Status, DbType.String); // ✅ Fixed: String not Boolean
-        parameters.Add("@Views", jobsDto.Views, DbType.Int32); // ✅ Added missing
+        parameters.Add("CompanyId", jobsDto.CompanyId, DbType.Int32);
+        parameters.Add("PostedByUserId", jobsDto.PostedByUserId, DbType.Int32);
+        parameters.Add("Title", jobsDto.Title, DbType.String);
+        parameters.Add("Description", jobsDto.Description, DbType.String);
+        parameters.Add("Location", jobsDto.Location, DbType.String);
+        parameters.Add("SalaryRangeMin", jobsDto.SalaryRangeMin, DbType.Decimal);
+        parameters.Add("SalaryRangeMax", jobsDto.SalaryRangeMax, DbType.Decimal);
+        parameters.Add("JobTypeId", jobsDto.JobTypeId, DbType.Int32);
+        parameters.Add("ExperienceLevel", jobsDto.ExperienceLevel, DbType.Int32);
+        parameters.Add("Responsibilities", jobsDto.Responsibilities, DbType.String);
+        parameters.Add("Requirements", jobsDto.Requirements, DbType.String);
+        parameters.Add("Benefits", jobsDto.Benefits, DbType.String);
+        parameters.Add("PostedAt", jobsDto.PostedAt, DbType.DateTime);
+        parameters.Add("ApplicationDeadline", jobsDto.ApplicationDeadline, DbType.DateTime);
+        parameters.Add("Status", jobsDto.Status, DbType.String);
+        parameters.Add("Views", jobsDto.Views, DbType.Int32);
+        parameters.Add("JobId", jobsDto.JobId, DbType.Int32);
 
-        int affectedRows;
-
-        if (jobsDto.JobId <= 0)
+        if (isNewJob)
         {
-            var newId = await connection.ExecuteScalarAsync<int>(sql, parameters).ConfigureAwait(false);
-            affectedRows = newId > 0 ? 1 : 0;
-            jobsDto.JobId = newId;
+            var insertQuery = @"
+            INSERT INTO Job (
+                CompanyId, PostedByUserId, Title, Description, Location,
+                SalaryRangeMin, SalaryRangeMax, JobTypeId, ExperienceLevel,
+                Responsibilities, Requirements, Benefits, PostedAt,
+                ApplicationDeadline, Status, Views
+            )
+            VALUES (
+                @CompanyId, @PostedByUserId, @Title, @Description, @Location,
+                @SalaryRangeMin, @SalaryRangeMax, @JobTypeId, @ExperienceLevel,
+                @Responsibilities, @Requirements, @Benefits, @PostedAt,
+                @ApplicationDeadline, @Status, @Views
+            );
+            SELECT CAST(SCOPE_IDENTITY() AS INT);";
+
+            var newJobId = await connection.ExecuteScalarAsync<int>(insertQuery, parameters);
+            return new ResponseDto
+            {
+                IsSuccess = newJobId > 0,
+                Message = newJobId > 0 ? "Job inserted successfully." : "Failed to insert job.",
+                StatusCode = newJobId > 0 ? 200 : 400,
+                Id = newJobId
+            };
         }
         else
         {
+            var updateQuery = @"
+            UPDATE Job
+            SET CompanyId = @CompanyId, PostedByUserId = @PostedByUserId,
+                Title = @Title, Description = @Description, Location = @Location,
+                SalaryRangeMin = @SalaryRangeMin, SalaryRangeMax = @SalaryRangeMax,
+                JobTypeId = @JobTypeId, ExperienceLevel = @ExperienceLevel,
+                Responsibilities = @Responsibilities, Requirements = @Requirements,
+                Benefits = @Benefits, PostedAt = @PostedAt,
+                ApplicationDeadline = @ApplicationDeadline, Status = @Status,
+                Views = @Views
+            WHERE JobId = @JobId";
 
-            if (jobsDto.JobId <= 0)
-                return new ResponseDto { IsSuccess = false, Message = "Invalid JobId for update." };
-
-            affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
+            var rowsAffected = await connection.ExecuteAsync(updateQuery, parameters);
+            return new ResponseDto
+            {
+                IsSuccess = rowsAffected > 0,
+                Message = rowsAffected > 0 ? "Job updated successfully." : "Failed to update job.",
+                StatusCode = rowsAffected > 0 ? 200 : 400,
+                Id = rowsAffected > 0 ? jobsDto.JobId : 0
+            };
         }
-
-        return new ResponseDto
-        {
-            IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Job submitted successfully." : "Failed to submit job."
-        };
     }
 
     public async Task<ResponseDto> DeleteJobAsync(int jobId)
