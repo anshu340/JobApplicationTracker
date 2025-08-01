@@ -43,7 +43,7 @@ public class JobRepository : IJobsRepository
         return await connection.QueryAsync<JobsDataModel>(sql).ConfigureAwait(false);
     }
 
-    public async Task<JobsDataModel?> GetJobsByIdAsync(int jobId) // ✅ Fixed return type
+    public async Task<JobsDataModel?> GetJobsByIdAsync(int jobId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -73,6 +73,40 @@ public class JobRepository : IJobsRepository
         parameters.Add("@JobId", jobId, DbType.Int32);
 
         return await connection.QueryFirstOrDefaultAsync<JobsDataModel>(sql, parameters).ConfigureAwait(false);
+    }
+
+    // ✅ NEW METHOD: Get Jobs By Company ID
+    public async Task<IEnumerable<JobsDataModel>> GetJobsByCompanyIdAsync(int companyId)
+    {
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        var sql = """
+            SELECT JobId,
+                   CompanyId,
+                   PostedByUserId,
+                   Title,
+                   Description,
+                   Location,
+                   SalaryRangeMin,
+                   SalaryRangeMax,
+                   JobTypeId,
+                   ExperienceLevel,
+                   Responsibilities,
+                   Requirements,
+                   Benefits,
+                   PostedAt,
+                   ApplicationDeadline,
+                   Status,
+                   Views
+            FROM Job
+            WHERE CompanyId = @CompanyId
+            ORDER BY PostedAt DESC
+            """;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@CompanyId", companyId, DbType.Int32);
+
+        return await connection.QueryAsync<JobsDataModel>(sql, parameters).ConfigureAwait(false);
     }
 
     public async Task<ResponseDto> SubmitJobAsync(JobsDataModel jobsDto)
