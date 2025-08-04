@@ -1,20 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Dapper" Version="2.1.66" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
-	  <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.4" />
-  </ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="DataModels\JobSeekerSkillDataModel.cs" />
+	  <Compile Remove="DataModels\JobSeekerSkills.cs" />
+	  <Compile Remove="DataModels\JobSeekersSkillsDataModel.cs" />
+	  <Compile Remove="DataModels\SkillsDataModels.cs" />
+	  <Compile Remove="Dto\Responses\JobSeekersSkillDto.cs" />
+	  <Compile Remove="Dto\Responses\JobSeekersSkillsDto.cs" />
+	  <Compile Remove="Dto\Responses\JobSekeerSkills.cs" />
+	  <Compile Remove="Dto\Responses\SkillDto.cs" />
+	  <Compile Remove="Interface\IJobSeekersSkillsRepository.cs" />
+	  <Compile Remove="Repository\JobSeekerSkillsRepository.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Dapper" Version="2.1.66" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="2.3.0" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Features" Version="9.0.7" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.4" />
+	</ItemGroup>
 
 
-  <ItemGroup>
-    <Folder Include="Dto\UserDtos\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="Dto\UserDtos\" />
+	</ItemGroup>
 
 </Project>

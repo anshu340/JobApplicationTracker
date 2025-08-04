@@ -1,6 +1,6 @@
-﻿namespace JobApplicationTracker.Data.DataModels;
+﻿namespace JobApplicationTracker.Data.DTOs;
 
-public class SkillsDataModel
+public class SkillsDTO
 {
     public int SkillId { get; set; }
     public string SkillName { get; set; } = null!;

@@ -40,7 +40,7 @@ public class RegistrationService(
             }
         }
 
-        
+
 
         if (request.CompanyDto != null)
         {
@@ -61,8 +61,8 @@ public class RegistrationService(
 
             };
 
-            int createdUserId = await userRepository.CreateUserAsync(companyUser);
-            if (createdUserId < 1)
+            var createdUser = await userRepository.SubmitUsersAsync(companyUser);
+            if (createdUser.Id < 1)
             {
                 return new ResponseDto
                 {
@@ -96,8 +96,8 @@ public class RegistrationService(
                 UpdatedAt = DateTime.Now
             };
 
-            int userId = await userRepository.CreateUserAsync(newUser);
-            if (userId < 1)
+            var user = await userRepository.SubmitUsersAsync(newUser);
+            if (user.Id < 1)
             {
                 return new ResponseDto
                 {

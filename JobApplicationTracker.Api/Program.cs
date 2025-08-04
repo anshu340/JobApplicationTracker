@@ -1,4 +1,5 @@
 ﻿using JobApplicationTracker.Api.GlobalExceptionHandler;
+using JobApplicationTracker.Data.Interface;
 using JobApplicationTracker.Service;
 using JobApplicationTracker.Service.Configuration;
 using JobApplicationTracker.Service.Services.Interfaces;
@@ -11,6 +12,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
+using JobApplicationTracker.Data.Repository;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -129,9 +132,14 @@ builder.Services.AddScoped<IPasswordHasherService, PasswordHasherService>();
 builder.Services.AddScoped<ICookieService, CookieService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
+builder.Services.AddScoped<IJobSeekersEducationRepository, JobSeekerEducationRepository>();
+
+builder.Services.AddScoped<IJobSeekerSkillRepository, JobSeekerSkillsRepository>();
+builder.Services.AddScoped<ISkillsRepository, SkillsRepository>();
 
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
+
 
 // add global exception handler service
 // builder.Services.AddExceptionHandler<AppExceptionHandler>();
