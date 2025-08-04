@@ -4,45 +4,49 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.Skills;
 
+[ApiController]
 [Route("api/skills")]
-public class SkillsController(ISkillsRepository skillService) : ControllerBase
+public class SkillsController : ControllerBase
 {
-    [HttpGet]
-    [Route("/getallskills")]
+    private readonly ISkillsRepository skillService;
+
+    public SkillsController(ISkillsRepository skillService)
+    {
+        this.skillService = skillService;
+    }
+
+    [HttpGet("getallskills")]
     public async Task<IActionResult> GetAllSkills()
     {
         var skills = await skillService.GetAllSkillsAsync();
         return Ok(skills);
     }
 
-    [HttpGet]
-    [Route("/getskillbyid")]
-    public async Task<IActionResult> GetSkillsById(int id)
+    [HttpGet("getskillbyid")]
+    public async Task<IActionResult> GetSkillsById([FromQuery] int id)
     {
         var skills = await skillService.GetSkillsByIdAsync(id);
-        if (skills == null)
-        {
-            return NotFound();
-        }
-        return Ok(skills);
+        return skills == null ? NotFound() : Ok(skills);
     }
 
-    [HttpPost]
-    [Route("/submitskills")]
+   
+    [HttpPost("submitskills")]
     public async Task<IActionResult> SubmitSkills([FromBody] SkillsDataModel skillsDto)
     {
-        if (skillsDto == null)
+        if (skillsDto == null ||
+            string.IsNullOrWhiteSpace(skillsDto.SkillName) ||
+            string.IsNullOrWhiteSpace(skillsDto.Category))
         {
-            return BadRequest();
+            return BadRequest("Invalid input data.");
         }
 
         var response = await skillService.SubmitSkillsAsync(skillsDto);
         return response.IsSuccess ? Ok(response) : BadRequest(response);
     }
 
-    [HttpDelete]
-    [Route("/deleteskills")]
-    public async Task<IActionResult> DeleteSkills(int id)
+
+    [HttpDelete("deleteskills")]
+    public async Task<IActionResult> DeleteSkills([FromQuery] int id)
     {
         var response = await skillService.DeleteSkillsAsync(id);
         return response.IsSuccess ? Ok(response) : BadRequest(response);

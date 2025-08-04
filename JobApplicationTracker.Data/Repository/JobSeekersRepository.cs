@@ -1,4 +1,4 @@
-using Dapper;
+﻿using Dapper;
 using JobApplicationTracker.Data.Interface;
 using System.Data;
 using JobApplicationTracker.Data.DataModels;
@@ -70,7 +70,7 @@ public class JobSeekerRepository : IJobSeekersRepository
 
         string sql;
 
-        if (jobSeekerDto.JobSeekerId <= 0)
+        if (jobSeekerDto.UserId <= 0)
         {
             // Insert new job seeker (assumes JobSeekerId is auto-incremented)
             sql = """
@@ -94,7 +94,7 @@ public class JobSeekerRepository : IJobSeekersRepository
         }
 
         var parameters = new DynamicParameters();
-        parameters.Add("@JobSeekerId", jobSeekerDto.JobSeekerId, DbType.Int32);
+        parameters.Add("@UserId", jobSeekerDto.UserId, DbType.Int32);
         parameters.Add("@FirstName", jobSeekerDto.FirstName, DbType.String);
         parameters.Add("@LastName", jobSeekerDto.LastName, DbType.String);
         parameters.Add("@Location", jobSeekerDto.Location, DbType.String);
@@ -118,7 +118,7 @@ public class JobSeekerRepository : IJobSeekersRepository
         string sql = @"INSERT INTO JobSeekers (UserId, FirstName, LastName, Location)
                      VALUES (@UserId, @FirstName, @LastName, @Location);
         SELECT CAST(SCOPE_IDENTITY() AS INT)";
-        
+
         var parameters = new DynamicParameters();
         parameters.Add("@UserId", reqeust.UserId, DbType.Int32);
         parameters.Add("@FirstName", reqeust.FirstName, DbType.String);
@@ -133,15 +133,15 @@ public class JobSeekerRepository : IJobSeekersRepository
         // parameters.Add("@DateOfBirth", reqeust.DateOfBirth, DbType.DateTime);
         // parameters.Add("@PreferredJobTypes", reqeust.PreferredJobTypes, DbType.String);
         // parameters.Add("@PreferredExperienceLevels", reqeust.PreferredExperienceLevels, DbType.String);
-        
+
         int affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
-        
+
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
             Message = affectedRows > 0 ? "Job Seeker Created successfully." : "Failed to create user of type jobseeker."
         };
-        
+
     }
     public async Task<ResponseDto> DeleteJobSeekersAsync(int jobSeekerId)
     {

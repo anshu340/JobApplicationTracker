@@ -1,7 +1,7 @@
 ﻿namespace  JobApplicationTracker.Data.DataModels;
 public class JobSeekersDataModel
 {
-    public int JobSeekerId { get; set; } 
+    public int EducationId { get; set; }
     public int UserId { get; set; }
     public string FirstName { get; set; } = null!;
     public string LastName { get; set; } = null!;
