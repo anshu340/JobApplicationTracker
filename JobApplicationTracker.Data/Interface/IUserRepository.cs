@@ -18,4 +18,7 @@ public interface IUserRepository
     Task<UserProfileDto> GetUserProfileAsync(int userId);
     Task<ResponseDto> UpdateUserProfilePictureAsync(int userId, string? imageUrl, string? bio);
 
+
+
+
 }
