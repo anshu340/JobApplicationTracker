@@ -1,14 +1,14 @@
 ﻿using JobApplicationTracker.Data.DataModels;
-using System.IO;
+using JobApplicationTracker.Data.Dto;
 using JobApplicationTracker.Data.Dto.Responses;
 using JobApplicationTracker.Data.Dtos.Responses;
 using JobApplicationTracker.Data.Interface;
 using JobApplicationTracker.Service.DTO.Requests;
 using JobApplicationTracker.Service.Services.Interfaces;
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using Microsoft.AspNetCore.Authorization;
+using System.IO;
 
 
 
@@ -56,28 +56,19 @@ public class UsersController : ControllerBase
 
         return Ok(user);
     }
-
-    [HttpPost("submitusers")]
+    [HttpPost("submituser")]
     [AllowAnonymous]
     public async Task<IActionResult> SubmitUsersAsync(UsersDataModel usersDto)
     {
         if (usersDto == null)
-            return BadRequest();
-
-        usersDto.PasswordHash = _passwordHasher.HashPassword(usersDto.PasswordHash);
+            return BadRequest("User data is required");
 
         var response = await _userRepository.SubmitUsersAsync(usersDto);
         return response.IsSuccess ? Ok(response) : BadRequest(response);
     }
 
-    [HttpDelete("deleteuser")]
-    public async Task<IActionResult> DeleteUser([FromQuery] int id)
-    {
-        var response = await _userRepository.DeleteUsersAsync(id);
-        return response.IsSuccess ? Ok(response) : BadRequest(response);
-    }
 
-    [HttpPost("register-user")]
+    [HttpPost("registeruser")]
     public async Task<IActionResult> Register([FromBody] RegisterDto request)
     {
         if (!ModelState.IsValid)
@@ -89,20 +80,35 @@ public class UsersController : ControllerBase
         return response.IsSuccess ? Ok(response) : BadRequest(response);
     }
 
+    [HttpDelete("deleteuser")]
+    public async Task<IActionResult> DeleteUser([FromQuery] int id)
+    {
+        var response = await _userRepository.DeleteUsersAsync(id);
+        return response.IsSuccess ? Ok(response) : BadRequest(response);
+    }
+
+
     [HttpGet("profile/{userId}")]
-    public async Task<ActionResult<UserProfileDto>> GetUserProfile(int userId)
+    public async Task<ActionResult<UsersProfileDto>> GetUserProfile(int userId)
     {
         var profile = await _userRepository.GetUserProfileAsync(userId);
 
         if (profile == null)
             return NotFound("User not found");
 
+        // Fix: Safely construct full image URL if profile picture exists
+        if (!string.IsNullOrEmpty(profile.ProfilePicture))
+        {
+            profile.ProfilePicture = $"{Request.Scheme}://{Request.Host}/images/profiles/{Path.GetFileName(profile.ProfilePicture)}";
+        }
+
         return Ok(profile);
     }
 
 
+
     [HttpPost("uploadProfilePicture/{userId:int}")]
-    public async Task<IActionResult> UploadProfilePicture([FromRoute] int userId, [FromForm] UploadProfileDto uploadProfileDto)
+    public async Task<IActionResult> UploadUserProfilePictureAysnc([FromRoute] int userId, [FromForm] UploadProfileDto uploadProfileDto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -130,9 +136,38 @@ public class UsersController : ControllerBase
         }
 
         // ✅ Use repository method to update DB
-        var result = await _userRepository.UpdateUserProfilePictureAsync(userId, imageUrl, uploadProfileDto.Bio);
+        var result = await _userRepository.UploadUserProfilePictureAsync(userId, imageUrl, uploadProfileDto.Bio);
         return result.IsSuccess ? Ok(result) : NotFound(result);
     }
+
+    [HttpGet("getuserUploadedprofileByid/{id}")]
+    public async Task<IActionResult> GetUploadedProfileById(int id)
+    {
+        var user = await _userRepository.GetUploadedProfileByIdAsync(id);
+
+        if (user == null || string.IsNullOrEmpty(user.ProfilePicture))
+        {
+            return NotFound(new
+            {
+                IsSuccess = false,
+                Message = "Profile image not found"
+            });
+        }
+
+        var fileName = Path.GetFileName(user.ProfilePicture);
+        var imageUrl = $"{Request.Scheme}://{Request.Host}/images/profiles/{fileName}";
+
+        return Ok(new
+        {
+            IsSuccess = true,
+            ProfileImageUrl = imageUrl,
+            Bio = user.Bio
+        });
+    }
+
+
+
+
 
 
 

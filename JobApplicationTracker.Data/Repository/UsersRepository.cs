@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using Azure.Core;
+using Dapper;
 using JobApplicationTracker.Api.Enums;
 using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Dto.AuthDto;
@@ -29,72 +30,69 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
         return await connection.QueryAsync<UsersDtoResponse>(sql, parameters).ConfigureAwait(false);
     }
 
-    public async Task<UserProfileDto?> GetUserProfileAsync(int userId)
+    public async Task<UsersProfileDto?> GetUserProfileAsync(int userId)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
-        // Step 1: Get basic user info
         var userQuery = """
-            SELECT UserId, CompanyId, Email, UserType, CreatedAt, UpdatedAt
-            FROM Users
-            WHERE UserId = @UserId
-        """;
+        SELECT * FROM Users
+        WHERE UserId = @UserId
+    """;
 
         var user = await connection.QueryFirstOrDefaultAsync<UsersDataModel>(
             userQuery, new { UserId = userId });
 
         if (user is null) return null;
 
-        var profile = new UserProfileDto
+        var profile = new UsersProfileDto
         {
             UserId = user.UserId,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
             Email = user.Email,
-            UserType = user.UserType,
-            CreatedAt = user.CreatedAt,
-            UpdatedAt = user.UpdatedAt
+            PhoneNumber = user.PhoneNumber,
+            ProfilePicture = user.ProfilePicture,
+            ResumeUrl = user.ResumeUrl,
+            PortfolioUrl = user.PortfolioUrl,
+            LinkedinProfile = user.LinkedinProfile,
+            Location = user.Location,
+            Headline = user.Headline,
+            Bio = user.Bio,
+            DateOfBirth = user.DateOfBirth,
+            CompanyProfile = null // default
         };
-        // Step 2: Fetch profile based on UserType
-        switch ((UserTypes)user.UserType)
+
+        // ✅ Add company profile if CompanyId > 0
+        if (user.CompanyId.HasValue && user.CompanyId.Value > 0)
         {
-            case UserTypes.Company when user.CompanyId.HasValue:
-                var companyQuery = "SELECT * FROM Companies WHERE CompanyId = @CompanyId";
-                var company = await connection.QueryFirstOrDefaultAsync<CompanyProfileDto>(
-                    companyQuery, new { CompanyId = user.CompanyId.Value });
-                profile.CompanyProfile = company;
-                var jobSeekerQuery = "SELECT * FROM Users WHERE UserId = @UserId";
-                var jobSeeker = await connection.QueryFirstOrDefaultAsync<JobSeekersProfileDto>(
-                    jobSeekerQuery, new { UserId = user.UserId });
-                profile.JobSeekerProfile = jobSeeker;
-                break;
+            var companyQuery = """
+            SELECT * FROM Companies
+            WHERE CompanyId = @CompanyId
+        """;
 
-            case UserTypes.JobSeeker:
-                jobSeekerQuery = "SELECT * FROM Users WHERE UserId = @UserId";
-                jobSeeker = await connection.QueryFirstOrDefaultAsync<JobSeekersProfileDto>(
-                   jobSeekerQuery, new { UserId = user.UserId });
-                profile.JobSeekerProfile = jobSeeker;
-                break;
+            var company = await connection.QueryFirstOrDefaultAsync<CompanyProfileDto>(
+                companyQuery, new { CompanyId = user.CompanyId.Value });
 
-                //case UserTypes.Staff:
-                //    // If you plan to fetch recruiter/staff profile later
-                //    var staffQuery = "SELECT * FROM Staffs WHERE UserId = @UserId";
-                //    var staff = await connection.QueryFirstOrDefaultAsync<StaffProfileDto>(
-                //        staffQuery, new { UserId = user.UserId });
-                //    profile.StaffProfile = staff;
-                //    break;
+            if (company is not null)
+            {
+                profile.CompanyProfile = new CompanyProfileDto
+                {
+                    CompanyId = company.CompanyId,
+                    CompanyName = company.CompanyName,
+                    WebsiteUrl = company.WebsiteUrl,
 
-                //case UserTypes.Admin:
-                //    // Currently no specific profile to fetch for Admin, so break silently
-                //    break;
 
-                //default:
-                //    // Optional: log or handle unknown UserType
-                //    break;
+
+                    Location = company.Location,
+                    Description = company.Description,
+
+                };
+            }
         }
-
-
 
         return profile;
     }
+
 
     public async Task<UsersDtoResponse?> GetUsersByIdAsync(int usersId)
     {
@@ -121,53 +119,163 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
         var isNewUser = userDto.UserId <= 0;
-
-        var query = isNewUser
-            ? @"
-            INSERT INTO Users (FirstName, LastName, Email, PasswordHash, CompanyId,
-                               PhoneNumber, UserType, Location, CreatedAt, UpdatedAt) 
-            VALUES (@FirstName, @LastName, @Email, @PasswordHash, @CompanyId,
-                    @PhoneNumber, @UserType, @Location, @CreatedAt, @UpdatedAt);
-            SELECT CAST(SCOPE_IDENTITY() as int);"
-            : @"
-            UPDATE Users
-            SET Email = @Email,
-                PasswordHash = @PasswordHash,
-                UserType = @UserType,
-                UpdatedAt = @UpdatedAt
-            WHERE UserId = @UserId";
-
         var parameters = new DynamicParameters();
-        parameters.Add("FirstName", userDto.FirstName, DbType.String);
-        parameters.Add("LastName", userDto.LastName, DbType.String);
-        parameters.Add("Email", userDto.Email, DbType.String);
-        parameters.Add("PasswordHash", userDto.PasswordHash, DbType.String);
-        parameters.Add("CompanyId", userDto.CompanyId, DbType.Int32);
-        parameters.Add("PhoneNumber", userDto.PhoneNumber, DbType.String);
-        parameters.Add("UserType", userDto.UserType, DbType.Int32);
-        parameters.Add("Location", userDto.Location, DbType.String);
-        parameters.Add("CreatedAt", DateTime.UtcNow, DbType.DateTime);
-        parameters.Add("UpdatedAt", DateTime.UtcNow, DbType.DateTime);
-        parameters.Add("UserId", userDto.UserId, DbType.Int32);
-
-        int userId;
 
         if (isNewUser)
         {
-            userId = await connection.ExecuteScalarAsync<int>(query, parameters).ConfigureAwait(false);
+            // For new users, set defaults for null values if needed
+            parameters.Add("FirstName", userDto.FirstName ?? "");
+            parameters.Add("LastName", userDto.LastName ?? "");
+            parameters.Add("Email", userDto.Email ?? "");
+            parameters.Add("PasswordHash", userDto.PasswordHash ?? "");
+            parameters.Add("CompanyId", userDto.CompanyId);
+            parameters.Add("PhoneNumber", userDto.PhoneNumber);
+            parameters.Add("UserType", userDto.UserType);
+            parameters.Add("Location", userDto.Location);
+            parameters.Add("CreatedAt", DateTime.UtcNow);
+            parameters.Add("UpdatedAt", DateTime.UtcNow);
+
+            var insertQuery = @"
+        INSERT INTO Users (FirstName, LastName, Email, PasswordHash, CompanyId,
+                           PhoneNumber, UserType, Location, CreatedAt, UpdatedAt)
+        VALUES (@FirstName, @LastName, @Email, @PasswordHash, @CompanyId,
+                @PhoneNumber, @UserType, @Location, @CreatedAt, @UpdatedAt);
+        SELECT CAST(SCOPE_IDENTITY() AS INT);";
+
+            var newUserId = await connection.ExecuteScalarAsync<int>(insertQuery, parameters);
+            return new ResponseDto
+            {
+                IsSuccess = newUserId > 0,
+                Message = "User inserted successfully.",
+                Id = newUserId
+            };
         }
         else
         {
-            var rowsAffected = await connection.ExecuteAsync(query, parameters).ConfigureAwait(false);
-            userId = rowsAffected > 0 ? userDto.UserId : -1; // return -1 if update failed
-        }
+            // For updates, only update fields that are not null/empty
+            var setClauses = new List<string>();
 
-        return new ResponseDto
-        {
-            IsSuccess = userId > 0,
-            Message = userId > 0 ? "User saved successfully." : "Failed to save user.",
-            Id = userId
-        };
+            if (!string.IsNullOrEmpty(userDto.FirstName))
+            {
+                setClauses.Add("FirstName = @FirstName");
+                parameters.Add("FirstName", userDto.FirstName);
+            }
+
+            if (!string.IsNullOrEmpty(userDto.LastName))
+            {
+                setClauses.Add("LastName = @LastName");
+                parameters.Add("LastName", userDto.LastName);
+            }
+
+            if (!string.IsNullOrEmpty(userDto.Email))
+            {
+                setClauses.Add("Email = @Email");
+                parameters.Add("Email", userDto.Email);
+            }
+
+            if (!string.IsNullOrEmpty(userDto.PasswordHash))
+            {
+                setClauses.Add("PasswordHash = @PasswordHash");
+                parameters.Add("PasswordHash", userDto.PasswordHash); // Already hashed
+            }
+
+
+
+
+            if (userDto.CompanyId.HasValue)
+            {
+                setClauses.Add("CompanyId = @CompanyId");
+                parameters.Add("CompanyId", userDto.CompanyId);
+            }
+
+            if (!string.IsNullOrEmpty(userDto.PhoneNumber))
+            {
+                setClauses.Add("PhoneNumber = @PhoneNumber");
+                parameters.Add("PhoneNumber", userDto.PhoneNumber);
+            }
+
+            if (userDto.UserType > 0)  // Assuming 0 is not a valid UserType
+            {
+                setClauses.Add("UserType = @UserType");
+                parameters.Add("UserType", userDto.UserType);
+            }
+
+            if (!string.IsNullOrEmpty(userDto.Location))
+            {
+                setClauses.Add("Location = @Location");
+                parameters.Add("Location", userDto.Location);
+            }
+
+            if (!string.IsNullOrEmpty(userDto.ProfilePicture))
+            {
+                setClauses.Add("ProfilePicture = @ProfilePicture");
+                parameters.Add("ProfilePicture", userDto.ProfilePicture);
+            }
+
+            if (!string.IsNullOrEmpty(userDto.ResumeUrl))
+            {
+                setClauses.Add("ResumeUrl = @ResumeUrl");
+                parameters.Add("ResumeUrl", userDto.ResumeUrl);
+            }
+
+            if (!string.IsNullOrEmpty(userDto.PortfolioUrl))
+            {
+                setClauses.Add("PortfolioUrl = @PortfolioUrl");
+                parameters.Add("PortfolioUrl", userDto.PortfolioUrl);
+            }
+
+            if (!string.IsNullOrEmpty(userDto.LinkedinProfile))
+            {
+                setClauses.Add("LinkedinProfile = @LinkedinProfile");
+                parameters.Add("LinkedinProfile", userDto.LinkedinProfile);
+            }
+
+            if (!string.IsNullOrEmpty(userDto.Headline))
+            {
+                setClauses.Add("Headline = @Headline");
+                parameters.Add("Headline", userDto.Headline);
+            }
+
+            if (!string.IsNullOrEmpty(userDto.Bio))
+            {
+                setClauses.Add("Bio = @Bio");
+                parameters.Add("Bio", userDto.Bio);
+            }
+
+            if (userDto.DateOfBirth.HasValue)
+            {
+                setClauses.Add("DateOfBirth = @DateOfBirth");
+                parameters.Add("DateOfBirth", userDto.DateOfBirth);
+            }
+
+            // Always update the UpdatedAt field
+            setClauses.Add("UpdatedAt = @UpdatedAt");
+            parameters.Add("UpdatedAt", DateTime.UtcNow);
+            parameters.Add("UserId", userDto.UserId);
+
+            if (!setClauses.Any())
+            {
+                return new ResponseDto
+                {
+                    IsSuccess = false,
+                    Message = "No fields to update.",
+                    Id = userDto.UserId
+                };
+            }
+
+            var updateQuery = $@"
+        UPDATE Users
+        SET {string.Join(", ", setClauses)}
+        WHERE UserId = @UserId";
+
+            var rowsAffected = await connection.ExecuteAsync(updateQuery, parameters);
+            return new ResponseDto
+            {
+                IsSuccess = rowsAffected > 0,
+                Message = rowsAffected > 0 ? "User updated successfully." : "Failed to update user.",
+                Id = rowsAffected > 0 ? userDto.UserId : -1
+            };
+        }
     }
 
     public async Task<ResponseDto> DeleteUsersAsync(int userId)
@@ -247,7 +355,7 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
     }
 
 
-    public async Task<ResponseDto> UpdateUserProfilePictureAsync(int userId, string? imageUrl, string? bio)
+    public async Task<ResponseDto> UploadUserProfilePictureAsync(int userId, string? imageUrl, string? bio)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
@@ -270,6 +378,19 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             Message = rows > 0 ? "Profile updated." : "JobSeeker not found."
         };
     }
+    public async Task<UsersProfileDto?> GetUploadedProfileByIdAsync(int userId)
+    {
+        await using var connection = await connectionService.GetDatabaseConnectionAsync();
+
+        var query = @"SELECT * FROM Users WHERE UserId = @UserId";
+
+        var user = await connection.QueryFirstOrDefaultAsync<UsersProfileDto>(query, new { UserId = userId });
+
+        return user;
+    }
+
+
+
 
 
 

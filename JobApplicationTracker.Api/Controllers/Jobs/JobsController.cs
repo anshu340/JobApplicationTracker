@@ -83,7 +83,7 @@ public class JobsController : ControllerBase
     }
 
     // POST: api/Jobs
-    [HttpPost]
+    [HttpPost("submitjobs")]
     public async Task<ActionResult> CreateJob([FromBody] JobsDataModel jobDto)
     {
         try
