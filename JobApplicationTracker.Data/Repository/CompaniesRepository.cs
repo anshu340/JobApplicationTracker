@@ -24,12 +24,8 @@ public class CompaniesRepository : ICompaniesRepository
                          Description,
                          WebsiteUrl,
                          CompanyLogo,
-                         Industry,
-                         Headquarters,
                          Location,
                          ContactEmail,
-                         FoundedDate,
-                         Status,
                          CreateDateTime
                   FROM Companies
                   """;
@@ -47,13 +43,9 @@ public class CompaniesRepository : ICompaniesRepository
                          CompanyName,
                          Description,
                          WebsiteUrl,
-                         CompanyLogo,
-                         Industry,
-                         Headquarters,
+                         CompanyLogo,                      
                          Location,
-                         ContactEmail,
-                         FoundedDate,
-                         Status,
+                         ContactEmail,                         
                          CreateDateTime
                   FROM Companies
                   WHERE CompanyId = @companiesId
@@ -65,7 +57,7 @@ public class CompaniesRepository : ICompaniesRepository
         return await connection.QueryFirstOrDefaultAsync<CompaniesDataModel>(sql, parameters).ConfigureAwait(false);
     }
 
-       public async Task<ResponseDto> SubmitCompaniesAsync(CompaniesDataModel companiesDto)
+    public async Task<ResponseDto> SubmitCompaniesAsync(CompaniesDataModel companiesDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -76,12 +68,10 @@ public class CompaniesRepository : ICompaniesRepository
         {
             sql = """
                   INSERT INTO Companies (
-                      CompanyName, Description, WebsiteUrl, CompanyLogo, Industry,
-                      Headquarters, Location, ContactEmail, FoundedDate, Status, CreateDateTime
+                      CompanyName, Description, WebsiteUrl, CompanyLogo, Location, ContactEmail,CreateDateTime,
                   )
                   VALUES (
-                      @CompanyName, @Description, @WebsiteUrl, @CompanyLogo, @Industry,
-                      @Headquarters, @Location, @ContactEmail, @FoundedDate, @Status, GETUTCDATE()
+                      @CompanyName, @Description, @WebsiteUrl, @CompanyLogo, @Location, @ContactEmail,  GETUTCDATE()
                   );
                   SELECT CAST(SCOPE_IDENTITY() AS INT);
                   """;
@@ -94,13 +84,9 @@ public class CompaniesRepository : ICompaniesRepository
                       CompanyName = @CompanyName,
                       Description = @Description,
                       WebsiteUrl = @WebsiteUrl,
-                      CompanyLogo = @CompanyLogo,
-                      Industry = @Industry,
-                      Headquarters = @Headquarters,
+                      CompanyLogo = @CompanyLogo,                  
                       Location = @Location,
-                      ContactEmail = @ContactEmail,
-                      FoundedDate = @FoundedDate,
-                      Status = @Status
+                      ContactEmail = @ContactEmail
                   WHERE CompanyId = @CompanyId
                   """;
         }
@@ -111,12 +97,9 @@ public class CompaniesRepository : ICompaniesRepository
         parameters.Add("@Description", companiesDto.Description);
         parameters.Add("@WebsiteUrl", companiesDto.WebsiteUrl);
         parameters.Add("@CompanyLogo", companiesDto.CompanyLogo);
-        parameters.Add("@Industry", companiesDto.Industry);
-        parameters.Add("@Headquarters", companiesDto.Headquarters);
         parameters.Add("@Location", companiesDto.Location);
         parameters.Add("@ContactEmail", companiesDto.ContactEmail);
-        parameters.Add("@FoundedDate", companiesDto.FoundedDate);
-        parameters.Add("@Status", companiesDto.Status);
+
 
         int affectedRows;
         if (isInsert)
@@ -148,17 +131,17 @@ public class CompaniesRepository : ICompaniesRepository
         var query = @"INSERT INTO Companies (CompanyName, Description, Location) 
                     VALUES (@CompanyName, @Description, @Location);
                     SELECT SCOPE_IDENTITY();";
-        
+
         var parameters = new DynamicParameters();
         parameters.Add("@CompanyName", request.CompanyName, DbType.String);
         parameters.Add("@Description", request.Description, DbType.String);
         parameters.Add("@Location", request.Location, DbType.String);
-        
-     int companyId =   await connection.ExecuteScalarAsync<int>(query, parameters).ConfigureAwait(false);
-     return companyId;
+
+        int companyId = await connection.ExecuteScalarAsync<int>(query, parameters).ConfigureAwait(false);
+        return companyId;
     }
-    
-    
+
+
     public async Task<ResponseDto> DeleteCompanyAsync(int companiesId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
