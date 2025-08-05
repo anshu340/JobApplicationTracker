@@ -108,34 +108,34 @@ public class JobsController : ControllerBase
         }
     }
 
-    // PUT: api/Jobs/{id}
-    [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateJob(int id, [FromBody] JobsDataModel jobDto)
-    {
-        try
-        {
-            if (jobDto == null || id != jobDto.JobId)
-            {
-                return BadRequest("Invalid job data");
-            }
+    //// PUT: api/Jobs/{id}
+    //[HttpPut("{id}")]
+    //public async Task<ActionResult> UpdateJob(int id, [FromBody] JobsDataModel jobDto)
+    //{
+    //    try
+    //    {
+    //        if (jobDto == null || id != jobDto.JobId)
+    //        {
+    //            return BadRequest("Invalid job data");
+    //        }
 
-            var result = await _jobsRepository.SubmitJobAsync(jobDto);
+    //        var result = await _jobsRepository.SubmitJobAsync(jobDto);
 
-            if (result.IsSuccess)
-            {
-                return Ok(result);
-            }
+    //        if (result.IsSuccess)
+    //        {
+    //            return Ok(result);
+    //        }
 
-            return BadRequest(result.Message);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
-    }
+    //        return BadRequest(result.Message);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return StatusCode(500, $"Internal server error: {ex.Message}");
+    //    }
+    //}
 
     // DELETE: api/Jobs/{id}
-    [HttpDelete("{id}")]
+    [HttpDelete("delete/{id}")]
     public async Task<ActionResult> DeleteJob(int id)
     {
         try

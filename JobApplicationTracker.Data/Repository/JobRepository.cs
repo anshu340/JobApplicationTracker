@@ -187,18 +187,16 @@ public class JobRepository : IJobsRepository
     public async Task<ResponseDto> DeleteJobAsync(int jobId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-
         var sql = """DELETE FROM Job WHERE JobId = @JobId""";
-
         var parameters = new DynamicParameters();
         parameters.Add("@JobId", jobId, DbType.Int32);
-
         var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
 
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Job deleted successfully." : "Failed to delete job."
+            Message = affectedRows > 0 ? "Job deleted successfully." : "Failed to delete job.",
+            Id = jobId  // Add this line to return the deleted job ID
         };
     }
 }

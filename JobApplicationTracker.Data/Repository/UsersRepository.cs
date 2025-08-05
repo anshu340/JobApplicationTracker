@@ -397,5 +397,3 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
 
 }
 
-}
-
