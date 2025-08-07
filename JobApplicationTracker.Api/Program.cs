@@ -1,4 +1,4 @@
-﻿using JobApplicationTracker.Api.GlobalExceptionHandler;
+using JobApplicationTracker.Api.GlobalExceptionHandler;
 using JobApplicationTracker.Data.Interface;
 
 using JobApplicationTracker.Data.Repository;
@@ -146,7 +146,12 @@ builder.Services.AddScoped<ISkillsRepository, SkillsRepository>();
 
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
+
+builder.Services.AddScoped<IUsersEducationRepository, UsersEducationRepository>();
+
+
 builder.Services.AddScoped<IJobsRepository, JobRepository>();
+
 
 
 // add global exception handler service
