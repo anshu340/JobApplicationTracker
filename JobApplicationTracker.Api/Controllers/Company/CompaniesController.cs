@@ -11,7 +11,7 @@ namespace JobApplicationTracker.Api.Controllers.Company;
 [Route("api/companyies")]
 public class CompaniesController(ICompaniesRepository companyService, IRegistrationService registrationService) : ControllerBase
 {
-    
+
     [HttpGet]
     [Route("/getallcompanies")]
     public async Task<IActionResult> GetAllCompanies()
@@ -31,7 +31,7 @@ public class CompaniesController(ICompaniesRepository companyService, IRegistrat
         }
         return Ok(company);
     }
-    
+
     [HttpDelete]
     [Route("/deletecompany")]
     public async Task<IActionResult> DeleteCompany(int id)
@@ -43,4 +43,20 @@ public class CompaniesController(ICompaniesRepository companyService, IRegistrat
         }
         return BadRequest("Invalid response type.");
     }
+
+    [HttpPost]
+    [Route("/submitcompany")]
+    public async Task<IActionResult> SubmitCompany([FromBody] CompaniesDataModel companyDto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var response = await companyService.SubmitCompaniesAsync(companyDto);
+        if (response.IsSuccess)
+            return Ok(response);
+
+        return BadRequest(response);
+    }
+
+
 }

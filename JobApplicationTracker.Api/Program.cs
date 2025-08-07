@@ -1,13 +1,15 @@
-﻿using JobApplicationTracker.Api.GlobalExceptionHandler;
+using JobApplicationTracker.Api.GlobalExceptionHandler;
 using JobApplicationTracker.Data.Interface;
+
+using JobApplicationTracker.Data.Repository;
+
 using JobApplicationTracker.Service;
 using JobApplicationTracker.Service.Configuration;
 using JobApplicationTracker.Service.Services.Interfaces;
 using JobApplicationTracker.Service.Services.Service;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Hosting.Server;
+
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
@@ -137,9 +139,18 @@ builder.Services.AddScoped<IJobSeekersEducationRepository, JobSeekerEducationRep
 builder.Services.AddScoped<IJobSeekerSkillRepository, JobSeekerSkillsRepository>();
 builder.Services.AddScoped<ISkillsRepository, SkillsRepository>();
 
+// In your Program.cs, add this AFTER the AddServiceLayer call:
+
+// Calling the extension method to register all services from Service and Data layers
+
+
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
+
 builder.Services.AddScoped<IUsersEducationRepository, UsersEducationRepository>();
+
+
+builder.Services.AddScoped<IJobsRepository, JobRepository>();
 
 
 
