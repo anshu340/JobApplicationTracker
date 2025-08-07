@@ -6,22 +6,22 @@ using JobApplicationTracker.Data.Dtos.Responses;
 
 namespace JobApplicationTracker.Data.Repository;
 
-public class JobSeekerEducationRepository : IJobSeekersEducationRepository
+public class UsersEducationRepository : IUsersEducationRepository
 {
     private readonly IDatabaseConnectionService _connectionService;
 
-    public JobSeekerEducationRepository(IDatabaseConnectionService connectionService)
+    public UsersEducationRepository(IDatabaseConnectionService connectionService)
     {
         _connectionService = connectionService;
     }
 
-    public async Task<IEnumerable<JobSeekerEducationDto>> GetAllJobSeekerEducationAsync()
+    public async Task<IEnumerable<UsersEducationDto>> GetAllUsersEducationAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
         var sql = """
                   SELECT EducationId, 
-                         JobSeekerId,
+                         UsersId,
                          University,
                          College,
                          Degree,
@@ -30,19 +30,19 @@ public class JobSeekerEducationRepository : IJobSeekersEducationRepository
                          Status,
                          EndDate,
                          GPA
-                  FROM JobSeekerEducation
+                  FROM UsersEducation
                   """;
 
-        return await connection.QueryAsync<JobSeekerEducationDto>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<UsersEducationDto>(sql).ConfigureAwait(false);
     }
 
-    public async Task<JobSeekerEducationDto> GetJobSeekerEducationByIdAsync(int jobSeekerEducationId)
+    public async Task<UsersEducationDto> GetUsersEducationByIdAsync(int usersEducationId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
         var sql = """
                   SELECT EducationId, 
-                         JobSeekerId,
+                         UsersId,
                          University,
                          College,
                          Degree,
@@ -51,23 +51,23 @@ public class JobSeekerEducationRepository : IJobSeekersEducationRepository
                          Status,
                          EndDate,
                          GPA 
-                  FROM JobSeekerEducation
+                  FROM UsersEducation
                   WHERE EducationId = @EducationId
                   """;
 
         var parameters = new DynamicParameters();
-        parameters.Add("@EducationId", jobSeekerEducationId, DbType.Int32);
+        parameters.Add("@EducationId", usersEducationId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<JobSeekerEducationDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<UsersEducationDto>(sql, parameters).ConfigureAwait(false);
     }
 
-    public async Task<IEnumerable<JobSeekerEducationDto>> GetJobSeekerEducationByJobSeekerIdAsync(int jobSeekerId)
+    public async Task<IEnumerable<UsersEducationDto>> GetUsersEducationByUserIdAsync(int userId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
         var sql = """
                   SELECT EducationId, 
-                         JobSeekerId,
+                         UsersId,
                          University,
                          College,
                          Degree,
@@ -76,41 +76,40 @@ public class JobSeekerEducationRepository : IJobSeekersEducationRepository
                          Status,
                          EndDate,
                          GPA 
-                  FROM JobSeekerEducation
-                  WHERE JobSeekerId = @JobSeekerId
+                  FROM UsersEducation
+                  WHERE UserId = @UserId
                   """;
 
         var parameters = new DynamicParameters();
-        parameters.Add("@JobSeekerId", jobSeekerId, DbType.Int32);
+        parameters.Add("@UserId", userId, DbType.Int32);
 
-        return await connection.QueryAsync<JobSeekerEducationDto>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryAsync<UsersEducationDto>(sql, parameters).ConfigureAwait(false);
     }
 
-    public async Task<ResponseDto> SubmitJobSeekerEducationAsync(JobSeekerEducationDto jobSeekerEducationDto)
+    public async Task<ResponseDto> SubmitUsersEducationAsync(UsersEducationDto usersEducationDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-        var isNewEducation = jobSeekerEducationDto.EducationId <= 0;
+        var isNewEducation = usersEducationDto.EducationId <= 0;
         var parameters = new DynamicParameters();
 
-        // Common parameters for both insert and update
-        parameters.Add("@JobSeekerId", jobSeekerEducationDto.JobSeekerId, DbType.Int32);
-        parameters.Add("@University", jobSeekerEducationDto.University, DbType.String);
-        parameters.Add("@College", jobSeekerEducationDto.College, DbType.String);
-        parameters.Add("@Degree", jobSeekerEducationDto.Degree, DbType.String);
-        parameters.Add("@FieldOfStudy", jobSeekerEducationDto.FieldOfStudy, DbType.String);
-        parameters.Add("@StartDate", jobSeekerEducationDto.StartDate, DbType.DateTime);
-        parameters.Add("@Status", jobSeekerEducationDto.Status, DbType.String);
-        parameters.Add("@EndDate", jobSeekerEducationDto.EndDate, DbType.DateTime);
-        parameters.Add("@GPA", jobSeekerEducationDto.Gpa, DbType.Double);
+        parameters.Add("@UsersId", usersEducationDto.UsersId, DbType.Int32);
+        parameters.Add("@University", usersEducationDto.University, DbType.String);
+        parameters.Add("@College", usersEducationDto.College, DbType.String);
+        parameters.Add("@Degree", usersEducationDto.Degree, DbType.String);
+        parameters.Add("@FieldOfStudy", usersEducationDto.FieldOfStudy, DbType.String);
+        parameters.Add("@StartDate", usersEducationDto.StartDate, DbType.DateTime);
+        parameters.Add("@Status", usersEducationDto.Status, DbType.String);
+        parameters.Add("@EndDate", usersEducationDto.EndDate, DbType.DateTime);
+        parameters.Add("@GPA", usersEducationDto.Gpa, DbType.Double);
 
         if (isNewEducation)
         {
             var insertSql = """
-                           INSERT INTO JobSeekerEducation 
-                           (JobSeekerId, University, College, Degree, FieldOfStudy, StartDate, Status, EndDate, GPA)
+                           INSERT INTO UsersEducation 
+                           (UsersId, University, College, Degree, FieldOfStudy, StartDate, Status, EndDate, GPA)
                            VALUES 
-                           (@JobSeekerId, @University, @College, @Degree, @FieldOfStudy, @StartDate, @Status, @EndDate, @GPA);
+                           (@UsersId, @University, @College, @Degree, @FieldOfStudy, @StartDate, @Status, @EndDate, @GPA);
                            SELECT CAST(SCOPE_IDENTITY() AS INT);
                            """;
 
@@ -119,15 +118,14 @@ public class JobSeekerEducationRepository : IJobSeekersEducationRepository
             return new ResponseDto
             {
                 IsSuccess = newEducationId > 0,
-                Message = newEducationId > 0 ? "Job seeker education inserted successfully." : "Failed to insert job seeker education.",
+                Message = newEducationId > 0 ? "User education inserted successfully." : "Failed to insert user education.",
                 StatusCode = newEducationId > 0 ? 201 : 400,
                 Id = newEducationId
             };
         }
         else
         {
-            // First check if the record exists
-            var existingRecord = await GetJobSeekerEducationByIdAsync(jobSeekerEducationDto.EducationId);
+            var existingRecord = await GetUsersEducationByIdAsync(usersEducationDto.EducationId);
             if (existingRecord == null)
             {
                 return new ResponseDto
@@ -135,16 +133,15 @@ public class JobSeekerEducationRepository : IJobSeekersEducationRepository
                     Id = 0,
                     IsSuccess = false,
                     StatusCode = 404,
-                    Message = $"Education record with ID {jobSeekerEducationDto.EducationId} not found"
+                    Message = $"Education record with ID {usersEducationDto.EducationId} not found"
                 };
             }
 
-            // Add EducationId parameter for update
-            parameters.Add("@EducationId", jobSeekerEducationDto.EducationId, DbType.Int32);
+            parameters.Add("@EducationId", usersEducationDto.EducationId, DbType.Int32);
 
             var updateSql = """
-                           UPDATE JobSeekerEducation
-                           SET JobSeekerId = @JobSeekerId,
+                           UPDATE UsersEducation
+                           SET UsersId = @UsersId,
                                University = @University,
                                College = @College,
                                Degree = @Degree,
@@ -161,19 +158,18 @@ public class JobSeekerEducationRepository : IJobSeekersEducationRepository
             return new ResponseDto
             {
                 IsSuccess = rowsAffected > 0,
-                Message = rowsAffected > 0 ? "Job seeker education updated successfully." : "Failed to update job seeker education.",
+                Message = rowsAffected > 0 ? "User education updated successfully." : "Failed to update user education.",
                 StatusCode = rowsAffected > 0 ? 200 : 400,
-                Id = rowsAffected > 0 ? jobSeekerEducationDto.EducationId : 0
+                Id = rowsAffected > 0 ? usersEducationDto.EducationId : 0
             };
         }
     }
 
-    public async Task<ResponseDto> DeleteJobSeekerEducationAsync(int educationId)
+    public async Task<ResponseDto> DeleteUsersEducationAsync(int educationId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-        // First check if the record exists
-        var existingRecord = await GetJobSeekerEducationByIdAsync(educationId);
+        var existingRecord = await GetUsersEducationByIdAsync(educationId);
         if (existingRecord == null)
         {
             return new ResponseDto
@@ -185,7 +181,7 @@ public class JobSeekerEducationRepository : IJobSeekersEducationRepository
             };
         }
 
-        var sql = "DELETE FROM JobSeekerEducation WHERE EducationId = @EducationId";
+        var sql = "DELETE FROM UsersEducation WHERE EducationId = @EducationId";
 
         var parameters = new DynamicParameters();
         parameters.Add("@EducationId", educationId, DbType.Int32);
@@ -195,10 +191,9 @@ public class JobSeekerEducationRepository : IJobSeekersEducationRepository
         return new ResponseDto
         {
             IsSuccess = rowsAffected > 0,
-            Message = rowsAffected > 0 ? "Job seeker education deleted successfully." : "Failed to delete job seeker education.",
+            Message = rowsAffected > 0 ? "User education deleted successfully." : "Failed to delete user education.",
             StatusCode = rowsAffected > 0 ? 200 : 400,
             Id = rowsAffected > 0 ? educationId : 0
         };
     }
 }
-

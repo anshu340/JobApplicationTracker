@@ -10,6 +10,7 @@
 	  <Compile Remove="Controllers\JobSeeker\JobSeekerSkillsController.cs" />
 	  <Compile Remove="Controllers\JobSeeker\JobSeekersSkillsController.cs" />
 	  <Compile Remove="Controllers\JobSeeker\JobSekeerSkillsController.cs" />
+	  <Compile Remove="Controllers\JobSeeker\UserEducationController.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

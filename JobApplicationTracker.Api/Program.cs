@@ -139,6 +139,8 @@ builder.Services.AddScoped<ISkillsRepository, SkillsRepository>();
 
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
+builder.Services.AddScoped<IUsersEducationRepository, UsersEducationRepository>();
+
 
 
 // add global exception handler service

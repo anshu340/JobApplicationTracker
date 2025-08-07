@@ -11,11 +11,13 @@
 	  <Compile Remove="DataModels\JobSeekerSkills.cs" />
 	  <Compile Remove="DataModels\JobSeekersSkillsDataModel.cs" />
 	  <Compile Remove="DataModels\SkillsDataModels.cs" />
+	  <Compile Remove="DataModels\UserEducation.cs" />
 	  <Compile Remove="Dto\Responses\JobSeekersSkillDto.cs" />
 	  <Compile Remove="Dto\Responses\JobSeekersSkillsDto.cs" />
 	  <Compile Remove="Dto\Responses\JobSekeerSkills.cs" />
 	  <Compile Remove="Dto\Responses\SkillDto.cs" />
 	  <Compile Remove="Interface\IJobSeekersSkillsRepository.cs" />
+	  <Compile Remove="Interface\IUsersEduationRepository.cs" />
 	  <Compile Remove="Repository\JobSeekerSkillsRepository.cs" />
 	</ItemGroup>
 
