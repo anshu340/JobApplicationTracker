@@ -1,12 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using JobApplicationTracker.Dto;
+using JobApplicationTracker.Data.Dtos.Responses;
 
 namespace JobApplicationTracker.Data.Interface
 {
-    internal interface IUsersEducationRepository
+    public interface IUsersEducationRepository
     {
+        Task<IEnumerable<UsersEducationDto>> GetAllUsersEducationAsync();
+
+        Task<UsersEducationDto> GetUsersEducationByIdAsync(int usersEducationId);
+
+        Task<ResponseDto> SubmitUsersEducationAsync(UsersEducationDto usersEducationDto);
+
+        Task<ResponseDto> DeleteUsersEducationAsync(int usersEducationId);
     }
 }

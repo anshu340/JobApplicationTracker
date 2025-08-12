@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace JobApplicationTracker.Data.DataModels;
 
-namespace JobApplicationTracker.Data.DataModels
+public class UsersEducation
 {
-    internal class UsersEducationDataModel
-    {
-    }
+    public int EducationId { get; set; }
+    public int UsersId { get; set; } // Foreign key to JobSeekers
+    public string University { get; set; } = null!;
+    public string College { get; set; } = null!;
+    public string Degree { get; set; } = null!;
+    public string? FieldOfStudy { get; set; }
+    public DateTime StartDate { get; set; }
+    public bool Status { get; set; } //  education status either true or false, ongoing, finished
+    public DateTime? EndDate { get; set; }
+    public double? Gpa { get; set; }
 }

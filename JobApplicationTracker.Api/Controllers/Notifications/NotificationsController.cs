@@ -17,7 +17,7 @@ public class NotificationsController(INotificationsRepository notificationsServi
 
     [HttpGet]
     [Route("/getnotificationbyid")]
-    public async Task<IActionResult> GetNotificationsById(int id)
+    public async Task<IActionResult> GetNotificationsById(Guid id)
     {
         var notification= await notificationsService.GetNotificationsByIdAsync(id);
         if (notification == null)
@@ -42,9 +42,10 @@ public class NotificationsController(INotificationsRepository notificationsServi
 
     [HttpDelete]
     [Route("/deletenotifications")]
-    public async Task<IActionResult> DeleteNotifications(int id)
+    public async Task<IActionResult> DeleteNotifications(Guid id)
     {
         var response = await notificationsService.DeleteNotificationsAsync(id);
         return response.IsSuccess ? Ok(response) : BadRequest(response);
     }
+    
 }

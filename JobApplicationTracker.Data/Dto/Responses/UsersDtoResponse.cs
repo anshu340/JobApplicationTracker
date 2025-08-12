@@ -3,6 +3,7 @@ namespace JobApplicationTracker.Data.Dto.Responses;
 public class UsersDtoResponse
 {
     public int UserId { get; set; }
+
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public string Email { get; set; }
@@ -17,7 +18,9 @@ public class UsersDtoResponse
     public string? Location { get; set; }
     public string? Headline { get; set; }
     public string? Bio { get; set; }
+
     public string? Skills { get; set; }
     public string? Education { get; set; }
+
 
 }
