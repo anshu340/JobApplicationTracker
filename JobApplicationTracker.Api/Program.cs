@@ -148,8 +148,14 @@ builder.Services.AddScoped<INotificationsTypesRepository, NotificationTypesRepos
 // Calling the extension method to register all services from Service and Data layers
 
 
+// In your Program.cs, add this AFTER the AddServiceLayer call:
+
+// Calling the extension method to register all services from Service and Data layers
+
+
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
+builder.Services.AddScoped<IJobsRepository, JobRepository>();
 
 builder.Services.AddScoped<IUsersEducationRepository, UsersEducationRepository>();
 

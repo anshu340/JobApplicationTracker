@@ -1,4 +1,4 @@
-﻿using Azure.Core;
+using Azure.Core;
 using Dapper;
 using JobApplicationTracker.Api.Enums;
 using JobApplicationTracker.Data.DataModels;
@@ -17,12 +17,7 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
         var sql = """
-                  SELECT UserId, 
-                         Email, 
-                         UserType,
-                         PhoneNumber,
-                         CreatedAt,
-                         UpdatedAt
+                  SELECT *
                   FROM Users where (CompanyId =@companyId or @companyId = 0)
                   """;
         var parameters = new DynamicParameters();
@@ -35,9 +30,15 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
         var userQuery = """
+
         SELECT * FROM Users
         WHERE UserId = @UserId
     """;
+
+                    SELECT * FROM Users
+                    WHERE UserId = @UserId
+                """;
+
 
         var user = await connection.QueryFirstOrDefaultAsync<UsersDataModel>(
             userQuery, new { UserId = userId });
@@ -52,6 +53,7 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             Email = user.Email,
             PhoneNumber = user.PhoneNumber,
             ProfilePicture = user.ProfilePicture,
+
             ResumeUrl = user.ResumeUrl,
             PortfolioUrl = user.PortfolioUrl,
             LinkedinProfile = user.LinkedinProfile,
@@ -81,7 +83,36 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                     CompanyName = company.CompanyName,
                     WebsiteUrl = company.WebsiteUrl,
 
+=======
+            LinkedinProfile = user.LinkedinProfile,
+            Location = user.Location,
+            Bio = user.Bio,
+            DateOfBirth = user.DateOfBirth,
+            Skills = user.Skills,
+            Education = user.Education,
+            CompanyProfile = null
+        };
 
+
+        // ✅ Add company profile if CompanyId > 0
+        if (user.CompanyId.HasValue && user.CompanyId.Value > 0)
+        {
+            var companyQuery = """
+            SELECT * FROM Companies
+            WHERE CompanyId = @CompanyId
+        """;
+
+
+            var company = await connection.QueryFirstOrDefaultAsync<CompanyProfileDto>(
+                companyQuery, new { CompanyId = user.CompanyId.Value });
+
+            if (company is not null)
+            {
+                profile.CompanyProfile = new CompanyProfileDto
+                {
+                    CompanyId = company.CompanyId,
+                    CompanyName = company.CompanyName,
+                    WebsiteUrl = company.WebsiteUrl,
 
                     Location = company.Location,
                     Description = company.Description,
@@ -99,15 +130,10 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
         var sql = """
-            SELECT UserId,
-                   Email,
-                   UserType,
-                   PhoneNumber,
-                   CreatedAt,
-                   UpdatedAt
-            FROM Users 
-            WHERE UserId = @UserId
-        """;
+                SELECT*
+                FROM Users 
+                WHERE UserId = @UserId
+            """;
 
         var parameters = new DynamicParameters();
         parameters.Add("@UserId", usersId, DbType.Int32); // ✅ FIXED
@@ -179,9 +205,6 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                 parameters.Add("PasswordHash", userDto.PasswordHash); // Already hashed
             }
 
-
-
-
             if (userDto.CompanyId.HasValue)
             {
                 setClauses.Add("CompanyId = @CompanyId");
@@ -212,6 +235,7 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                 parameters.Add("ProfilePicture", userDto.ProfilePicture);
             }
 
+
             if (!string.IsNullOrEmpty(userDto.ResumeUrl))
             {
                 setClauses.Add("ResumeUrl = @ResumeUrl");
@@ -224,17 +248,21 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                 parameters.Add("PortfolioUrl", userDto.PortfolioUrl);
             }
 
+
+
             if (!string.IsNullOrEmpty(userDto.LinkedinProfile))
             {
                 setClauses.Add("LinkedinProfile = @LinkedinProfile");
                 parameters.Add("LinkedinProfile", userDto.LinkedinProfile);
             }
 
+
             if (!string.IsNullOrEmpty(userDto.Headline))
             {
                 setClauses.Add("Headline = @Headline");
                 parameters.Add("Headline", userDto.Headline);
             }
+
 
             if (!string.IsNullOrEmpty(userDto.Bio))
             {
@@ -247,6 +275,18 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                 setClauses.Add("DateOfBirth = @DateOfBirth");
                 parameters.Add("DateOfBirth", userDto.DateOfBirth);
             }
+
+            if (!string.IsNullOrEmpty(userDto.Skills))
+            {
+                setClauses.Add("Skills = @Skills");
+                parameters.Add("Skills", userDto.Skills);
+            }
+            if (!string.IsNullOrEmpty(userDto.Education))
+            {
+                setClauses.Add("Education = @Education");
+                parameters.Add("Education", userDto.Education);
+            }
+
 
             // Always update the UpdatedAt field
             setClauses.Add("UpdatedAt = @UpdatedAt");
@@ -264,9 +304,15 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             }
 
             var updateQuery = $@"
+
         UPDATE Users
         SET {string.Join(", ", setClauses)}
         WHERE UserId = @UserId";
+
+                            UPDATE Users
+                            SET {string.Join(", ", setClauses)}
+                            WHERE UserId = @UserId";
+
 
             var rowsAffected = await connection.ExecuteAsync(updateQuery, parameters);
             return new ResponseDto
@@ -314,6 +360,10 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
 
         var query = """
             SELECT TOP 1 UserId,
+                         FirstName,
+                         LastName,
+                         Bio,
+                         Location,
                          Email,
                          UserType,
                          PhoneNumber,
@@ -375,7 +425,7 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
         return new ResponseDto
         {
             IsSuccess = rows > 0,
-            Message = rows > 0 ? "Profile updated." : "JobSeeker not found."
+            Message = rows > 0 ? "Profile updated." : "User not found."
         };
     }
     public async Task<UsersProfileDto?> GetUploadedProfileByIdAsync(int userId)
@@ -391,6 +441,12 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
 
 
 
+
+
+
+
+
+}
 
 
 

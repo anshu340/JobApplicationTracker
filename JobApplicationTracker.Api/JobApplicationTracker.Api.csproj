@@ -37,4 +37,8 @@
 		<ProjectReference Include="..\JobApplicationTracker.Service\JobApplicationTracker.Service.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="NewFolder\NewFolder\NewFolder\" />
+	</ItemGroup>
+
 </Project>
