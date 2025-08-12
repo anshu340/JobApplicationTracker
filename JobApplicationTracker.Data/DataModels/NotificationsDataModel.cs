@@ -2,7 +2,7 @@
 
 public class NotificationsDataModel
 {
-    public int NotificationId { get; set; }
+    public Guid NotificationId { get; set; }
     public int UserId { get; set; } // Foreign Key
     public int NotificationTypeId { get; set; } // Foreign Key
     public string Title { get; set; } = string.Empty;

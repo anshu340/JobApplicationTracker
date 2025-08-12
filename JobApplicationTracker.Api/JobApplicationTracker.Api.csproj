@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
@@ -6,12 +6,23 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 
+
 	<ItemGroup>
 	  <Compile Remove="Controllers\JobSeeker\JobSeekerSkillsController.cs" />
 	  <Compile Remove="Controllers\JobSeeker\JobSeekersSkillsController.cs" />
 	  <Compile Remove="Controllers\JobSeeker\JobSekeerSkillsController.cs" />
 	  <Compile Remove="Controllers\JobSeeker\UserEducationController.cs" />
 	</ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.12.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.1" />
+	<PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.0" />
+  </ItemGroup>
+
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />

@@ -15,8 +15,14 @@ public interface IUserRepository
     Task<bool> DoesEmailExists(string email);
     Task<UsersDtoResponse?> GetUserByPhone(string phone);
     Task<UsersDataModel?> GetUserForLoginAsync(string email);
-    Task<UserProfileDto> GetUserProfileAsync(int userId);
-    Task<ResponseDto> UpdateUserProfilePictureAsync(int userId, string? imageUrl, string? bio);
+    Task<UsersProfileDto> GetUserProfileAsync(int userId);
+    Task<ResponseDto> UploadUserProfilePictureAsync(int userId, string? imageUrl, string? bio);
+
+    Task<UsersProfileDto?> GetUploadedProfileByIdAsync(int id);
+
+
+
+
 
 
 
