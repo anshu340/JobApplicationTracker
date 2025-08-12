@@ -138,6 +138,7 @@ builder.Services.AddScoped<IJobSeekersEducationRepository, JobSeekerEducationRep
 
 builder.Services.AddScoped<IJobSeekerSkillRepository, JobSeekerSkillsRepository>();
 builder.Services.AddScoped<ISkillsRepository, SkillsRepository>();
+builder.Services.AddScoped<IJobTypeRepository, JobTypeRepository>();
 
 // In your Program.cs, add this AFTER the AddServiceLayer call:
 
