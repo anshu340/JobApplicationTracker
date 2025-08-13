@@ -23,12 +23,12 @@ public class JobRepository : IJobsRepository
             SELECT JobId,
                    CompanyId,
                    PostedByUserId,
-                   Title,
+                   JobType,
                    Description,
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   JobTypeId,
+                   JobEmpolymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -51,12 +51,12 @@ public class JobRepository : IJobsRepository
             SELECT JobId,
                    CompanyId,
                    PostedByUserId,
-                   Title,
+                   JobType,
                    Description,
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   JobTypeId,
+                   JobEmpolymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -84,12 +84,12 @@ public class JobRepository : IJobsRepository
             SELECT JobId,
                    CompanyId,
                    PostedByUserId,
-                   Title,
+                   JobType,
                    Description,
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   JobTypeId,
+                   JobEmpolymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -117,12 +117,12 @@ public class JobRepository : IJobsRepository
         var parameters = new DynamicParameters();
         parameters.Add("CompanyId", jobsDto.CompanyId, DbType.Int32);
         parameters.Add("PostedByUserId", jobsDto.PostedByUserId, DbType.Int32);
-        parameters.Add("Title", jobsDto.Title, DbType.String);
+        parameters.Add("JobType", jobsDto.JobType, DbType.String);
         parameters.Add("Description", jobsDto.Description, DbType.String);
         parameters.Add("Location", jobsDto.Location, DbType.String);
         parameters.Add("SalaryRangeMin", jobsDto.SalaryRangeMin, DbType.Decimal);
         parameters.Add("SalaryRangeMax", jobsDto.SalaryRangeMax, DbType.Decimal);
-        parameters.Add("JobTypeId", jobsDto.JobTypeId, DbType.Int32);
+        parameters.Add("JobType", jobsDto.JobEmpolymentType, DbType.Int32);
         parameters.Add("ExperienceLevel", jobsDto.ExperienceLevel, DbType.Int32);
         parameters.Add("Responsibilities", jobsDto.Responsibilities, DbType.String);
         parameters.Add("Requirements", jobsDto.Requirements, DbType.String);
@@ -137,14 +137,14 @@ public class JobRepository : IJobsRepository
         {
             var insertQuery = @"
             INSERT INTO Job (
-                CompanyId, PostedByUserId, Title, Description, Location,
-                SalaryRangeMin, SalaryRangeMax, JobTypeId, ExperienceLevel,
+                CompanyId, PostedByUserId, JobType, Description, Location,
+                SalaryRangeMin, SalaryRangeMax, JobEmpolymentType, ExperienceLevel,
                 Responsibilities, Requirements, Benefits, PostedAt,
                 ApplicationDeadline, Status, Views
             )
             VALUES (
-                @CompanyId, @PostedByUserId, @Title, @Description, @Location,
-                @SalaryRangeMin, @SalaryRangeMax, @JobTypeId, @ExperienceLevel,
+                @CompanyId, @PostedByUserId, @JobType, @Description, @Location,
+                @SalaryRangeMin, @SalaryRangeMax, @JobEmpolymentType, @ExperienceLevel,
                 @Responsibilities, @Requirements, @Benefits, @PostedAt,
                 @ApplicationDeadline, @Status, @Views
             );
@@ -164,9 +164,9 @@ public class JobRepository : IJobsRepository
             var updateQuery = @"
             UPDATE Job
             SET CompanyId = @CompanyId, PostedByUserId = @PostedByUserId,
-                Title = @Title, Description = @Description, Location = @Location,
+                JobType = @JobType, Description = @Description, Location = @Location,
                 SalaryRangeMin = @SalaryRangeMin, SalaryRangeMax = @SalaryRangeMax,
-                JobTypeId = @JobTypeId, ExperienceLevel = @ExperienceLevel,
+                JobEmpolymentType = @JobEmpolymentType, ExperienceLevel = @ExperienceLevel,
                 Responsibilities = @Responsibilities, Requirements = @Requirements,
                 Benefits = @Benefits, PostedAt = @PostedAt,
                 ApplicationDeadline = @ApplicationDeadline, Status = @Status,
