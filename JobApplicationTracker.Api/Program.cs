@@ -1,4 +1,4 @@
-﻿using JobApplicationTracker.Api.GlobalExceptionHandler;
+using JobApplicationTracker.Api.GlobalExceptionHandler;
 using JobApplicationTracker.Data.Interface;
 
 using JobApplicationTracker.Data.Repository;
@@ -15,6 +15,7 @@ using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
 using JobApplicationTracker.Data.Repository;
+using JobApplicationTracker.Api.Data.Service;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -138,7 +139,18 @@ builder.Services.AddScoped<IJobSeekersEducationRepository, JobSeekerEducationRep
 
 builder.Services.AddScoped<IJobSeekerSkillRepository, JobSeekerSkillsRepository>();
 builder.Services.AddScoped<ISkillsRepository, SkillsRepository>();
+
+builder.Services.AddScoped<INotificationsRepository, NotificationsRepository>();
+builder.Services.AddScoped<INotificationsTypesRepository, NotificationTypesRepository>();
+
+
+// In your Program.cs, add this AFTER the AddServiceLayer call:
+
+// Calling the extension method to register all services from Service and Data layers
+
+
 builder.Services.AddScoped<IJobTypeRepository, JobTypeRepository>();
+
 
 // In your Program.cs, add this AFTER the AddServiceLayer call:
 
@@ -148,6 +160,14 @@ builder.Services.AddScoped<IJobTypeRepository, JobTypeRepository>();
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
 builder.Services.AddScoped<IJobsRepository, JobRepository>();
+
+
+builder.Services.AddScoped<IUsersEducationRepository, UsersEducationRepository>();
+
+
+builder.Services.AddScoped<IJobsRepository, JobRepository>();
+
+
 
 
 // add global exception handler service

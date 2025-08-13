@@ -1,4 +1,4 @@
-using Dapper;
+﻿using Dapper;
 using JobApplicationTracker.Data.Interface;
 using System.Data;
 using JobApplicationTracker.Data.DataModels;
@@ -201,4 +201,11 @@ namespace JobApplicationTracker.Data.Repository
             };
         }
     }
+
+
 }
+
+
+
+}
+

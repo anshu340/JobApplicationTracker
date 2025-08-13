@@ -34,4 +34,8 @@ namespace JobApplicationTracker.Data.Dto.Responses
         public CompanyProfileDto? CompanyProfile { get; set; }
 
     }
+
 }
+
+}
+
