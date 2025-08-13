@@ -2,12 +2,16 @@ USE [JobApplicationTrackerDB]
 GO
 
 
+
 /****** Object:  Table [dbo].[Admin]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[Admin]    Script Date: 8/5/2025 1:24:30 PM ******/
 
 
 /****** Object:  Table [dbo].[Admin]    Script Date: 8/5/2025 1:24:30 PM ******/
+
+
+/****** Object:  Table [dbo].[Admin]    Script Date: 8/7/2025 3:22:11 PM ******/
 
 SET ANSI_NULLS ON
 GO
@@ -36,6 +40,9 @@ GO
 
 /****** Object:  Table [dbo].[AdminLog]    Script Date: 8/5/2025 1:24:30 PM ******/
 
+
+/****** Object:  Table [dbo].[AdminLog]    Script Date: 8/7/2025 3:22:11 PM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -59,12 +66,16 @@ PRIMARY KEY CLUSTERED
 GO
 
 
+
 /****** Object:  Table [dbo].[Application]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[Application]    Script Date: 8/5/2025 1:24:30 PM ******/
 
 
 /****** Object:  Table [dbo].[Application]    Script Date: 8/5/2025 1:24:30 PM ******/
+
+
+/****** Object:  Table [dbo].[Application]    Script Date: 8/7/2025 3:22:11 PM ******/
 
 SET ANSI_NULLS ON
 GO
@@ -93,11 +104,15 @@ PRIMARY KEY CLUSTERED
 GO
 
 
+
 /****** Object:  Table [dbo].[ApplicationStatus]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[ApplicationStatus]    Script Date: 8/5/2025 1:24:30 PM ******/
 
 /****** Object:  Table [dbo].[ApplicationStatus]    Script Date: 8/5/2025 1:24:30 PM ******/
+
+
+/****** Object:  Table [dbo].[ApplicationStatus]    Script Date: 8/7/2025 3:22:11 PM ******/
 
 SET ANSI_NULLS ON
 GO
@@ -119,12 +134,16 @@ PRIMARY KEY CLUSTERED
 GO
 
 
+
 /****** Object:  Table [dbo].[Companies]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[Companies]    Script Date: 8/5/2025 1:24:30 PM ******/
 
 
 /****** Object:  Table [dbo].[Companies]    Script Date: 8/5/2025 1:24:30 PM ******/
+
+
+/****** Object:  Table [dbo].[Companies]    Script Date: 8/7/2025 3:22:11 PM ******/
 
 SET ANSI_NULLS ON
 GO
@@ -147,11 +166,15 @@ PRIMARY KEY CLUSTERED
 GO
 
 
+
 /****** Object:  Table [dbo].[Job]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[Job]    Script Date: 8/5/2025 1:24:30 PM ******/
 
 /****** Object:  Table [dbo].[Job]    Script Date: 8/5/2025 1:24:30 PM ******/
+
+
+/****** Object:  Table [dbo].[Job]    Script Date: 8/7/2025 3:22:11 PM ******/
 
 SET ANSI_NULLS ON
 GO
@@ -183,12 +206,17 @@ PRIMARY KEY CLUSTERED
 GO
 
 
+
 /****** Object:  Table [dbo].[JobType]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[JobType]    Script Date: 8/5/2025 1:24:30 PM ******/
 
 
 /****** Object:  Table [dbo].[JobType]    Script Date: 8/5/2025 1:24:30 PM ******/
+
+
+/****** Object:  Table [dbo].[JobType]    Script Date: 8/7/2025 3:22:11 PM ******/
+
 
 SET ANSI_NULLS ON
 GO
@@ -197,7 +225,6 @@ GO
 CREATE TABLE [dbo].[JobType](
 	[JobTypeId] [int] IDENTITY(1,1) NOT NULL,
 	[Name] [nvarchar](50) NOT NULL,
-	[Description] [nvarchar](max) NOT NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[JobTypeId] ASC
@@ -210,6 +237,7 @@ PRIMARY KEY CLUSTERED
 GO
 
 
+
 /****** Object:  Table [dbo].[Notifications]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[Notifications]    Script Date: 8/5/2025 1:24:30 PM ******/
@@ -217,6 +245,8 @@ GO
 
 /****** Object:  Table [dbo].[Notifications]    Script Date: 8/5/2025 1:24:30 PM ******/
 
+
+/****** Object:  Table [dbo].[Notifications]    Script Date: 8/7/2025 3:22:11 PM ******/
 
 SET ANSI_NULLS ON
 GO
@@ -239,12 +269,15 @@ PRIMARY KEY CLUSTERED
 GO
 
 
+
 /****** Object:  Table [dbo].[NotificationTypes]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[NotificationTypes]    Script Date: 8/5/2025 1:24:30 PM ******/
 
 
 /****** Object:  Table [dbo].[NotificationTypes]    Script Date: 8/5/2025 1:24:30 PM ******/
+
+/****** Object:  Table [dbo].[NotificationTypes]    Script Date: 8/7/2025 3:22:11 PM ******/
 
 SET ANSI_NULLS ON
 GO
@@ -267,6 +300,7 @@ PRIMARY KEY CLUSTERED
 GO
 
 
+
 /****** Object:  Table [dbo].[Skill]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[Skill]    Script Date: 8/5/2025 1:24:30 PM ******/
@@ -275,24 +309,22 @@ GO
 /****** Object:  Table [dbo].[Skill]    Script Date: 8/5/2025 1:24:30 PM ******/
 
 
+/****** Object:  Table [dbo].[Skills]    Script Date: 8/7/2025 3:22:11 PM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [dbo].[Skill](
-	[SkillId] [int] IDENTITY(1,1) NOT NULL,
-	[SkillName] [nvarchar](100) NOT NULL,
-	[Category] [nvarchar](100) NOT NULL,
+CREATE TABLE [dbo].[Skills](
+	[SkillId] [smallint] IDENTITY(1,1) NOT NULL,
+	[Skill] [varchar](100) NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[SkillId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
- CONSTRAINT [UQ_Skill_SkillName] UNIQUE NONCLUSTERED 
-(
-	[SkillName] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+
 
 
 /****** Object:  Table [dbo].[Users]    Script Date: 8/4/2025 1:41:24 PM ******/
@@ -301,6 +333,9 @@ GO
 
 
 /****** Object:  Table [dbo].[Users]    Script Date: 8/5/2025 1:24:30 PM ******/
+
+
+/****** Object:  Table [dbo].[Users]    Script Date: 8/7/2025 3:22:11 PM ******/
 
 SET ANSI_NULLS ON
 GO
@@ -322,6 +357,8 @@ CREATE TABLE [dbo].[Users](
 	[Bio] [nvarchar](max) NULL,
 	[DateOfBirth] [date] NULL,
 	[CompanyId] [int] NULL,
+	[Skills] [varchar](50) NULL,
+	[Education] [varchar](50) NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[UserId] ASC
@@ -334,12 +371,16 @@ UNIQUE NONCLUSTERED
 GO
 
 
+
 /****** Object:  Table [dbo].[UsersEducation]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[UsersEducation]    Script Date: 8/5/2025 1:24:30 PM ******/
 
 
 /****** Object:  Table [dbo].[UsersEducation]    Script Date: 8/5/2025 1:24:30 PM ******/
+
+
+/****** Object:  Table [dbo].[UsersEducation]    Script Date: 8/7/2025 3:22:11 PM ******/
 
 SET ANSI_NULLS ON
 GO
@@ -364,12 +405,16 @@ PRIMARY KEY CLUSTERED
 GO
 
 
+
 /****** Object:  Table [dbo].[UsersExperience]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[UsersExperience]    Script Date: 8/5/2025 1:24:30 PM ******/
 
 
 /****** Object:  Table [dbo].[UsersExperience]    Script Date: 8/5/2025 1:24:30 PM ******/
+
+
+/****** Object:  Table [dbo].[UsersExperience]    Script Date: 8/7/2025 3:22:11 PM ******/
 
 SET ANSI_NULLS ON
 GO
@@ -391,12 +436,16 @@ PRIMARY KEY CLUSTERED
 GO
 
 
+
 /****** Object:  Table [dbo].[UsersSkill]    Script Date: 8/4/2025 1:41:24 PM ******/
 
 /****** Object:  Table [dbo].[UsersSkill]    Script Date: 8/5/2025 1:24:30 PM ******/
 
 
 /****** Object:  Table [dbo].[UsersSkill]    Script Date: 8/5/2025 1:24:30 PM ******/
+
+
+/****** Object:  Table [dbo].[UsersSkill]    Script Date: 8/7/2025 3:22:11 PM ******/
 
 SET ANSI_NULLS ON
 GO

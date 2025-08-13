@@ -19,6 +19,9 @@ public interface IUserRepository
     Task<UsersProfileDto> GetUserProfileAsync(int userId);
     Task<ResponseDto> UploadUserProfilePictureAsync(int userId, string? imageUrl, string? bio);
 
+    Task<UsersProfileDto?> GetUploadedProfileByIdAsync(int id);
+
+
 
     Task<UsersProfileDto?> GetUploadedProfileByIdAsync(int id);
 

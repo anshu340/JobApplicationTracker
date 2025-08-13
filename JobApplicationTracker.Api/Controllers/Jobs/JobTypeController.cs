@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.Jobs;
 
-[Route("api/jobtypes")]
+[ApiController]
+[Route("api/[controller]")]
 public class JobTypeController(IJobTypeRepository jobTypeService) : ControllerBase
 {
     [HttpGet]
