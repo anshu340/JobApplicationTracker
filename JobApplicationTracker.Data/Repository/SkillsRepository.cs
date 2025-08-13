@@ -18,7 +18,7 @@ namespace JobApplicationTracker.Data.Repository
         public async Task<IEnumerable<SkillsDataModel>> GetAllSkillsAsync()
         {
             await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-            var sql = @"SELECT SkillId, SkillName, Category FROM [dbo].[Skill]";
+            var sql = @"SELECT SkillId, Skill FROM [dbo].[Skills]";
             return await connection.QueryAsync<SkillsDataModel>(sql).ConfigureAwait(false);
         }
 
@@ -27,9 +27,8 @@ namespace JobApplicationTracker.Data.Repository
             await using var connection = await _connectionService.GetDatabaseConnectionAsync();
             var sql = """
                       SELECT SkillId, 
-                             SkillName, 
-                             Category 
-                      FROM [dbo].[Skill]
+                             Skill 
+                      FROM [dbo].[Skills]
                       WHERE SkillId = @SkillId
                       """;
             var parameters = new DynamicParameters();
@@ -37,12 +36,93 @@ namespace JobApplicationTracker.Data.Repository
             return await connection.QueryFirstOrDefaultAsync<SkillsDataModel>(sql, parameters).ConfigureAwait(false);
         }
 
+        // New method to get skills by UserId from Users table (JSON array format)
+        public async Task<IEnumerable<SkillsDataModel>> GetSkillsByUserIdAsync(int userId)
+        {
+            await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+            // First get the skills JSON array from Users table
+            var userSkillsQuery = """
+                      SELECT Skills 
+                      FROM [dbo].[Users] 
+                      WHERE UserId = @UserId
+                      """;
+            var parameters = new DynamicParameters();
+            parameters.Add("@UserId", userId, DbType.Int32);
+
+            var skillsJson = await connection.QueryFirstOrDefaultAsync<string>(userSkillsQuery, parameters).ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(skillsJson))
+            {
+                return Enumerable.Empty<SkillsDataModel>();
+            }
+
+            try
+            {
+                // Parse JSON array [1,2,3] to get skill IDs
+                var skillIds = System.Text.Json.JsonSerializer.Deserialize<int[]>(skillsJson);
+
+                if (skillIds == null || skillIds.Length == 0)
+                {
+                    return Enumerable.Empty<SkillsDataModel>();
+                }
+
+                // Get skill details for these IDs
+                var skillsQuery = """
+                          SELECT SkillId, Skill 
+                          FROM [dbo].[Skills] 
+                          WHERE SkillId IN @SkillIds
+                          """;
+                var skillsParams = new DynamicParameters();
+                skillsParams.Add("@SkillIds", skillIds);
+
+                return await connection.QueryAsync<SkillsDataModel>(skillsQuery, skillsParams).ConfigureAwait(false);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // Handle case where Skills column contains invalid JSON
+                return Enumerable.Empty<SkillsDataModel>();
+            }
+        }
+
+        // Method to get only SkillIds by UserId from Users table (JSON array format)
+        public async Task<IEnumerable<int>> GetSkillsIdByUserIdAsync(int userId)
+        {
+            await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+            var sql = """
+                      SELECT Skills 
+                      FROM [dbo].[Users] 
+                      WHERE UserId = @UserId
+                      """;
+            var parameters = new DynamicParameters();
+            parameters.Add("@UserId", userId, DbType.Int32);
+
+            var skillsJson = await connection.QueryFirstOrDefaultAsync<string>(sql, parameters).ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(skillsJson))
+            {
+                return Enumerable.Empty<int>();
+            }
+
+            try
+            {
+                // Parse JSON array [1,2,3] to get skill IDs
+                var skillIds = System.Text.Json.JsonSerializer.Deserialize<int[]>(skillsJson);
+                return skillIds ?? Enumerable.Empty<int>();
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // Handle case where Skills column contains invalid JSON
+                return Enumerable.Empty<int>();
+            }
+        }
+
         public async Task<ResponseDto> SubmitSkillsAsync(SkillsDataModel skillsDto)
         {
             await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
             // Check if SkillId exists
-            var existsQuery = "SELECT COUNT(1) FROM [dbo].[Skill] WHERE SkillId = @SkillId";
+            var existsQuery = "SELECT COUNT(1) FROM [dbo].[Skills] WHERE SkillId = @SkillId";
             var exists = await connection.ExecuteScalarAsync<int>(existsQuery, new { skillsDto.SkillId });
 
             int skillIdResult = 0;
@@ -52,14 +132,13 @@ namespace JobApplicationTracker.Data.Repository
             {
                 // Insert new skill and get inserted SkillId
                 var sql = @"
-            INSERT INTO [dbo].[Skill] (SkillName, Category)
+            INSERT INTO [dbo].[Skills] (Skill)
             OUTPUT INSERTED.SkillId
-            VALUES (@SkillName, @Category)";
+            VALUES (@Skill)";
 
                 skillIdResult = await connection.ExecuteScalarAsync<int>(sql, new
                 {
-                    skillsDto.SkillName,
-                    skillsDto.Category
+                    skillsDto.Skill
                 });
 
                 affectedRows = skillIdResult > 0 ? 1 : 0;
@@ -68,15 +147,13 @@ namespace JobApplicationTracker.Data.Repository
             {
                 // Update existing skill
                 var sql = @"
-            UPDATE [dbo].[Skill]
-            SET SkillName = @SkillName,
-                Category = @Category
+            UPDATE [dbo].[Skills]
+            SET Skill = @Skill
             WHERE SkillId = @SkillId";
 
                 affectedRows = await connection.ExecuteAsync(sql, new
                 {
-                    skillsDto.SkillName,
-                    skillsDto.Category,
+                    skillsDto.Skill,
                     skillsDto.SkillId
                 });
 
@@ -97,7 +174,7 @@ namespace JobApplicationTracker.Data.Repository
         public async Task<ResponseDto> DeleteSkillsAsync(int skillId)
         {
             await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-            var sql = @"DELETE FROM [dbo].[Skill] WHERE SkillId = @SkillId";
+            var sql = @"DELETE FROM [dbo].[Skills] WHERE SkillId = @SkillId";
 
             var parameters = new DynamicParameters();
             parameters.Add("@SkillId", skillId, DbType.Int32);
@@ -124,4 +201,7 @@ namespace JobApplicationTracker.Data.Repository
             };
         }
     }
+
 }
+
+

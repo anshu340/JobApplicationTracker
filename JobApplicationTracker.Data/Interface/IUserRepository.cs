@@ -1,3 +1,4 @@
+
 using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Dto.AuthDto;
 using JobApplicationTracker.Data.Dto.Responses;
@@ -18,13 +19,8 @@ public interface IUserRepository
     Task<UsersProfileDto> GetUserProfileAsync(int userId);
     Task<ResponseDto> UploadUserProfilePictureAsync(int userId, string? imageUrl, string? bio);
 
+
     Task<UsersProfileDto?> GetUploadedProfileByIdAsync(int id);
-
-
-
-
-
-
 
 
 }

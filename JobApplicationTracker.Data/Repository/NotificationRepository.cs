@@ -115,8 +115,9 @@ public class NotificationsRepository : INotificationsRepository
             {
                 IsSuccess = affectedRows > 0,
                 Message = affectedRows > 0 ? "Notification saved successfully." : "Failed to save notification.",
-                Id = notificationsDto.NotificationId.ToString() // Assuming you changed ResponseDto.Id to string
+                Guid Id = notificationsDto.NotificationId 
             };
+
         }
         catch (Exception ex)
         {
