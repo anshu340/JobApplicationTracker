@@ -13,7 +13,7 @@ namespace JobApplicationTracker.Data.DataModels
         public string? Location { get; set; }
         public decimal? SalaryRangeMin { get; set; }
         public decimal? SalaryRangeMax { get; set; }
-        public string JobEmpolymentType { get; set; }
+        public string EmpolymentType { get; set; }
         public String ExperienceLevel { get; set; }
         public string? Responsibilities { get; set; }
         public string? Requirements { get; set; }

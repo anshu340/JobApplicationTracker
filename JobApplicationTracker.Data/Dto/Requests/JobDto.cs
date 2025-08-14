@@ -15,7 +15,7 @@ namespace JobApplicationTracker.Data.Dto.Requests
         public string Description { get; set; }
         public string Requirements { get; set; }
         public string Location { get; set; }
-        public string JobEmpolymentType { get; set; }
+        public string EmpolymentType { get; set; }
         public decimal SalaryRangeMin { get; set; }
         public decimal SalaryRangeMax { get; set; }
         public String ExperienceLevel { get; set; }

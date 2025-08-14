@@ -121,7 +121,7 @@ CREATE TABLE [dbo].[Job](
 	[Location] [nvarchar](255) NULL,
 	[SalaryRangeMin] [decimal](10, 2) NULL,
 	[SalaryRangeMax] [decimal](10, 2) NULL,
-	[JobEmpolymentType] [nvarchar](50) NOT NULL,
+	[EmpolymentType] [nvarchar](50) NOT NULL,
 	[ExperienceLevel] [nvarchar](50) NOT NULL,
 	[Responsibilities] [nvarchar](max) NULL,
 	[Requirements] [nvarchar](max) NULL,
