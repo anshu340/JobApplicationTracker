@@ -1,10 +1,11 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JobApplicationTracker.Data.Dto.Responses
+namespace JobApplicationTracker.Data.Dtos.Responses
 {
     public class ExperienceDto
     {
@@ -15,5 +16,8 @@ namespace JobApplicationTracker.Data.Dto.Responses
         public int? EndMonth { get; set; }
         public int? EndYear { get; set; }
         public string? Description { get; set; }
+        public string? JobTitle { get; set; }
+        public string? Organization { get; set; }
+        public string? Location { get; set; }
     }
 }

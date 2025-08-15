@@ -53,18 +53,20 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             DateOfBirth = user.DateOfBirth,
             Skills = user.Skills,
             Education = user.Education,
-            CompanyProfile = null
+            Experiences = user.Experiences
+
         };
 
-        // ✅ Add company profile if CompanyId > 0
+        // ✅ FIXED: Add company profile with CompanyLogo if CompanyId > 0
         if (user.CompanyId.HasValue && user.CompanyId.Value > 0)
         {
             var companyQuery = """
-            SELECT * FROM Companies
+            SELECT CompanyId, CompanyName, Description, WebsiteUrl, CompanyLogo, Location, ContactEmail, CreateDateTime
+            FROM Companies
             WHERE CompanyId = @CompanyId
         """;
 
-            var company = await connection.QueryFirstOrDefaultAsync<CompanyProfileDto>(
+            var company = await connection.QueryFirstOrDefaultAsync<CompaniesDataModel>(
                 companyQuery, new { CompanyId = user.CompanyId.Value });
 
             if (company is not null)
@@ -76,14 +78,14 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                     WebsiteUrl = company.WebsiteUrl,
                     Location = company.Location,
                     Description = company.Description,
-
+                    CompanyLogo = company.CompanyLogo, // ✅ ADDED: Include company logo
+                    ContactEmail = company.ContactEmail // ✅ ADDED: Include contact email
                 };
             }
         }
 
         return profile;
     }
-
 
     public async Task<UsersDtoResponse?> GetUsersByIdAsync(int usersId)
     {
@@ -221,6 +223,13 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             {
                 setClauses.Add("Education = @Education");
                 parameters.Add("Education", userDto.Education);
+
+            }
+
+            if (!string.IsNullOrEmpty(userDto.Experiences))
+            {
+                setClauses.Add("Experiences = @Experiences"); 
+                parameters.Add("Experiences", userDto.Experiences);
             }
 
             // Always update the UpdatedAt field
@@ -333,7 +342,6 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
         return await connection.QueryFirstOrDefaultAsync<UsersDataModel>(query, parameters).ConfigureAwait(false);
     }
 
-
     public async Task<ResponseDto> UploadUserProfilePictureAsync(int userId, string? imageUrl, string? bio)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
@@ -357,6 +365,7 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             Message = rows > 0 ? "Profile updated." : "User not found."
         };
     }
+
     public async Task<UsersProfileDto?> GetUploadedProfileByIdAsync(int userId)
     {
         await using var connection = await connectionService.GetDatabaseConnectionAsync();
@@ -367,10 +376,4 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
 
         return user;
     }
-
-
-
-
-
-
 }

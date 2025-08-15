@@ -30,6 +30,19 @@ namespace JobApplicationTracker.Api.Controllers.Experience
             return Ok(experience);
         }
 
+        [HttpGet]
+        [Route("/getexperiencebyuserid")]
+        public async Task<IActionResult> GetExperienceByUserId([FromQuery] int userId)
+        {
+            var experiences = await experienceService.GetExperiencesByUserIdAsync(userId);
+
+            if (experiences == null || !experiences.Any())
+                return NotFound(new { Message = "No experiences found for this user." });
+
+            return Ok(experiences);
+        }
+
+
         [HttpPost]
         [Route("/submitexperience")]
         public async Task<IActionResult> SubmitExperience([FromBody] ExperienceDataModel experienceDto)

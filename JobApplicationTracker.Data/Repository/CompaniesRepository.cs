@@ -10,10 +10,12 @@ namespace JobApplicationTracker.Data.Repository;
 public class CompaniesRepository : ICompaniesRepository
 {
     private readonly IDatabaseConnectionService _connectionService;
+
     public CompaniesRepository(IDatabaseConnectionService connectionService)
     {
         _connectionService = connectionService;
     }
+
     public async Task<IEnumerable<CompaniesDataModel>> GetAllCompaniesAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
@@ -32,7 +34,6 @@ public class CompaniesRepository : ICompaniesRepository
 
         return await connection.QueryAsync<CompaniesDataModel>(sql).ConfigureAwait(false);
     }
-
 
     public async Task<CompaniesDataModel> GetCompaniesByIdAsync(int companiesId)
     {
@@ -68,10 +69,10 @@ public class CompaniesRepository : ICompaniesRepository
         {
             sql = """
                   INSERT INTO Companies (
-                      CompanyName, Description, WebsiteUrl, CompanyLogo, Location, ContactEmail,CreateDateTime,
+                      CompanyName, Description, WebsiteUrl, CompanyLogo, Location, ContactEmail, CreateDateTime
                   )
                   VALUES (
-                      @CompanyName, @Description, @WebsiteUrl, @CompanyLogo, @Location, @ContactEmail,  GETUTCDATE()
+                      @CompanyName, @Description, @WebsiteUrl, @CompanyLogo, @Location, @ContactEmail, GETUTCDATE()
                   );
                   SELECT CAST(SCOPE_IDENTITY() AS INT);
                   """;
@@ -100,7 +101,6 @@ public class CompaniesRepository : ICompaniesRepository
         parameters.Add("@Location", companiesDto.Location);
         parameters.Add("@ContactEmail", companiesDto.ContactEmail);
 
-
         int affectedRows;
         if (isInsert)
         {
@@ -122,7 +122,30 @@ public class CompaniesRepository : ICompaniesRepository
         };
     }
 
+    public async Task<ResponseDto> UpdateCompanyLogoAsync(int companyId, string logoUrl)
+    {
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
+        var sql = """
+                  UPDATE Companies
+                  SET CompanyLogo = @CompanyLogo
+                  WHERE CompanyId = @CompanyId
+                  """;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@CompanyId", companyId, DbType.Int32);
+        parameters.Add("@CompanyLogo", logoUrl, DbType.String);
+
+        var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
+
+        return new ResponseDto
+        {
+            IsSuccess = affectedRows > 0,
+            Message = affectedRows > 0
+                ? "Company logo updated successfully."
+                : "Failed to update company logo."
+        };
+    }
 
     public async Task<int> CreateCompanyAsync(CompaniesDataModel request)
     {
@@ -140,7 +163,6 @@ public class CompaniesRepository : ICompaniesRepository
         int companyId = await connection.ExecuteScalarAsync<int>(query, parameters).ConfigureAwait(false);
         return companyId;
     }
-
 
     public async Task<ResponseDto> DeleteCompanyAsync(int companiesId)
     {
@@ -172,16 +194,14 @@ public class CompaniesRepository : ICompaniesRepository
             return new ResponseDto
             {
                 IsSuccess = false,
-                Message = "Companies not found or could not be deleted."
+                Message = "Company not found or could not be deleted."
             };
         }
 
         return new ResponseDto
         {
             IsSuccess = true,
-            Message = "Companies deleted successfully.",
-
+            Message = "Company deleted successfully."
         };
     }
-
 }
