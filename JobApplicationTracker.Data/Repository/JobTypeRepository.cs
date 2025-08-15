@@ -20,7 +20,7 @@ public class JobTypeRepository : IJobTypeRepository
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
         var sql = """
                   SELECT JobTypeId, 
-                         Name, 
+                         Name 
                   FROM JobType
                   """;
         return await connection.QueryAsync<JobTypesDataModel>(sql).ConfigureAwait(false);
