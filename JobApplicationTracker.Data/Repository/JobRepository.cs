@@ -28,7 +28,7 @@ public class JobRepository : IJobsRepository
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   JobEmpolymentType,
+                   EmpolymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -56,7 +56,7 @@ public class JobRepository : IJobsRepository
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   JobEmpolymentType,
+                   EmpolymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -75,7 +75,6 @@ public class JobRepository : IJobsRepository
         return await connection.QueryFirstOrDefaultAsync<JobsDataModel>(sql, parameters).ConfigureAwait(false);
     }
 
-    // ✅ NEW METHOD: Get Jobs By Company ID
     public async Task<IEnumerable<JobsDataModel>> GetJobsByCompanyIdAsync(int companyId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
@@ -89,7 +88,7 @@ public class JobRepository : IJobsRepository
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   JobEmpolymentType,
+                   EmpolymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -122,8 +121,11 @@ public class JobRepository : IJobsRepository
         parameters.Add("Location", jobsDto.Location, DbType.String);
         parameters.Add("SalaryRangeMin", jobsDto.SalaryRangeMin, DbType.Decimal);
         parameters.Add("SalaryRangeMax", jobsDto.SalaryRangeMax, DbType.Decimal);
-        parameters.Add("JobType", jobsDto.JobEmpolymentType, DbType.Int32);
-        parameters.Add("ExperienceLevel", jobsDto.ExperienceLevel, DbType.Int32);
+
+        // Fixed: These should be strings as per database schema
+        parameters.Add("EmpolymentType", jobsDto.EmpolymentType, DbType.String);
+        parameters.Add("ExperienceLevel", jobsDto.ExperienceLevel, DbType.String);
+
         parameters.Add("Responsibilities", jobsDto.Responsibilities, DbType.String);
         parameters.Add("Requirements", jobsDto.Requirements, DbType.String);
         parameters.Add("Benefits", jobsDto.Benefits, DbType.String);
@@ -131,20 +133,20 @@ public class JobRepository : IJobsRepository
         parameters.Add("ApplicationDeadline", jobsDto.ApplicationDeadline, DbType.DateTime);
         parameters.Add("Status", jobsDto.Status, DbType.String);
         parameters.Add("Views", jobsDto.Views, DbType.Int32);
-        parameters.Add("JobId", jobsDto.JobId, DbType.Int32);
 
         if (isNewJob)
         {
+            // Remove JobId parameter for insert
             var insertQuery = @"
             INSERT INTO Job (
                 CompanyId, PostedByUserId, JobType, Description, Location,
-                SalaryRangeMin, SalaryRangeMax, JobEmpolymentType, ExperienceLevel,
+                SalaryRangeMin, SalaryRangeMax, EmpolymentType, ExperienceLevel,
                 Responsibilities, Requirements, Benefits, PostedAt,
                 ApplicationDeadline, Status, Views
             )
             VALUES (
                 @CompanyId, @PostedByUserId, @JobType, @Description, @Location,
-                @SalaryRangeMin, @SalaryRangeMax, @JobEmpolymentType, @ExperienceLevel,
+                @SalaryRangeMin, @SalaryRangeMax, @EmpolymentType, @ExperienceLevel,
                 @Responsibilities, @Requirements, @Benefits, @PostedAt,
                 @ApplicationDeadline, @Status, @Views
             );
@@ -161,12 +163,15 @@ public class JobRepository : IJobsRepository
         }
         else
         {
+            // For update, add JobId parameter
+            parameters.Add("JobId", jobsDto.JobId, DbType.Int32);
+
             var updateQuery = @"
             UPDATE Job
             SET CompanyId = @CompanyId, PostedByUserId = @PostedByUserId,
                 JobType = @JobType, Description = @Description, Location = @Location,
                 SalaryRangeMin = @SalaryRangeMin, SalaryRangeMax = @SalaryRangeMax,
-                JobEmpolymentType = @JobEmpolymentType, ExperienceLevel = @ExperienceLevel,
+                EmpolymentType = @EmpolymentType, ExperienceLevel = @ExperienceLevel,
                 Responsibilities = @Responsibilities, Requirements = @Requirements,
                 Benefits = @Benefits, PostedAt = @PostedAt,
                 ApplicationDeadline = @ApplicationDeadline, Status = @Status,
@@ -196,7 +201,8 @@ public class JobRepository : IJobsRepository
         {
             IsSuccess = affectedRows > 0,
             Message = affectedRows > 0 ? "Job deleted successfully." : "Failed to delete job.",
-            Id = jobId  // Add this line to return the deleted job ID
+            StatusCode = affectedRows > 0 ? 200 : 400,
+            Id = jobId
         };
     }
 }
