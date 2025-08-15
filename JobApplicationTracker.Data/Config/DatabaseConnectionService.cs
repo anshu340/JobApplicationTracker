@@ -3,7 +3,7 @@ using JobApplicationTracker.Data.Config;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 
-namespace JobApplicationTracke.Data.Database;
+namespace JobApplicationTracker.Data.Database;
 
 public class DatabaseConnectionService : IDatabaseConnectionService
 {
