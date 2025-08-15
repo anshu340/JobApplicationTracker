@@ -52,7 +52,12 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             Bio = user.Bio,
             DateOfBirth = user.DateOfBirth,
             Skills = user.Skills,
+
+            Education = user.Education,
+            Experiences = user.Experiences
+
             Education = user.Education
+
 
         };
 
@@ -222,6 +227,13 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             {
                 setClauses.Add("Education = @Education");
                 parameters.Add("Education", userDto.Education);
+
+            }
+
+            if (!string.IsNullOrEmpty(userDto.Experiences))
+            {
+                setClauses.Add("Experiences = @Experiences"); 
+                parameters.Add("Experiences", userDto.Experiences);
             }
 
             // Always update the UpdatedAt field
