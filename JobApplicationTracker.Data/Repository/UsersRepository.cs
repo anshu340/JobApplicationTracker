@@ -52,8 +52,12 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             Bio = user.Bio,
             DateOfBirth = user.DateOfBirth,
             Skills = user.Skills,
+
             Education = user.Education,
             Experiences = user.Experiences
+
+            Education = user.Education
+
 
         };
 

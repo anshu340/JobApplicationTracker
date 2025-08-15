@@ -142,6 +142,7 @@ builder.Services.AddScoped<IJobsRepository, JobRepository>();
 builder.Services.AddScoped<IJobTypeRepository, JobTypeRepository>();
 
 
+
 builder.Services.AddScoped<IExperienceRepository, ExperienceRepository>();
 
 // In your Program.cs, add this AFTER the AddServiceLayer call:
@@ -161,6 +162,12 @@ builder.Services.AddScoped<IEducationRepository, EducationRepository>();
 
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
+
+builder.Services.AddScoped<IEducationRepository, EducationRepository>();
+
+// Calling the extension method to register all services from Service and Data layers
+builder.Services.AddServiceLayer(builder.Configuration);
+
 
 // add global exception handler service
 // builder.Services.AddExceptionHandler<AppExceptionHandler>();
