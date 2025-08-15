@@ -17,9 +17,6 @@ public static class ServiceCollectionExtension {
         // services.AddScoped<IIndustriesRepository, IndustriesRepository>();
         // services.AddScoped<IAdminActionRepository, AdminActionService>();
         services.AddScoped<IJobApplicationRepository, ApplicationsRepository>();
-        services.AddScoped<IJobSeekerExperienceRepository, JobSeekerExperienceRepository>();
-        services.AddScoped<IJobSeekersRepository, JobSeekerRepository>();
-        //services.AddScoped<IJobSeekerSkillRepository, JobSeekerSkillsRepository>();
         services.AddScoped<ISkillsRepository, SkillsRepository>();
         services.AddScoped<IUserRepository, UsersRepository>();
 

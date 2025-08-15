@@ -1,203 +1,177 @@
 ﻿using Dapper;
-using JobApplicationTracker.Data.Interface;
-using JobApplicationTracker.Dto;
-using System.Data;
+using JobApplicationTracker.Data.Dto.Responses;
 using JobApplicationTracker.Data.Dtos.Responses;
+using JobApplicationTracker.Data.Interface;
+using System.Data;
 
-namespace JobApplicationTracker.Data.Repository;
-
-public class JobSeekerEducationRepository : IJobSeekersEducationRepository
+namespace JobApplicationTracker.Data.Repository
 {
-    private readonly IDatabaseConnectionService _connectionService;
-
-    public JobSeekerEducationRepository(IDatabaseConnectionService connectionService)
+    public class EducationRepository(IDatabaseConnectionService connectionService) : IEducationRepository
     {
-        _connectionService = connectionService;
-    }
-
-    public async Task<IEnumerable<JobSeekerEducationDto>> GetAllJobSeekerEducationAsync()
-    {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-
-        var sql = """
-                  SELECT EducationId, 
-                         JobSeekerId,
-                         University,
-                         College,
-                         Degree,
-                         FieldOfStudy,
-                         StartDate,
-                         Status,
-                         EndDate,
-                         GPA
-                  FROM JobSeekerEducation
-                  """;
-
-        return await connection.QueryAsync<JobSeekerEducationDto>(sql).ConfigureAwait(false);
-    }
-
-    public async Task<JobSeekerEducationDto> GetJobSeekerEducationByIdAsync(int jobSeekerEducationId)
-    {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-
-        var sql = """
-                  SELECT EducationId, 
-                         JobSeekerId,
-                         University,
-                         College,
-                         Degree,
-                         FieldOfStudy,
-                         StartDate,
-                         Status,
-                         EndDate,
-                         GPA 
-                  FROM JobSeekerEducation
-                  WHERE EducationId = @EducationId
-                  """;
-
-        var parameters = new DynamicParameters();
-        parameters.Add("@EducationId", jobSeekerEducationId, DbType.Int32);
-
-        return await connection.QueryFirstOrDefaultAsync<JobSeekerEducationDto>(sql, parameters).ConfigureAwait(false);
-    }
-
-    public async Task<IEnumerable<JobSeekerEducationDto>> GetJobSeekerEducationByJobSeekerIdAsync(int jobSeekerId)
-    {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-
-        var sql = """
-                  SELECT EducationId, 
-                         JobSeekerId,
-                         University,
-                         College,
-                         Degree,
-                         FieldOfStudy,
-                         StartDate,
-                         Status,
-                         EndDate,
-                         GPA 
-                  FROM JobSeekerEducation
-                  WHERE JobSeekerId = @JobSeekerId
-                  """;
-
-        var parameters = new DynamicParameters();
-        parameters.Add("@JobSeekerId", jobSeekerId, DbType.Int32);
-
-        return await connection.QueryAsync<JobSeekerEducationDto>(sql, parameters).ConfigureAwait(false);
-    }
-
-    public async Task<ResponseDto> SubmitJobSeekerEducationAsync(JobSeekerEducationDto jobSeekerEducationDto)
-    {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-
-        var isNewEducation = jobSeekerEducationDto.EducationId <= 0;
-        var parameters = new DynamicParameters();
-
-        // Common parameters for both insert and update
-        parameters.Add("@JobSeekerId", jobSeekerEducationDto.JobSeekerId, DbType.Int32);
-        parameters.Add("@University", jobSeekerEducationDto.University, DbType.String);
-        parameters.Add("@College", jobSeekerEducationDto.College, DbType.String);
-        parameters.Add("@Degree", jobSeekerEducationDto.Degree, DbType.String);
-        parameters.Add("@FieldOfStudy", jobSeekerEducationDto.FieldOfStudy, DbType.String);
-        parameters.Add("@StartDate", jobSeekerEducationDto.StartDate, DbType.DateTime);
-        parameters.Add("@Status", jobSeekerEducationDto.Status, DbType.String);
-        parameters.Add("@EndDate", jobSeekerEducationDto.EndDate, DbType.DateTime);
-        parameters.Add("@GPA", jobSeekerEducationDto.Gpa, DbType.Double);
-
-        if (isNewEducation)
+        public async Task<IEnumerable<EducationDto>> GetAllEducationAsync()
         {
-            var insertSql = """
-                           INSERT INTO JobSeekerEducation 
-                           (JobSeekerId, University, College, Degree, FieldOfStudy, StartDate, Status, EndDate, GPA)
-                           VALUES 
-                           (@JobSeekerId, @University, @College, @Degree, @FieldOfStudy, @StartDate, @Status, @EndDate, @GPA);
-                           SELECT CAST(SCOPE_IDENTITY() AS INT);
-                           """;
-
-            var newEducationId = await connection.ExecuteScalarAsync<int>(insertSql, parameters).ConfigureAwait(false);
-
-            return new ResponseDto
-            {
-                IsSuccess = newEducationId > 0,
-                Message = newEducationId > 0 ? "Job seeker education inserted successfully." : "Failed to insert job seeker education.",
-                StatusCode = newEducationId > 0 ? 201 : 400,
-                Id = newEducationId
-            };
+            await using var connection = await connectionService.GetDatabaseConnectionAsync();
+            var sql = """
+                SELECT EducationId, School, Degree, FieldOfStudy, StartDate, EndDate,
+                       IsCurrentlyStudying, Description, GPA
+                FROM Education
+            """;
+            return await connection.QueryAsync<EducationDto>(sql);
         }
-        else
+
+        public async Task<EducationDto?> GetEducationByIdAsync(int educationId)
         {
-            // First check if the record exists
-            var existingRecord = await GetJobSeekerEducationByIdAsync(jobSeekerEducationDto.EducationId);
-            if (existingRecord == null)
+            await using var connection = await connectionService.GetDatabaseConnectionAsync();
+            var sql = """
+                SELECT EducationId, School, Degree, FieldOfStudy, StartDate, EndDate,
+                       IsCurrentlyStudying, Description, GPA
+                FROM Education
+                WHERE EducationId = @EducationId
+            """;
+            return await connection.QueryFirstOrDefaultAsync<EducationDto>(sql, new { EducationId = educationId });
+        }
+
+        public async Task<ResponseDto> SubmitEducationAsync(EducationDto dto)
+        {
+            await using var connection = await connectionService.GetDatabaseConnectionAsync();
+            var isNew = dto.EducationId is null or <= 0;
+
+            if (isNew)
             {
+                var insertQuery = @"
+                    INSERT INTO Education (School, Degree, FieldOfStudy, StartDate, EndDate,
+                                            IsCurrentlyStudying, Description, GPA)
+                    VALUES (@School, @Degree, @FieldOfStudy, @StartDate, @EndDate,
+                            @IsCurrentlyStudying, @Description, @GPA);
+                    SELECT CAST(SCOPE_IDENTITY() AS INT);
+                ";
+
+                var newId = await connection.ExecuteScalarAsync<int>(insertQuery, dto);
                 return new ResponseDto
                 {
-                    Id = 0,
-                    IsSuccess = false,
-                    StatusCode = 404,
-                    Message = $"Education record with ID {jobSeekerEducationDto.EducationId} not found"
+                    IsSuccess = newId > 0,
+                    Message = "Education added successfully.",
+                    Id = newId
                 };
             }
+            else
+            {
+                var updateQuery = @"
+                    UPDATE Education
+                    SET School = @School,
+                        Degree = @Degree,
+                        FieldOfStudy = @FieldOfStudy,
+                        StartDate = @StartDate,
+                        EndDate = @EndDate,
+                        IsCurrentlyStudying = @IsCurrentlyStudying,
+                        Description = @Description,
+                        GPA = @GPA
+                    WHERE EducationId = @EducationId
+                ";
 
-            // Add EducationId parameter for update
-            parameters.Add("@EducationId", jobSeekerEducationDto.EducationId, DbType.Int32);
+                var rows = await connection.ExecuteAsync(updateQuery, dto);
+                return new ResponseDto
+                {
+                    IsSuccess = rows > 0,
+                    Message = rows > 0 ? "Education updated successfully." : "Failed to update education.",
+                    Id = dto.EducationId ?? -1
+                };
+            }
+        }
+        // New method to get Education details by UserId (Education JSON array in Users table)
+        public async Task<IEnumerable<EducationDto>> GetEducationByUserIdAsync(int userId)
+        {
+            await using var connection = await connectionService.GetDatabaseConnectionAsync();
 
-            var updateSql = """
-                           UPDATE JobSeekerEducation
-                           SET JobSeekerId = @JobSeekerId,
-                               University = @University,
-                               College = @College,
-                               Degree = @Degree,
-                               FieldOfStudy = @FieldOfStudy,
-                               StartDate = @StartDate,
-                               Status = @Status,
-                               EndDate = @EndDate,
-                               GPA = @GPA
-                           WHERE EducationId = @EducationId
-                           """;
+            // 1. Get Education JSON array string from Users table
+            var userEducationQuery = """
+        SELECT Education 
+        FROM [dbo].[Users] 
+        WHERE UserId = @UserId
+    """;
 
-            var rowsAffected = await connection.ExecuteAsync(updateSql, parameters).ConfigureAwait(false);
+            var parameters = new DynamicParameters();
+            parameters.Add("@UserId", userId, DbType.Int32);
+
+            var educationJson = await connection.QueryFirstOrDefaultAsync<string>(userEducationQuery, parameters);
+
+            if (string.IsNullOrWhiteSpace(educationJson))
+            {
+                return Enumerable.Empty<EducationDto>();
+            }
+
+            try
+            {
+                // 2. Deserialize JSON array of education IDs
+                var educationIds = System.Text.Json.JsonSerializer.Deserialize<int[]>(educationJson);
+
+                if (educationIds == null || educationIds.Length == 0)
+                    return Enumerable.Empty<EducationDto>();
+
+                // 3. Query Education table for these IDs
+                var educationQuery = """
+            SELECT EducationId, School, Degree, FieldOfStudy, StartDate, EndDate,
+                   IsCurrentlyStudying, Description, GPA
+            FROM Education
+            WHERE EducationId IN @EducationIds
+        """;
+
+                var educationParams = new DynamicParameters();
+                educationParams.Add("@EducationIds", educationIds);
+
+                return await connection.QueryAsync<EducationDto>(educationQuery, educationParams);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // Handle invalid JSON
+                return Enumerable.Empty<EducationDto>();
+            }
+        }
+
+        // Method to get only Education IDs by UserId from Users table (JSON array format)
+        public async Task<IEnumerable<int>> GetEducationIdsByUserIdAsync(int userId)
+        {
+            await using var connection = await connectionService.GetDatabaseConnectionAsync();
+
+            var sql = """
+        SELECT Education
+        FROM [dbo].[Users]
+        WHERE UserId = @UserId
+    """;
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@UserId", userId, DbType.Int32);
+
+            var educationJson = await connection.QueryFirstOrDefaultAsync<string>(sql, parameters);
+
+            if (string.IsNullOrWhiteSpace(educationJson))
+            {
+                return Enumerable.Empty<int>();
+            }
+
+            try
+            {
+                var educationIds = System.Text.Json.JsonSerializer.Deserialize<int[]>(educationJson);
+                return educationIds ?? Enumerable.Empty<int>();
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                return Enumerable.Empty<int>();
+            }
+        }
+
+
+        public async Task<ResponseDto> DeleteEducationAsync(int educationId)
+        {
+            await using var connection = await connectionService.GetDatabaseConnectionAsync();
+            var sql = "DELETE FROM Education WHERE EducationId = @EducationId";
+            var rows = await connection.ExecuteAsync(sql, new { EducationId = educationId });
 
             return new ResponseDto
             {
-                IsSuccess = rowsAffected > 0,
-                Message = rowsAffected > 0 ? "Job seeker education updated successfully." : "Failed to update job seeker education.",
-                StatusCode = rowsAffected > 0 ? 200 : 400,
-                Id = rowsAffected > 0 ? jobSeekerEducationDto.EducationId : 0
+                IsSuccess = rows > 0,
+                Message = rows > 0 ? "Education deleted successfully." : "Failed to delete education."
             };
         }
-    }
-
-    public async Task<ResponseDto> DeleteJobSeekerEducationAsync(int educationId)
-    {
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-
-        // First check if the record exists
-        var existingRecord = await GetJobSeekerEducationByIdAsync(educationId);
-        if (existingRecord == null)
-        {
-            return new ResponseDto
-            {
-                Id = 0,
-                IsSuccess = false,
-                StatusCode = 404,
-                Message = "Education record not found"
-            };
-        }
-
-        var sql = "DELETE FROM JobSeekerEducation WHERE EducationId = @EducationId";
-
-        var parameters = new DynamicParameters();
-        parameters.Add("@EducationId", educationId, DbType.Int32);
-
-        var rowsAffected = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
-
-        return new ResponseDto
-        {
-            IsSuccess = rowsAffected > 0,
-            Message = rowsAffected > 0 ? "Job seeker education deleted successfully." : "Failed to delete job seeker education.",
-            StatusCode = rowsAffected > 0 ? 200 : 400,
-            Id = rowsAffected > 0 ? educationId : 0
-        };
     }
 }

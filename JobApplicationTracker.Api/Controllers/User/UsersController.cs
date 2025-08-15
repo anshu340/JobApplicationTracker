@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using System.IO;
+using System.Text.Json;
 
 
 
@@ -132,7 +133,7 @@ public class UsersController : ControllerBase
                 await uploadProfileDto.ProfileImage.CopyToAsync(stream);
             }
 
-            imageUrl = $"/images/profiles/{fileName}";
+            imageUrl = $"{Request.Scheme}://{Request.Host}/images/profiles/{fileName}";
         }
 
         // ✅ Use repository method to update DB
@@ -164,5 +165,4 @@ public class UsersController : ControllerBase
             Bio = user.Bio
         });
     }
-
 }
