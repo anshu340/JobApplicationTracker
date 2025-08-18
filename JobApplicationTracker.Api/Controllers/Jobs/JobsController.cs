@@ -15,6 +15,29 @@ public class JobsController : ControllerBase
         _jobsRepository = jobsRepository;
     }
 
+    // Helper method to update status dynamically
+    private JobsDataModel SetJobStatus(JobsDataModel job)
+    {
+        if (job.ApplicationDeadline < DateTime.UtcNow.Date)
+        {
+            job.Status = "I"; // Inactive
+        }
+        else
+        {
+            job.Status = "A"; // Active
+        }
+        return job;
+    }
+
+    private IEnumerable<JobsDataModel> SetJobsStatus(IEnumerable<JobsDataModel> jobs)
+    {
+        foreach (var job in jobs)
+        {
+            SetJobStatus(job);
+        }
+        return jobs;
+    }
+
     // GET: api/Jobs
     [HttpGet]
     public async Task<ActionResult<IEnumerable<JobsDataModel>>> GetAllJobs()
@@ -22,7 +45,8 @@ public class JobsController : ControllerBase
         try
         {
             var jobs = await _jobsRepository.GetAllJobsAsync();
-            return Ok(jobs);
+            var updatedJobs = SetJobsStatus(jobs);
+            return Ok(updatedJobs);
         }
         catch (Exception ex)
         {
@@ -48,7 +72,8 @@ public class JobsController : ControllerBase
                 return NotFound($"Job with ID {id} not found");
             }
 
-            return Ok(job);
+            var updatedJob = SetJobStatus(job);
+            return Ok(updatedJob);
         }
         catch (Exception ex)
         {
@@ -56,7 +81,7 @@ public class JobsController : ControllerBase
         }
     }
 
-    // ✅ NEW ENDPOINT: GET: api/Jobs/getjobsbycompanyid?companyId=123
+    // GET: api/Jobs/getjobsbycompanyid?companyId=123
     [HttpGet("getjobsbycompanyid")]
     public async Task<ActionResult<IEnumerable<JobsDataModel>>> GetJobsByCompanyId([FromQuery] int companyId)
     {
@@ -71,10 +96,11 @@ public class JobsController : ControllerBase
 
             if (!jobs.Any())
             {
-                return Ok(new List<JobsDataModel>()); // Return empty list instead of 404
+                return Ok(new List<JobsDataModel>()); // empty list
             }
 
-            return Ok(jobs);
+            var updatedJobs = SetJobsStatus(jobs);
+            return Ok(updatedJobs);
         }
         catch (Exception ex)
         {
@@ -82,7 +108,7 @@ public class JobsController : ControllerBase
         }
     }
 
-    // POST: api/Jobs
+    // POST: api/Jobs/submitjobs
     [HttpPost("submitjobs")]
     public async Task<ActionResult> CreateJob([FromBody] JobsDataModel jobDto)
     {
@@ -97,7 +123,9 @@ public class JobsController : ControllerBase
 
             if (result.IsSuccess)
             {
-                return Ok(result);
+                var newJob = await _jobsRepository.GetJobsByIdAsync(result.Id);
+                var updatedJob = SetJobStatus(newJob);
+                return Ok(updatedJob);
             }
 
             return BadRequest(result.Message);
@@ -108,33 +136,7 @@ public class JobsController : ControllerBase
         }
     }
 
-    //// PUT: api/Jobs/{id}
-    //[HttpPut("{id}")]
-    //public async Task<ActionResult> UpdateJob(int id, [FromBody] JobsDataModel jobDto)
-    //{
-    //    try
-    //    {
-    //        if (jobDto == null || id != jobDto.JobId)
-    //        {
-    //            return BadRequest("Invalid job data");
-    //        }
-
-    //        var result = await _jobsRepository.SubmitJobAsync(jobDto);
-
-    //        if (result.IsSuccess)
-    //        {
-    //            return Ok(result);
-    //        }
-
-    //        return BadRequest(result.Message);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return StatusCode(500, $"Internal server error: {ex.Message}");
-    //    }
-    //}
-
-    // DELETE: api/Jobs/{id}
+    // DELETE: api/Jobs/delete/{id}
     [HttpDelete("delete/{id}")]
     public async Task<ActionResult> DeleteJob(int id)
     {

@@ -19,6 +19,16 @@ public class JobRepository : IJobsRepository
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
+        // ✅ First update expired jobs to inactive status
+        var updateExpiredSql = """
+            UPDATE Job 
+            SET Status = 'I' 
+            WHERE Status = 'A' 
+            AND ApplicationDeadline < CAST(GETDATE() AS DATE)
+            """;
+
+        await connection.ExecuteAsync(updateExpiredSql).ConfigureAwait(false);
+
         var sql = """
             SELECT JobId,
                    CompanyId,
@@ -47,6 +57,19 @@ public class JobRepository : IJobsRepository
     public async Task<JobsDataModel?> GetJobsByIdAsync(int jobId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        // ✅ Update this specific job if expired
+        var updateExpiredSql = """
+            UPDATE Job 
+            SET Status = 'I' 
+            WHERE JobId = @JobId 
+            AND Status = 'A' 
+            AND ApplicationDeadline < CAST(GETDATE() AS DATE)
+            """;
+
+        var updateParameters = new DynamicParameters();
+        updateParameters.Add("@JobId", jobId, DbType.Int32);
+        await connection.ExecuteAsync(updateExpiredSql, updateParameters).ConfigureAwait(false);
 
         var sql = """
             SELECT JobId,
@@ -81,6 +104,20 @@ public class JobRepository : IJobsRepository
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
+        // ✅ First update expired jobs for this company to inactive status
+        var updateExpiredSql = """
+            UPDATE Job 
+            SET Status = 'I' 
+            WHERE CompanyId = @CompanyId 
+            AND Status = 'A' 
+            AND ApplicationDeadline < CAST(GETDATE() AS DATE)
+            """;
+
+        var updateParameters = new DynamicParameters();
+        updateParameters.Add("@CompanyId", companyId, DbType.Int32);
+        await connection.ExecuteAsync(updateExpiredSql, updateParameters).ConfigureAwait(false);
+
+        // ✅ Then fetch all jobs for the company with updated statuses
         var sql = """
             SELECT JobId,
                    CompanyId,
@@ -133,7 +170,7 @@ public class JobRepository : IJobsRepository
         parameters.Add("ApplicationDeadline", jobsDto.ApplicationDeadline, DbType.DateTime);
         parameters.Add("Status", jobsDto.Status, DbType.String);
         parameters.Add("Views", jobsDto.Views, DbType.Int32);
-        parameters.Add("Skills", jobsDto.Skills, DbType.String); // ✅ Added Skills parameter
+        parameters.Add("Skills", jobsDto.Skills, DbType.String);
 
         if (isNewJob)
         {
