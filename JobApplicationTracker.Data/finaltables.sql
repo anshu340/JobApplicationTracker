@@ -1,6 +1,10 @@
 USE [JobApplicationTrackerDB]
 GO
+
+/****** Object:  Table [dbo].[Admin]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[Admin]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -20,7 +24,11 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+
+/****** Object:  Table [dbo].[AdminLog]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[AdminLog]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -42,7 +50,11 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+/****** Object:  Table [dbo].[Application]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[Application]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -68,7 +80,11 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+/****** Object:  Table [dbo].[ApplicationStatus]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[ApplicationStatus]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -87,7 +103,11 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+/****** Object:  Table [dbo].[Companies]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[Companies]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -107,7 +127,11 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+/****** Object:  Table [dbo].[Education]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[Education]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -128,7 +152,11 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+/****** Object:  Table [dbo].[Job]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[Job]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -157,7 +185,11 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+/****** Object:  Table [dbo].[JobType]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[JobType]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -175,7 +207,11 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+
+/****** Object:  Table [dbo].[Notifications]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[Notifications]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -195,7 +231,11 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+
+/****** Object:  Table [dbo].[NotificationTypes]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[NotificationTypes]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -215,7 +255,10 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+/****** Object:  Table [dbo].[Skills]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[Skills]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -229,7 +272,39 @@ PRIMARY KEY CLUSTERED
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+
+
+/****** Object:  Table [dbo].[Experiences]    Script Date: 8/15/2025 1:09:08 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Experiences](
+	[ExperienceId] [int] IDENTITY(1,1) NOT NULL,
+	[IsCurrentlyWorking] [bit] NOT NULL,
+	[StartMonth] [int] NOT NULL,
+	[StartYear] [int] NOT NULL,
+	[EndMonth] [int] NULL,
+	[EndYear] [int] NULL,
+	[Description] [nvarchar](max) NULL,
+	[JobTitle] [varchar](200) NULL,
+	[Organization] [varchar](200) NULL,
+	[Location] [varchar](200) NULL,
+
+PRIMARY KEY CLUSTERED 
+(
+	[ExperienceId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+
+/****** Object:  Table [dbo].[Users]    Script Date: 8/15/2025 12:32:07 PM ******/
+
 /****** Object:  Table [dbo].[Users]    Script Date: 8/15/2025 11:43:02 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -252,6 +327,7 @@ CREATE TABLE [dbo].[Users](
 	[CompanyId] [int] NULL,
 	[Skills] [varchar](50) NULL,
 	[Education] [varchar](50) NULL,
+	[Experiences] [varchar](50) Null,
 PRIMARY KEY CLUSTERED 
 (
 	[UserId] ASC

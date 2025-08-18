@@ -18,6 +18,7 @@ public class UsersDataModel
     public DateTime? DateOfBirth { get; set; }
     public string? Skills { get; set; }
     public string? Education { get; set; }
+    public string? Experiences { get; set; }
 
     public UsersDataModel()
     {
