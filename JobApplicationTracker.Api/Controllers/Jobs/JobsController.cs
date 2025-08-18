@@ -15,16 +15,16 @@ public class JobsController : ControllerBase
         _jobsRepository = jobsRepository;
     }
 
-    // Helper method to update status dynamically
+
     private JobsDataModel SetJobStatus(JobsDataModel job)
     {
         if (job.ApplicationDeadline < DateTime.UtcNow.Date)
         {
-            job.Status = "I"; // Inactive
+            job.Status = "I"; 
         }
         else
         {
-            job.Status = "A"; // Active
+            job.Status = "A"; 
         }
         return job;
     }
@@ -37,8 +37,6 @@ public class JobsController : ControllerBase
         }
         return jobs;
     }
-
-    // GET: api/Jobs
     [HttpGet]
     public async Task<ActionResult<IEnumerable<JobsDataModel>>> GetAllJobs()
     {
@@ -53,8 +51,6 @@ public class JobsController : ControllerBase
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
-
-    // GET: api/Jobs/getjobsbyid?id=123
     [HttpGet("getjobsbyid")]
     public async Task<ActionResult<JobsDataModel>> GetJobById([FromQuery] int id)
     {
@@ -81,7 +77,6 @@ public class JobsController : ControllerBase
         }
     }
 
-    // GET: api/Jobs/getjobsbycompanyid?companyId=123
     [HttpGet("getjobsbycompanyid")]
     public async Task<ActionResult<IEnumerable<JobsDataModel>>> GetJobsByCompanyId([FromQuery] int companyId)
     {
@@ -110,7 +105,7 @@ public class JobsController : ControllerBase
 
     // POST: api/Jobs/submitjobs
     [HttpPost("submitjobs")]
-    public async Task<ActionResult> CreateJob([FromBody] JobsDataModel jobDto)
+    public async Task<ActionResult> SubmitJob([FromBody] JobsDataModel jobDto)
     {
         try
         {
@@ -123,9 +118,8 @@ public class JobsController : ControllerBase
 
             if (result.IsSuccess)
             {
-                var newJob = await _jobsRepository.GetJobsByIdAsync(result.Id);
-                var updatedJob = SetJobStatus(newJob);
-                return Ok(updatedJob);
+                // ✅ Return the ResponseDto with success message and ID
+                return Ok(result);
             }
 
             return BadRequest(result.Message);

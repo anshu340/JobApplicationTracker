@@ -38,7 +38,7 @@ public class JobRepository : IJobsRepository
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   EmpolymentType,
+                   EmploymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -49,6 +49,7 @@ public class JobRepository : IJobsRepository
                    Views,
                    Skills
             FROM Job
+            ORDER BY PostedAt DESC
             """;
 
         return await connection.QueryAsync<JobsDataModel>(sql).ConfigureAwait(false);
@@ -80,7 +81,7 @@ public class JobRepository : IJobsRepository
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   EmpolymentType,
+                   EmploymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -127,7 +128,7 @@ public class JobRepository : IJobsRepository
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   EmpolymentType,
+                   EmploymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -161,7 +162,7 @@ public class JobRepository : IJobsRepository
         parameters.Add("Location", jobsDto.Location, DbType.String);
         parameters.Add("SalaryRangeMin", jobsDto.SalaryRangeMin, DbType.Decimal);
         parameters.Add("SalaryRangeMax", jobsDto.SalaryRangeMax, DbType.Decimal);
-        parameters.Add("EmpolymentType", jobsDto.EmpolymentType, DbType.String);
+        parameters.Add("EmploymentType", jobsDto.EmpolymentType, DbType.String); 
         parameters.Add("ExperienceLevel", jobsDto.ExperienceLevel, DbType.String);
         parameters.Add("Responsibilities", jobsDto.Responsibilities, DbType.String);
         parameters.Add("Requirements", jobsDto.Requirements, DbType.String);
@@ -174,27 +175,28 @@ public class JobRepository : IJobsRepository
 
         if (isNewJob)
         {
-            var insertQuery = @"
-            INSERT INTO Job (
-                CompanyId, PostedByUserId, JobType, Description, Location,
-                SalaryRangeMin, SalaryRangeMax, EmpolymentType, ExperienceLevel,
-                Responsibilities, Requirements, Benefits, PostedAt,
-                ApplicationDeadline, Status, Views, Skills
-            )
-            VALUES (
-                @CompanyId, @PostedByUserId, @JobType, @Description, @Location,
-                @SalaryRangeMin, @SalaryRangeMax, @EmpolymentType, @ExperienceLevel,
-                @Responsibilities, @Requirements, @Benefits, @PostedAt,
-                @ApplicationDeadline, @Status, @Views, @Skills
-            );
-            SELECT CAST(SCOPE_IDENTITY() AS INT);";
+            var insertQuery = """
+                INSERT INTO Job (
+                    CompanyId, PostedByUserId, JobType, Description, Location,
+                    SalaryRangeMin, SalaryRangeMax, EmploymentType, ExperienceLevel,
+                    Responsibilities, Requirements, Benefits, PostedAt,
+                    ApplicationDeadline, Status, Views, Skills
+                )
+                VALUES (
+                    @CompanyId, @PostedByUserId, @JobType, @Description, @Location,
+                    @SalaryRangeMin, @SalaryRangeMax, @EmploymentType, @ExperienceLevel,
+                    @Responsibilities, @Requirements, @Benefits, @PostedAt,
+                    @ApplicationDeadline, @Status, @Views, @Skills
+                );
+                SELECT CAST(SCOPE_IDENTITY() AS INT);
+                """;
 
-            var newJobId = await connection.ExecuteScalarAsync<int>(insertQuery, parameters);
+            var newJobId = await connection.ExecuteScalarAsync<int>(insertQuery, parameters).ConfigureAwait(false);
             return new ResponseDto
             {
                 IsSuccess = newJobId > 0,
-                Message = newJobId > 0 ? "Job inserted successfully." : "Failed to insert job.",
-                StatusCode = newJobId > 0 ? 200 : 400,
+                Message = newJobId > 0 ? "Job created successfully." : "Failed to create job.",
+                StatusCode = newJobId > 0 ? 201 : 400,
                 Id = newJobId
             };
         }
@@ -202,24 +204,25 @@ public class JobRepository : IJobsRepository
         {
             parameters.Add("JobId", jobsDto.JobId, DbType.Int32);
 
-            var updateQuery = @"
-            UPDATE Job
-            SET CompanyId = @CompanyId, PostedByUserId = @PostedByUserId,
-                JobType = @JobType, Description = @Description, Location = @Location,
-                SalaryRangeMin = @SalaryRangeMin, SalaryRangeMax = @SalaryRangeMax,
-                EmpolymentType = @EmpolymentType, ExperienceLevel = @ExperienceLevel,
-                Responsibilities = @Responsibilities, Requirements = @Requirements,
-                Benefits = @Benefits, PostedAt = @PostedAt,
-                ApplicationDeadline = @ApplicationDeadline, Status = @Status,
-                Views = @Views, Skills = @Skills
-            WHERE JobId = @JobId";
+            var updateQuery = """
+                UPDATE Job
+                SET CompanyId = @CompanyId, PostedByUserId = @PostedByUserId,
+                    JobType = @JobType, Description = @Description, Location = @Location,
+                    SalaryRangeMin = @SalaryRangeMin, SalaryRangeMax = @SalaryRangeMax,
+                    EmploymentType = @EmploymentType, ExperienceLevel = @ExperienceLevel,
+                    Responsibilities = @Responsibilities, Requirements = @Requirements,
+                    Benefits = @Benefits, PostedAt = @PostedAt,
+                    ApplicationDeadline = @ApplicationDeadline, Status = @Status,
+                    Views = @Views, Skills = @Skills
+                WHERE JobId = @JobId
+                """;
 
-            var rowsAffected = await connection.ExecuteAsync(updateQuery, parameters);
+            var rowsAffected = await connection.ExecuteAsync(updateQuery, parameters).ConfigureAwait(false);
             return new ResponseDto
             {
                 IsSuccess = rowsAffected > 0,
-                Message = rowsAffected > 0 ? "Job updated successfully." : "Failed to update job.",
-                StatusCode = rowsAffected > 0 ? 200 : 400,
+                Message = rowsAffected > 0 ? "Job updated successfully." : "Job not found or failed to update.",
+                StatusCode = rowsAffected > 0 ? 200 : 404,
                 Id = rowsAffected > 0 ? jobsDto.JobId : 0
             };
         }
@@ -236,8 +239,8 @@ public class JobRepository : IJobsRepository
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Job deleted successfully." : "Failed to delete job.",
-            StatusCode = affectedRows > 0 ? 200 : 400,
+            Message = affectedRows > 0 ? "Job deleted successfully." : "Job not found or failed to delete.",
+            StatusCode = affectedRows > 0 ? 200 : 404,
             Id = jobId
         };
     }
