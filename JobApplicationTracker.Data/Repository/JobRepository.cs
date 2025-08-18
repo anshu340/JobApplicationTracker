@@ -36,7 +36,8 @@ public class JobRepository : IJobsRepository
                    PostedAt,
                    ApplicationDeadline,
                    Status,
-                   Views
+                   Views,
+                   Skills
             FROM Job
             """;
 
@@ -64,7 +65,8 @@ public class JobRepository : IJobsRepository
                    PostedAt,
                    ApplicationDeadline,
                    Status,
-                   Views
+                   Views,
+                   Skills
             FROM Job
             WHERE JobId = @JobId
             """;
@@ -96,7 +98,8 @@ public class JobRepository : IJobsRepository
                    PostedAt,
                    ApplicationDeadline,
                    Status,
-                   Views
+                   Views,
+                   Skills
             FROM Job
             WHERE CompanyId = @CompanyId
             ORDER BY PostedAt DESC
@@ -121,11 +124,8 @@ public class JobRepository : IJobsRepository
         parameters.Add("Location", jobsDto.Location, DbType.String);
         parameters.Add("SalaryRangeMin", jobsDto.SalaryRangeMin, DbType.Decimal);
         parameters.Add("SalaryRangeMax", jobsDto.SalaryRangeMax, DbType.Decimal);
-
-        // Fixed: These should be strings as per database schema
         parameters.Add("EmpolymentType", jobsDto.EmpolymentType, DbType.String);
         parameters.Add("ExperienceLevel", jobsDto.ExperienceLevel, DbType.String);
-
         parameters.Add("Responsibilities", jobsDto.Responsibilities, DbType.String);
         parameters.Add("Requirements", jobsDto.Requirements, DbType.String);
         parameters.Add("Benefits", jobsDto.Benefits, DbType.String);
@@ -133,22 +133,22 @@ public class JobRepository : IJobsRepository
         parameters.Add("ApplicationDeadline", jobsDto.ApplicationDeadline, DbType.DateTime);
         parameters.Add("Status", jobsDto.Status, DbType.String);
         parameters.Add("Views", jobsDto.Views, DbType.Int32);
+        parameters.Add("Skills", jobsDto.Skills, DbType.String); // ✅ Added Skills parameter
 
         if (isNewJob)
         {
-            // Remove JobId parameter for insert
             var insertQuery = @"
             INSERT INTO Job (
                 CompanyId, PostedByUserId, JobType, Description, Location,
                 SalaryRangeMin, SalaryRangeMax, EmpolymentType, ExperienceLevel,
                 Responsibilities, Requirements, Benefits, PostedAt,
-                ApplicationDeadline, Status, Views
+                ApplicationDeadline, Status, Views, Skills
             )
             VALUES (
                 @CompanyId, @PostedByUserId, @JobType, @Description, @Location,
                 @SalaryRangeMin, @SalaryRangeMax, @EmpolymentType, @ExperienceLevel,
                 @Responsibilities, @Requirements, @Benefits, @PostedAt,
-                @ApplicationDeadline, @Status, @Views
+                @ApplicationDeadline, @Status, @Views, @Skills
             );
             SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
@@ -163,7 +163,6 @@ public class JobRepository : IJobsRepository
         }
         else
         {
-            // For update, add JobId parameter
             parameters.Add("JobId", jobsDto.JobId, DbType.Int32);
 
             var updateQuery = @"
@@ -175,7 +174,7 @@ public class JobRepository : IJobsRepository
                 Responsibilities = @Responsibilities, Requirements = @Requirements,
                 Benefits = @Benefits, PostedAt = @PostedAt,
                 ApplicationDeadline = @ApplicationDeadline, Status = @Status,
-                Views = @Views
+                Views = @Views, Skills = @Skills
             WHERE JobId = @JobId";
 
             var rowsAffected = await connection.ExecuteAsync(updateQuery, parameters);

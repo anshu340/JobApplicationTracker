@@ -179,6 +179,7 @@ CREATE TABLE [dbo].[Job](
 	[Views] [int] NOT NULL,
 	[EmpolymentType] [varchar](50) NULL,
 	[JobType] [nvarchar](255) NULL,
+	[Skills] [varchar](50) NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[JobId] ASC
