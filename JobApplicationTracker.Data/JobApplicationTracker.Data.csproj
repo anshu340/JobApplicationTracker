@@ -12,12 +12,18 @@
 	  <Compile Remove="DataModels\JobSeekerSkills.cs" />
 	  <Compile Remove="DataModels\JobSeekersSkillsDataModel.cs" />
 	  <Compile Remove="DataModels\SkillsDataModels.cs" />
+	  <Compile Remove="DataModels\UsersExpericence .cs" />
+	  <Compile Remove="DataModels\UsersExperience.cs" />
+	  <Compile Remove="DataModels\UsersExperienceDataModel.cs" />
 	  <Compile Remove="Dto\Responses\JobSeekersSkillDto.cs" />
 	  <Compile Remove="Dto\Responses\JobSeekersSkillsDto.cs" />
 	  <Compile Remove="Dto\Responses\JobSekeerSkills.cs" />
 	  <Compile Remove="Dto\Responses\SkillDto.cs" />
+	  <Compile Remove="Dto\Responses\UsersExperienceDto.cs" />
 	  <Compile Remove="Interface\IJobSeekersSkillsRepository.cs" />
+	  <Compile Remove="Interface\IUsersExperience.cs" />
 	  <Compile Remove="Repository\JobSeekerSkillsRepository.cs" />
+	  <Compile Remove="Repository\UsersExperienceRepository.cs" />
 
 		<PackageReference Include="Dapper" Version="2.1.66" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="2.3.0" />
