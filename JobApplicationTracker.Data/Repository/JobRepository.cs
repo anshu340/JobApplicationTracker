@@ -38,7 +38,7 @@ public class JobRepository : IJobsRepository
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   EmploymentType,
+                   EmpolymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -81,7 +81,7 @@ public class JobRepository : IJobsRepository
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   EmploymentType,
+                   EmpolymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -128,7 +128,7 @@ public class JobRepository : IJobsRepository
                    Location,
                    SalaryRangeMin,
                    SalaryRangeMax,
-                   EmploymentType,
+                   EmpolymentType,
                    ExperienceLevel,
                    Responsibilities,
                    Requirements,
@@ -162,7 +162,7 @@ public class JobRepository : IJobsRepository
         parameters.Add("Location", jobsDto.Location, DbType.String);
         parameters.Add("SalaryRangeMin", jobsDto.SalaryRangeMin, DbType.Decimal);
         parameters.Add("SalaryRangeMax", jobsDto.SalaryRangeMax, DbType.Decimal);
-        parameters.Add("EmploymentType", jobsDto.EmpolymentType, DbType.String); 
+        parameters.Add("EmpolymentType", jobsDto.EmpolymentType, DbType.String); // ✅ Fixed parameter name
         parameters.Add("ExperienceLevel", jobsDto.ExperienceLevel, DbType.String);
         parameters.Add("Responsibilities", jobsDto.Responsibilities, DbType.String);
         parameters.Add("Requirements", jobsDto.Requirements, DbType.String);
@@ -178,13 +178,13 @@ public class JobRepository : IJobsRepository
             var insertQuery = """
                 INSERT INTO Job (
                     CompanyId, PostedByUserId, JobType, Description, Location,
-                    SalaryRangeMin, SalaryRangeMax, EmploymentType, ExperienceLevel,
+                    SalaryRangeMin, SalaryRangeMax, EmpolymentType, ExperienceLevel,
                     Responsibilities, Requirements, Benefits, PostedAt,
                     ApplicationDeadline, Status, Views, Skills
                 )
                 VALUES (
                     @CompanyId, @PostedByUserId, @JobType, @Description, @Location,
-                    @SalaryRangeMin, @SalaryRangeMax, @EmploymentType, @ExperienceLevel,
+                    @SalaryRangeMin, @SalaryRangeMax, @EmpolymentType, @ExperienceLevel,
                     @Responsibilities, @Requirements, @Benefits, @PostedAt,
                     @ApplicationDeadline, @Status, @Views, @Skills
                 );
@@ -209,7 +209,7 @@ public class JobRepository : IJobsRepository
                 SET CompanyId = @CompanyId, PostedByUserId = @PostedByUserId,
                     JobType = @JobType, Description = @Description, Location = @Location,
                     SalaryRangeMin = @SalaryRangeMin, SalaryRangeMax = @SalaryRangeMax,
-                    EmploymentType = @EmploymentType, ExperienceLevel = @ExperienceLevel,
+                    EmpolymentType = @EmpolymentType, ExperienceLevel = @ExperienceLevel,
                     Responsibilities = @Responsibilities, Requirements = @Requirements,
                     Benefits = @Benefits, PostedAt = @PostedAt,
                     ApplicationDeadline = @ApplicationDeadline, Status = @Status,
