@@ -163,7 +163,7 @@ builder.Services.AddScoped<IEducationRepository, EducationRepository>();
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
 
-builder.Services.AddScoped<IEducationRepository, EducationRepository>();
+
 
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);

@@ -1,5 +1,4 @@
-﻿
-using JobApplicationTracker.Api.ApiResponses;
+﻿using JobApplicationTracker.Api.ApiResponses;
 using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Dtos.Responses;
 using JobApplicationTracker.Data.Interface;
@@ -14,59 +13,107 @@ namespace JobApplicationTracker.Api.Controllers.Experience
         [Route("/getallexperiences")]
         public async Task<IActionResult> GetAllExperiences()
         {
-            var experiences = await experienceService.GetAllExperiencesAsync();
-            return Ok(experiences);
+            try
+            {
+                var experiences = await experienceService.GetAllExperiencesAsync();
+                return Ok(experiences);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Internal server error", Details = ex.Message });
+            }
         }
 
         [HttpGet]
         [Route("/getexperiencebyid")]
         public async Task<IActionResult> GetExperienceById(int id)
         {
-            var experience = await experienceService.GetExperienceByIdAsync(id);
-            if (experience == null)
+            try
             {
-                return NotFound();
+                var experience = await experienceService.GetExperienceByIdAsync(id);
+                if (experience == null)
+                {
+                    return NotFound(new { Message = "Experience not found" });
+                }
+                return Ok(experience);
             }
-            return Ok(experience);
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Internal server error", Details = ex.Message });
+            }
         }
 
         [HttpGet]
         [Route("/getexperiencebyuserid")]
         public async Task<IActionResult> GetExperienceByUserId([FromQuery] int userId)
         {
-            var experiences = await experienceService.GetExperiencesByUserIdAsync(userId);
-
-            if (experiences == null || !experiences.Any())
-                return NotFound(new { Message = "No experiences found for this user." });
-
-            return Ok(experiences);
+            try
+            {
+                var experiences = await experienceService.GetExperiencesByUserIdAsync(userId);
+                if (experiences == null || !experiences.Any())
+                    return NotFound(new { Message = "No experiences found for this user." });
+                return Ok(experiences);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Internal server error", Details = ex.Message });
+            }
         }
-
 
         [HttpPost]
         [Route("/submitexperience")]
         public async Task<IActionResult> SubmitExperience([FromBody] ExperienceDataModel experienceDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
 
-            var response = await experienceService.SubmitExperienceAsync(experienceDto);
-            if (response.IsSuccess)
-                return Ok(response);
+                ResponseDto response;
 
-            return BadRequest(response);
+                // Check if this is an update (has ExperienceId > 0) or create (ExperienceId = 0)
+                if (experienceDto.ExperienceId > 0)
+                {
+                    // Update existing experience
+                    response = await experienceService.UpdateExperienceAsync(experienceDto.ExperienceId, experienceDto);
+                }
+                else
+                {
+                    // Create new experience
+                    response = await experienceService.SubmitExperienceAsync(experienceDto);
+                }
+
+                if (response.IsSuccess)
+                    return Ok(response);
+
+                return BadRequest(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Internal server error", Details = ex.Message });
+            }
         }
 
         [HttpDelete]
         [Route("/deleteexperience")]
-        public async Task<IActionResult> DeleteExperience(int id)
+        public async Task<IActionResult> DeleteExperience([FromQuery] int id)
         {
-            var response = await experienceService.DeleteExperienceAsync(id);
-            if (response is ResponseDto responseDto)
+            try
             {
-                return responseDto.IsSuccess ? Ok(responseDto) : BadRequest(responseDto);
+                if (id <= 0)
+                    return BadRequest(new { Message = "Invalid experience ID" });
+
+                var response = await experienceService.DeleteExperienceAsync(id);
+                if (response is ResponseDto responseDto)
+                {
+                    return responseDto.IsSuccess ? Ok(responseDto) : BadRequest(responseDto);
+                }
+                return BadRequest("Invalid response type.");
             }
-            return BadRequest("Invalid response type.");
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Internal server error", Details = ex.Message });
+            }
         }
     }
 }
