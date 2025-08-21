@@ -138,7 +138,7 @@ public class CompaniesController(ICompaniesRepository companyService, IRegistrat
             var logoUrl = $"{Request.Scheme}://{Request.Host}/images/companylogo/{fileName}";
 
             // Update company with new logo URL
-            var updateResponse = await companyService.UpdateCompanyLogoAsync(companyId, logoUrl);
+            var updateResponse = await companyService.UploadCompanyLogoAsync(companyId, logoUrl);
 
             if (updateResponse.IsSuccess)
             {
@@ -197,7 +197,7 @@ public class CompaniesController(ICompaniesRepository companyService, IRegistrat
             }
 
             // Update company to remove logo URL
-            var updateResponse = await companyService.UpdateCompanyLogoAsync(companyId, null);
+            var updateResponse = await companyService.UploadCompanyLogoAsync(companyId, null);
 
             if (updateResponse.IsSuccess)
             {
@@ -238,6 +238,49 @@ public class CompaniesController(ICompaniesRepository companyService, IRegistrat
         catch
         {
             return string.Empty;
+        }
+    }
+    [HttpGet]
+    [Route("/getcompanylogo/{companyId}")]
+    public async Task<IActionResult> GetCompanyLogo(int companyId)
+    {
+        try
+        {
+            var logoUrl = await companyService.GetCompanyLogoAsync(companyId);
+
+            if (logoUrl == null)
+            {
+                return NotFound(new ResponseDto
+                {
+                    IsSuccess = false,
+                    Message = "Company not found or no logo available."
+                });
+            }
+
+            if (string.IsNullOrEmpty(logoUrl))
+            {
+                return Ok(new ResponseDto
+                {
+                    IsSuccess = true,
+                    Message = "Company found but no logo uploaded.",
+                    Data = new { LogoUrl = (string?)null }
+                });
+            }
+
+            return Ok(new ResponseDto
+            {
+                IsSuccess = true,
+                Message = "Company logo retrieved successfully.",
+                Data = new { LogoUrl = logoUrl }
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ResponseDto
+            {
+                IsSuccess = false,
+                Message = $"An error occurred while retrieving the company logo: {ex.Message}"
+            });
         }
     }
 }

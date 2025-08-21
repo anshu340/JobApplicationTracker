@@ -122,7 +122,7 @@ public class CompaniesRepository : ICompaniesRepository
         };
     }
 
-    public async Task<ResponseDto> UpdateCompanyLogoAsync(int companyId, string logoUrl)
+    public async Task<ResponseDto> UploadCompanyLogoAsync(int companyId, string logoUrl)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -204,4 +204,21 @@ public class CompaniesRepository : ICompaniesRepository
             Message = "Company deleted successfully."
         };
     }
+
+    public async Task<string?> GetCompanyLogoAsync(int companyId)
+    {
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        var sql = """
+              SELECT CompanyLogo
+              FROM Companies
+              WHERE CompanyId = @CompanyId
+              """;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@CompanyId", companyId, DbType.Int32);
+
+        return await connection.QueryFirstOrDefaultAsync<string?>(sql, parameters).ConfigureAwait(false);
+    }
+
 }
