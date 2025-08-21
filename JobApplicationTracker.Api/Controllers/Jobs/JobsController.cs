@@ -15,16 +15,15 @@ public class JobsController : ControllerBase
         _jobsRepository = jobsRepository;
     }
 
-
     private JobsDataModel SetJobStatus(JobsDataModel job)
     {
         if (job.ApplicationDeadline < DateTime.UtcNow.Date)
         {
-            job.Status = "I"; 
+            job.Status = "I";
         }
         else
         {
-            job.Status = "A"; 
+            job.Status = "A";
         }
         return job;
     }
@@ -37,8 +36,26 @@ public class JobsController : ControllerBase
         }
         return jobs;
     }
+
+    // ✅ Updated: For USER-FACING pages (Home page, job search) - auto-deletes old inactive jobs + ONLY PUBLISHED JOBS
     [HttpGet]
     public async Task<ActionResult<IEnumerable<JobsDataModel>>> GetAllJobs()
+    {
+        try
+        {
+            var jobs = await _jobsRepository.GetActiveJobsForUsersAsync();
+            var updatedJobs = SetJobsStatus(jobs);
+            return Ok(updatedJobs);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
+    // ✅ New endpoint: For COMPANY dashboard - shows ALL jobs including inactive and unpublished ones
+    [HttpGet("company/all")]
+    public async Task<ActionResult<IEnumerable<JobsDataModel>>> GetAllJobsForCompany()
     {
         try
         {
@@ -51,6 +68,7 @@ public class JobsController : ControllerBase
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
+
     [HttpGet("getjobsbyid")]
     public async Task<ActionResult<JobsDataModel>> GetJobById([FromQuery] int id)
     {
@@ -77,6 +95,7 @@ public class JobsController : ControllerBase
         }
     }
 
+    // ✅ Company-specific jobs (NO auto-delete) - Shows ALL jobs including unpublished
     [HttpGet("getjobsbycompanyid")]
     public async Task<ActionResult<IEnumerable<JobsDataModel>>> GetJobsByCompanyId([FromQuery] int companyId)
     {
@@ -91,7 +110,7 @@ public class JobsController : ControllerBase
 
             if (!jobs.Any())
             {
-                return Ok(new List<JobsDataModel>()); // empty list
+                return Ok(new List<JobsDataModel>());
             }
 
             var updatedJobs = SetJobsStatus(jobs);
@@ -103,22 +122,21 @@ public class JobsController : ControllerBase
         }
     }
 
-    // POST: api/Jobs/submitjobs
-    [HttpPost("submitjobs")]
-    public async Task<ActionResult> SubmitJob([FromBody] JobsDataModel jobDto)
+    // ✅ NEW ENDPOINT: Publish a job
+    [HttpPut("publish/{id}")]
+    public async Task<ActionResult> PublishJob(int id)
     {
         try
         {
-            if (jobDto == null)
+            if (id <= 0)
             {
-                return BadRequest("Job data is required");
+                return BadRequest("Invalid job ID");
             }
 
-            var result = await _jobsRepository.SubmitJobAsync(jobDto);
+            var result = await _jobsRepository.PublishJobAsync(id);
 
             if (result.IsSuccess)
             {
-                // ✅ Return the ResponseDto with success message and ID
                 return Ok(result);
             }
 
@@ -130,7 +148,63 @@ public class JobsController : ControllerBase
         }
     }
 
-    // DELETE: api/Jobs/delete/{id}
+    // ✅ NEW ENDPOINT: Unpublish a job
+    [HttpPut("unpublish/{id}")]
+    public async Task<ActionResult> UnpublishJob(int id)
+    {
+        try
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid job ID");
+            }
+
+            var result = await _jobsRepository.UnpublishJobAsync(id);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
+    [HttpPost("submitjobs")]
+    public async Task<ActionResult> SubmitJob([FromBody] JobsDataModel jobDto)
+    {
+        try
+        {
+            if (jobDto == null)
+            {
+                return BadRequest("Job data is required");
+            }
+
+            // ✅ By default, new jobs are created as unpublished (IsPublished = false)
+            if (jobDto.JobId <= 0) // New job
+            {
+                jobDto.IsPublished = false; // Ensure new jobs are unpublished by default
+            }
+
+            var result = await _jobsRepository.SubmitJobAsync(jobDto);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
     [HttpDelete("delete/{id}")]
     public async Task<ActionResult> DeleteJob(int id)
     {

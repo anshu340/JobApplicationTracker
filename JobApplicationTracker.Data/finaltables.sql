@@ -180,6 +180,7 @@ CREATE TABLE [dbo].[Job](
 	[EmpolymentType] [varchar](50) NULL,
 	[JobType] [nvarchar](255) NULL,
 	[Skills] [varchar](50) NULL,
+	[IsPublished] [bit] NOT NULL DEFAULT 0,
 PRIMARY KEY CLUSTERED 
 (
 	[JobId] ASC

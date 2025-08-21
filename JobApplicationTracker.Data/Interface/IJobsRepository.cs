@@ -6,8 +6,13 @@ namespace JobApplicationTracker.Data.Interface;
 public interface IJobsRepository
 {
     Task<IEnumerable<JobsDataModel>> GetAllJobsAsync();
+    Task<IEnumerable<JobsDataModel>> GetActiveJobsForUsersAsync();
     Task<JobsDataModel?> GetJobsByIdAsync(int jobId);
-    Task<IEnumerable<JobsDataModel>> GetJobsByCompanyIdAsync(int companyId); // ✅ New method
+    Task<IEnumerable<JobsDataModel>> GetJobsByCompanyIdAsync(int companyId);
     Task<ResponseDto> SubmitJobAsync(JobsDataModel jobsDto);
     Task<ResponseDto> DeleteJobAsync(int jobsId);
+
+    // ✅ Add these new methods for publish functionality
+    Task<ResponseDto> PublishJobAsync(int jobId);
+    Task<ResponseDto> UnpublishJobAsync(int jobId);
 }
