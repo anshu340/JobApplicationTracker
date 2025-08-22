@@ -5,6 +5,6 @@
         Admin = 1,
         Company = 2,
         Staff =3,
-        JobSeeker = 4
+        User = 4
     }
 }

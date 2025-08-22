@@ -91,7 +91,7 @@ public class RegistrationService(
                 PhoneNumber = request.PhoneNumber,
                 PasswordHash = request.Password,
                 Location = request.Location,
-                UserType = (int)UserTypes.JobSeeker,
+                UserType = (int)UserTypes.User,
                 CreatedAt = request.CreateDateTime ?? DateTime.Now,
                 UpdatedAt = DateTime.Now
             };

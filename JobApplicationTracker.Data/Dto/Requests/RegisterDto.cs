@@ -11,6 +11,7 @@ public class RegisterDto
     public string PhoneNumber { get; set; } = null!;
     public string? Location { get; set; } = null!;
     public int? CompanyId { get; set; }
+    public int? UserType { get; set; }
     public CompaniesDataModel? CompanyDto { get; set; }
     public DateTime? CreateDateTime { get; set; }
     

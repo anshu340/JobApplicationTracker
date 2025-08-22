@@ -77,8 +77,8 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                     WebsiteUrl = company.WebsiteUrl,
                     Location = company.Location,
                     Description = company.Description,
-                    CompanyLogo = company.CompanyLogo, // ✅ ADDED: Include company logo
-                    ContactEmail = company.ContactEmail // ✅ ADDED: Include contact email
+                    CompanyLogo = company.CompanyLogo,
+                    ContactEmail = company.ContactEmail 
                 };
             }
         }
