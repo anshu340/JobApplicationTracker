@@ -14,7 +14,7 @@ public class RegisterDto
     public int? UserType { get; set; }
     public CompaniesDataModel? CompanyDto { get; set; }
     public DateTime? CreateDateTime { get; set; }
-    
+
     public RegisterDto()
     {
         CreateDateTime = DateTime.Now;

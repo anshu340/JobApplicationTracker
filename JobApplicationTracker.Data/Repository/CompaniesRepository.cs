@@ -221,4 +221,20 @@ public class CompaniesRepository : ICompaniesRepository
         return await connection.QueryFirstOrDefaultAsync<string?>(sql, parameters).ConfigureAwait(false);
     }
 
+    public async Task<bool> CompanyExistsAsync(int companyId)
+    {
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        var sql = """
+              SELECT 1 
+              FROM Companies 
+              WHERE CompanyId = @CompanyId
+              """;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@CompanyId", companyId, DbType.Int32);
+
+        var result = await connection.ExecuteScalarAsync<int?>(sql, parameters).ConfigureAwait(false);
+        return result.HasValue;
+    }
 }

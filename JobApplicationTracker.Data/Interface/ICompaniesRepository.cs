@@ -11,6 +11,6 @@ public interface ICompaniesRepository
     Task<int> CreateCompanyAsync(CompaniesDataModel request);
     Task<ResponseDto> DeleteCompanyAsync(int companiesId);
     Task<ResponseDto> UploadCompanyLogoAsync(int companyId, string logoUrl);
-
+    Task<bool> CompanyExistsAsync(int companyId);
     Task<string?> GetCompanyLogoAsync(int companyId);
 }

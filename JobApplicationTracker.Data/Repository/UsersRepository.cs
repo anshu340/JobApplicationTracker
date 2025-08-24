@@ -52,8 +52,8 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             Bio = user.Bio,
             DateOfBirth = user.DateOfBirth,
             Skills = user.Skills,
-            Education = user.Education,
-            Experiences = user.Experiences
+            Education = user.Education
+
         };
 
         // ✅ FIXED: Add company profile with CompanyLogo if CompanyId > 0
@@ -77,8 +77,8 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                     WebsiteUrl = company.WebsiteUrl,
                     Location = company.Location,
                     Description = company.Description,
-                    CompanyLogo = company.CompanyLogo,
-                    ContactEmail = company.ContactEmail 
+                    CompanyLogo = company.CompanyLogo, // ✅ ADDED: Include company logo
+                    ContactEmail = company.ContactEmail // ✅ ADDED: Include contact email
                 };
             }
         }
@@ -115,10 +115,10 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             parameters.Add("LastName", userDto.LastName ?? "");
             parameters.Add("Email", userDto.Email ?? "");
             parameters.Add("PasswordHash", userDto.PasswordHash ?? "");
-            parameters.Add("CompanyId", userDto.CompanyId);
             parameters.Add("PhoneNumber", userDto.PhoneNumber);
             parameters.Add("UserType", userDto.UserType);
             parameters.Add("Location", userDto.Location);
+            parameters.Add("CompanyId", userDto.CompanyId);
             parameters.Add("CreatedAt", DateTime.UtcNow);
             parameters.Add("UpdatedAt", DateTime.UtcNow);
 
@@ -166,11 +166,6 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                 parameters.Add("PasswordHash", userDto.PasswordHash); // Already hashed
             }
 
-            if (userDto.CompanyId.HasValue)
-            {
-                setClauses.Add("CompanyId = @CompanyId");
-                parameters.Add("CompanyId", userDto.CompanyId);
-            }
 
             if (!string.IsNullOrEmpty(userDto.PhoneNumber))
             {
@@ -188,6 +183,13 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             {
                 setClauses.Add("Location = @Location");
                 parameters.Add("Location", userDto.Location);
+            }
+
+
+            if (userDto.CompanyId.HasValue)
+            {
+                setClauses.Add("CompanyId = @CompanyId");
+                parameters.Add("CompanyId", userDto.CompanyId);
             }
 
             if (!string.IsNullOrEmpty(userDto.ProfilePicture))
@@ -222,13 +224,6 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             {
                 setClauses.Add("Education = @Education");
                 parameters.Add("Education", userDto.Education);
-
-            }
-
-            if (!string.IsNullOrEmpty(userDto.Experiences))
-            {
-                setClauses.Add("Experiences = @Experiences"); 
-                parameters.Add("Experiences", userDto.Experiences);
             }
 
             // Always update the UpdatedAt field
