@@ -6,3 +6,4 @@ public class SkillsDataModel
     public string Skill { get; set; } = null!;
 
 }
+
