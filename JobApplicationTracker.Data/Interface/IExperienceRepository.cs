@@ -1,18 +1,20 @@
 ﻿using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dto.Responses;
 using JobApplicationTracker.Data.Dtos.Responses;
-
 
 namespace JobApplicationTracker.Data.Interface
 {
     public interface IExperienceRepository
     {
+        // Get operations
         Task<IEnumerable<ExperienceDto>> GetAllExperiencesAsync();
-        Task<ExperienceDto?> GetExperienceByIdAsync(int id);
-
+        Task<ExperienceDto?> GetExperienceByIdAsync(int experienceId);
         Task<IEnumerable<ExperienceDataModel>> GetExperiencesByUserIdAsync(int userId);
 
+        // Submit operations (handles both insert and update)
         Task<ResponseDto> SubmitExperienceAsync(ExperienceDataModel experience);
-        Task<ResponseDto> UpdateExperienceAsync(int id, ExperienceDataModel experience);
-        Task<ResponseDto> DeleteExperienceAsync(int id);
+
+        // Delete operation
+        Task<ResponseDto> DeleteExperienceAsync(int experienceId);
     }
 }

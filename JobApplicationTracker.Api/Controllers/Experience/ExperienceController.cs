@@ -1,119 +1,163 @@
-﻿using JobApplicationTracker.Api.ApiResponses;
-using JobApplicationTracker.Data.DataModels;
+﻿using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Dtos.Responses;
 using JobApplicationTracker.Data.Interface;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JobApplicationTracker.Api.Controllers.Experience
+namespace JobApplicationTracker.Api.Controllers
 {
-    [Route("api/experiences")]
-    public class ExperienceController(IExperienceRepository experienceService) : ControllerBase
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ExperienceController(IExperienceRepository experienceRepository) : ControllerBase
     {
+        /// <summary>
+        /// Gets all experiences from the database
+        /// </summary>
         [HttpGet]
-        [Route("/getallexperiences")]
         public async Task<IActionResult> GetAllExperiences()
         {
             try
             {
-                var experiences = await experienceService.GetAllExperiencesAsync();
-                return Ok(experiences);
+                var result = await experienceRepository.GetAllExperiencesAsync();
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "Internal server error", Details = ex.Message });
+                return StatusCode(500, new { Message = "An error occurred while retrieving experiences.", Error = ex.Message });
             }
         }
 
-        [HttpGet]
-        [Route("/getexperiencebyid")]
+        /// <summary>
+        /// Gets a specific experience by ID
+        /// </summary>
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetExperienceById(int id)
         {
             try
             {
-                var experience = await experienceService.GetExperienceByIdAsync(id);
-                if (experience == null)
-                {
-                    return NotFound(new { Message = "Experience not found" });
-                }
+                var experience = await experienceRepository.GetExperienceByIdAsync(id);
+                if (experience is null)
+                    return NotFound(new { Message = "Experience record not found." });
+
                 return Ok(experience);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "Internal server error", Details = ex.Message });
+                return StatusCode(500, new { Message = "An error occurred while retrieving the experience.", Error = ex.Message });
             }
         }
 
-        [HttpGet]
-        [Route("/getexperiencebyuserid")]
-        public async Task<IActionResult> GetExperienceByUserId([FromQuery] int userId)
+        /// <summary>
+        /// Creates a new experience or updates an existing one
+        /// If ExperienceId is 0 or not provided, creates new experience
+        /// If ExperienceId > 0, updates existing experience
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> SubmitExperience([FromBody] ExperienceDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var model = MapDtoToDataModel(dto);
+                var response = await experienceRepository.SubmitExperienceAsync(model);
+
+                if (!response.IsSuccess)
+                    return BadRequest(response);
+
+                // Return appropriate status code
+                if (dto.ExperienceId > 0)
+                    return Ok(response); // 200 for update
+                else
+                    return Created($"api/experience/{response.Id}", response); // 201 for create
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while submitting the experience.", Error = ex.Message });
+            }
+        }
+
+
+
+        /// <summary>
+        /// Deletes an experience by ID
+        /// </summary>
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DeleteExperience(int id)
         {
             try
             {
-                var experiences = await experienceService.GetExperiencesByUserIdAsync(userId);
-                if (experiences == null || !experiences.Any())
-                    return NotFound(new { Message = "No experiences found for this user." });
+                var response = await experienceRepository.DeleteExperienceAsync(id);
+
+                if (!response.IsSuccess)
+                {
+                    if (response.Message.Contains("not found"))
+                        return NotFound(response);
+
+                    return BadRequest(response);
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while deleting the experience.", Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets all experiences for a specific user
+        /// </summary>
+        [HttpGet("user/{userId:int}")]
+        public async Task<IActionResult> GetExperiencesByUserId(int userId)
+        {
+            try
+            {
+                var experiences = await experienceRepository.GetExperiencesByUserIdAsync(userId);
                 return Ok(experiences);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "Internal server error", Details = ex.Message });
+                return StatusCode(500, new { Message = "An error occurred while retrieving user experiences.", Error = ex.Message });
             }
         }
 
-        [HttpPost]
-        [Route("/submitexperience")]
-        public async Task<IActionResult> SubmitExperience([FromBody] ExperienceDataModel experienceDto)
+        /// <summary>
+        /// Gets only experience IDs for a specific user
+        /// </summary>
+        [HttpGet("user/{userId:int}/ids")]
+        public async Task<IActionResult> GetExperienceIdsByUserId(int userId)
         {
             try
             {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-
-                ResponseDto response;
-
-                // Check if this is an update (has ExperienceId > 0) or create (ExperienceId = 0)
-                if (experienceDto.ExperienceId > 0)
-                {
-                    // Update existing experience
-                    response = await experienceService.UpdateExperienceAsync(experienceDto.ExperienceId, experienceDto);
-                }
-                else
-                {
-                    // Create new experience
-                    response = await experienceService.SubmitExperienceAsync(experienceDto);
-                }
-
-                if (response.IsSuccess)
-                    return Ok(response);
-
-                return BadRequest(response);
+                var experiences = await experienceRepository.GetExperiencesByUserIdAsync(userId);
+                var experienceIds = experiences.Select(e => e.ExperienceId).ToList();
+                return Ok(experienceIds);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "Internal server error", Details = ex.Message });
+                return StatusCode(500, new { Message = "An error occurred while retrieving user experience IDs.", Error = ex.Message });
             }
         }
 
-        [HttpDelete]
-        [Route("/deleteexperience")]
-        public async Task<IActionResult> DeleteExperience([FromQuery] int id)
+        /// <summary>
+        /// Helper method to map DTO to DataModel
+        /// </summary>
+        private static ExperienceDataModel MapDtoToDataModel(ExperienceDto dto)
         {
-            try
+            return new ExperienceDataModel
             {
-                if (id <= 0)
-                    return BadRequest(new { Message = "Invalid experience ID" });
-
-                var response = await experienceService.DeleteExperienceAsync(id);
-                if (response is ResponseDto responseDto)
-                {
-                    return responseDto.IsSuccess ? Ok(responseDto) : BadRequest(responseDto);
-                }
-                return BadRequest("Invalid response type.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = "Internal server error", Details = ex.Message });
-            }
+                ExperienceId = dto.ExperienceId,
+                JobTitle = dto.JobTitle,
+                Organization = dto.Organization,
+                Location = dto.Location,
+                StartMonth = dto.StartMonth,
+                StartYear = dto.StartYear,
+                EndMonth = dto.EndMonth,
+                EndYear = dto.EndYear,
+                Description = dto.Description,
+                IsCurrentlyWorking = dto.IsCurrentlyWorking
+            };
         }
     }
 }

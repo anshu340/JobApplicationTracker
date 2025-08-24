@@ -185,7 +185,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Jobs Applications Tracker API V1");
-        options.RoutePrefix = string.Empty; // This makes Swagger UI the root
+        options.RoutePrefix = string.Empty; 
     });
 }
 

@@ -1,3 +1,5 @@
+using JobApplicationTracker.Data.Dtos.Responses;
+
 namespace JobApplicationTracker.Data.Dto.Responses;
 
 public class UsersDtoResponse
@@ -20,6 +22,7 @@ public class UsersDtoResponse
     public string? Skills { get; set; }
     public string? Education { get; set; }
 
-    public string? Experience { get; set; }
+    public string? Experiences { get; set; }
+    public List<ExperienceDto>? ExperienceList { get; set; } // Add this for objects
 
 }

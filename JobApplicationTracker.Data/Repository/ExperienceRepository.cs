@@ -4,7 +4,6 @@ using JobApplicationTracker.Data.Dto.Responses;
 using JobApplicationTracker.Data.Dtos.Responses;
 using JobApplicationTracker.Data.Interface;
 using System.Data;
-using System.Text.Json;
 
 namespace JobApplicationTracker.Data.Repository
 {
@@ -34,7 +33,6 @@ namespace JobApplicationTracker.Data.Repository
             }
             catch (Exception ex)
             {
-                // Log the exception here
                 throw new Exception($"Error retrieving experiences: {ex.Message}", ex);
             }
         }
@@ -61,146 +59,116 @@ namespace JobApplicationTracker.Data.Repository
             }
         }
 
-        // Get experiences for a user using JSON array in Users table
+        // Get experiences for a user using comma-separated string in Users table
         public async Task<IEnumerable<ExperienceDataModel>> GetExperiencesByUserIdAsync(int userId)
         {
             try
             {
                 await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-                // 1. Get JSON array of Experience IDs from Users table
-                var query = "SELECT Experiences FROM [dbo].[Users] WHERE UserId = @UserId";
-                var parameters = new DynamicParameters();
-                parameters.Add("@UserId", userId, DbType.Int32);
+                // 1. Get comma-separated string of Experience IDs from Users table
+                var query = "SELECT Experiences FROM Users WHERE UserId = @UserId";
+                var experienceIds = await connection.QueryFirstOrDefaultAsync<string>(query, new { UserId = userId });
 
-                var experienceJson = await connection.QueryFirstOrDefaultAsync<string>(query, parameters);
-
-                if (string.IsNullOrWhiteSpace(experienceJson))
+                if (string.IsNullOrWhiteSpace(experienceIds))
                     return Enumerable.Empty<ExperienceDataModel>();
 
-                var experienceIds = JsonSerializer.Deserialize<int[]>(experienceJson);
-                if (experienceIds == null || experienceIds.Length == 0)
+                // 2. Parse comma-separated IDs
+                var ids = experienceIds.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                      .Select(id => int.TryParse(id.Trim(), out var parsed) ? parsed : 0)
+                                      .Where(id => id > 0)
+                                      .ToList();
+
+                if (!ids.Any())
                     return Enumerable.Empty<ExperienceDataModel>();
 
-                // 2. Get Experiences from Experiences table
-                var experiencesQuery = @"
+                // 3. Get Experiences from Experiences table
+                var experiencesQuery = $@"
                     SELECT ExperienceId, IsCurrentlyWorking, StartMonth, StartYear, EndMonth, EndYear, 
                            Description, JobTitle, Organization, Location
                     FROM Experiences
-                    WHERE ExperienceId IN @ExperienceIds
+                    WHERE ExperienceId IN ({string.Join(",", ids)})
                     ORDER BY StartYear DESC, StartMonth DESC";
 
-                var experienceParams = new DynamicParameters();
-                experienceParams.Add("@ExperienceIds", experienceIds);
-
-                return await connection.QueryAsync<ExperienceDataModel>(experiencesQuery, experienceParams);
+                return await connection.QueryAsync<ExperienceDataModel>(experiencesQuery);
             }
-            catch (JsonException ex)
+            catch (Exception ex)
             {
-                throw new Exception($"Error parsing experience JSON: {ex.Message}", ex);
+                throw new Exception($"Error retrieving user experiences: {ex.Message}", ex);
             }
         }
 
-        // Insert new experience
+        // Single method that handles both INSERT and UPDATE
         public async Task<ResponseDto> SubmitExperienceAsync(ExperienceDataModel experience)
         {
             try
             {
                 await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-                var sql = @"
-                    INSERT INTO Experiences 
-                        (IsCurrentlyWorking, StartMonth, StartYear, EndMonth, EndYear, 
-                         Description, JobTitle, Organization, Location)
-                    VALUES 
-                        (@IsCurrentlyWorking, @StartMonth, @StartYear, @EndMonth, @EndYear, 
-                         @Description, @JobTitle, @Organization, @Location);
-                    SELECT CAST(SCOPE_IDENTITY() AS INT);";
-
-                var parameters = new DynamicParameters();
-                parameters.Add("@IsCurrentlyWorking", experience.IsCurrentlyWorking, DbType.Boolean);
-                parameters.Add("@StartMonth", experience.StartMonth, DbType.Int32);
-                parameters.Add("@StartYear", experience.StartYear, DbType.Int32);
-                parameters.Add("@EndMonth", experience.EndMonth, DbType.Int32);
-                parameters.Add("@EndYear", experience.EndYear, DbType.Int32);
-                parameters.Add("@Description", experience.Description ?? string.Empty, DbType.String);
-                parameters.Add("@JobTitle", experience.JobTitle ?? string.Empty, DbType.String);
-                parameters.Add("@Organization", experience.Organization ?? string.Empty, DbType.String);
-                parameters.Add("@Location", experience.Location ?? string.Empty, DbType.String);
-
-                var newId = await connection.QuerySingleAsync<int>(sql, parameters).ConfigureAwait(false);
-                experience.ExperienceId = newId;
-
-                return new ResponseDto
+                if (experience.ExperienceId > 0)
                 {
-                    IsSuccess = newId > 0,
-                    Message = newId > 0 ? "Experience created successfully." : "Failed to create experience.",
-                    Id = newId
-                };
+                    // UPDATE existing experience
+                    var updateSql = @"
+                        UPDATE Experiences
+                        SET 
+                            IsCurrentlyWorking = @IsCurrentlyWorking,
+                            StartMonth = @StartMonth,
+                            StartYear = @StartYear,
+                            EndMonth = @EndMonth,
+                            EndYear = @EndYear,
+                            Description = @Description,
+                            JobTitle = @JobTitle,
+                            Organization = @Organization,
+                            Location = @Location
+                        WHERE ExperienceId = @ExperienceId";
+
+                    var parameters = CreateParameters(experience);
+                    parameters.Add("@ExperienceId", experience.ExperienceId);
+
+                    var affectedRows = await connection.ExecuteAsync(updateSql, parameters).ConfigureAwait(false);
+
+                    return new ResponseDto
+                    {
+                        IsSuccess = affectedRows > 0,
+                        Message = affectedRows > 0 ? "Experience updated successfully." : "Experience not found.",
+                        Id = experience.ExperienceId
+                    };
+                }
+                else
+                {
+                    // INSERT new experience
+                    var insertSql = @"
+                        INSERT INTO Experiences 
+                            (IsCurrentlyWorking, StartMonth, StartYear, EndMonth, EndYear, 
+                             Description, JobTitle, Organization, Location)
+                        VALUES 
+                            (@IsCurrentlyWorking, @StartMonth, @StartYear, @EndMonth, @EndYear, 
+                             @Description, @JobTitle, @Organization, @Location);
+                        SELECT CAST(SCOPE_IDENTITY() AS INT);";
+
+                    var parameters = CreateParameters(experience);
+                    var newId = await connection.QuerySingleAsync<int>(insertSql, parameters).ConfigureAwait(false);
+
+                    return new ResponseDto
+                    {
+                        IsSuccess = newId > 0,
+                        Message = newId > 0 ? "Experience created successfully." : "Failed to create experience.",
+                        Id = newId
+                    };
+                }
             }
             catch (Exception ex)
             {
                 return new ResponseDto
                 {
                     IsSuccess = false,
-                    Message = $"Error creating experience: {ex.Message}",
-                    Id = 0
+                    Message = $"Error submitting experience: {ex.Message}",
+                    Id = experience.ExperienceId
                 };
             }
         }
 
-        // Update existing experience
-        public async Task<ResponseDto> UpdateExperienceAsync(int experienceId, ExperienceDataModel experience)
-        {
-            try
-            {
-                await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-                var sql = @"
-                    UPDATE Experiences
-                    SET 
-                        IsCurrentlyWorking = @IsCurrentlyWorking,
-                        StartMonth = @StartMonth,
-                        StartYear = @StartYear,
-                        EndMonth = @EndMonth,
-                        EndYear = @EndYear,
-                        Description = @Description,
-                        JobTitle = @JobTitle,
-                        Organization = @Organization,
-                        Location = @Location
-                    WHERE ExperienceId = @ExperienceId";
-
-                var parameters = new DynamicParameters();
-                parameters.Add("@ExperienceId", experienceId);
-                parameters.Add("@IsCurrentlyWorking", experience.IsCurrentlyWorking, DbType.Boolean);
-                parameters.Add("@StartMonth", experience.StartMonth, DbType.Int32);
-                parameters.Add("@StartYear", experience.StartYear, DbType.Int32);
-                parameters.Add("@EndMonth", experience.EndMonth, DbType.Int32);
-                parameters.Add("@EndYear", experience.EndYear, DbType.Int32);
-                parameters.Add("@Description", experience.Description ?? string.Empty, DbType.String);
-                parameters.Add("@JobTitle", experience.JobTitle ?? string.Empty, DbType.String);
-                parameters.Add("@Organization", experience.Organization ?? string.Empty, DbType.String);
-                parameters.Add("@Location", experience.Location ?? string.Empty, DbType.String);
-
-                var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
-
-                return new ResponseDto
-                {
-                    IsSuccess = affectedRows > 0,
-                    Message = affectedRows > 0 ? "Experience updated successfully." : "Experience not found or could not be updated.",
-                    Id = experienceId
-                };
-            }
-            catch (Exception ex)
-            {
-                return new ResponseDto
-                {
-                    IsSuccess = false,
-                    Message = $"Error updating experience: {ex.Message}",
-                    Id = experienceId
-                };
-            }
-        }
 
         // Delete experience
         public async Task<ResponseDto> DeleteExperienceAsync(int experienceId)
@@ -208,18 +176,49 @@ namespace JobApplicationTracker.Data.Repository
             try
             {
                 await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+                using var transaction = connection.BeginTransaction();
 
-                var sql = "DELETE FROM Experiences WHERE ExperienceId = @ExperienceId";
-                var affectedRows = await connection.ExecuteAsync(sql, new { ExperienceId = experienceId }).ConfigureAwait(false);
-
-                return new ResponseDto
+                try
                 {
-                    IsSuccess = affectedRows > 0,
-                    Message = affectedRows > 0
-                        ? "Experience deleted successfully."
-                        : "Experience not found or could not be deleted.",
-                    Id = experienceId
-                };
+                    // 1. Remove experience from all users first
+                    var usersWithExperience = await connection.QueryAsync<(int UserId, string Experiences)>(
+                        "SELECT UserId, Experiences FROM Users WHERE Experiences IS NOT NULL AND Experiences LIKE @Pattern",
+                        new { Pattern = $"%{experienceId}%" }, transaction);
+
+                    foreach (var (userId, experiences) in usersWithExperience)
+                    {
+                        var experienceIdsList = experiences.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                                          .Select(id => int.TryParse(id.Trim(), out var parsed) ? parsed : 0)
+                                                          .Where(id => id > 0 && id != experienceId)
+                                                          .ToList();
+
+                        var newExperienceIds = experienceIdsList.Any() ? string.Join(",", experienceIdsList) : null;
+
+                        await connection.ExecuteAsync(
+                            "UPDATE Users SET Experiences = @Experiences, UpdatedAt = @UpdatedAt WHERE UserId = @UserId",
+                            new { Experiences = newExperienceIds, UpdatedAt = DateTime.UtcNow, UserId = userId }, transaction);
+                    }
+
+                    // 2. Delete the experience
+                    var sql = "DELETE FROM Experiences WHERE ExperienceId = @ExperienceId";
+                    var affectedRows = await connection.ExecuteAsync(sql, new { ExperienceId = experienceId }, transaction);
+
+                    transaction.Commit();
+
+                    return new ResponseDto
+                    {
+                        IsSuccess = affectedRows > 0,
+                        Message = affectedRows > 0
+                            ? "Experience deleted successfully."
+                            : "Experience not found.",
+                        Id = experienceId
+                    };
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
             catch (Exception ex)
             {
@@ -230,6 +229,23 @@ namespace JobApplicationTracker.Data.Repository
                     Id = experienceId
                 };
             }
+        }
+
+        // Helper method to create common parameters
+        private DynamicParameters CreateParameters(ExperienceDataModel experience)
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("@IsCurrentlyWorking", experience.IsCurrentlyWorking, DbType.Boolean);
+            parameters.Add("@StartMonth", experience.StartMonth, DbType.Int32);
+            parameters.Add("@StartYear", experience.StartYear, DbType.Int32);
+            parameters.Add("@EndMonth", experience.EndMonth, DbType.Int32);
+            parameters.Add("@EndYear", experience.EndYear, DbType.Int32);
+            parameters.Add("@Description", experience.Description ?? string.Empty, DbType.String);
+            parameters.Add("@JobTitle", experience.JobTitle ?? string.Empty, DbType.String);
+            parameters.Add("@Organization", experience.Organization ?? string.Empty, DbType.String);
+            parameters.Add("@Location", experience.Location ?? string.Empty, DbType.String);
+
+            return parameters;
         }
     }
 }
