@@ -9,9 +9,7 @@ namespace JobApplicationTracker.Api.Controllers
     [ApiController]
     public class ExperienceController(IExperienceRepository experienceRepository) : ControllerBase
     {
-        /// <summary>
-        /// Gets all experiences from the database
-        /// </summary>
+
         [HttpGet]
         public async Task<IActionResult> GetAllExperiences()
         {
@@ -26,9 +24,6 @@ namespace JobApplicationTracker.Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets a specific experience by ID
-        /// </summary>
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetExperienceById(int id)
         {
@@ -46,11 +41,6 @@ namespace JobApplicationTracker.Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Creates a new experience or updates an existing one
-        /// If ExperienceId is 0 or not provided, creates new experience
-        /// If ExperienceId > 0, updates existing experience
-        /// </summary>
         [HttpPost]
         public async Task<IActionResult> SubmitExperience([FromBody] ExperienceDto dto)
         {
@@ -67,7 +57,7 @@ namespace JobApplicationTracker.Api.Controllers
 
                 // Return appropriate status code
                 if (dto.ExperienceId > 0)
-                    return Ok(response); // 200 for update
+                    return Ok(response);
                 else
                     return Created($"api/experience/{response.Id}", response); // 201 for create
             }
@@ -77,11 +67,6 @@ namespace JobApplicationTracker.Api.Controllers
             }
         }
 
-
-
-        /// <summary>
-        /// Deletes an experience by ID
-        /// </summary>
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteExperience(int id)
         {
@@ -105,9 +90,6 @@ namespace JobApplicationTracker.Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets all experiences for a specific user
-        /// </summary>
         [HttpGet("user/{userId:int}")]
         public async Task<IActionResult> GetExperiencesByUserId(int userId)
         {
@@ -121,10 +103,6 @@ namespace JobApplicationTracker.Api.Controllers
                 return StatusCode(500, new { Message = "An error occurred while retrieving user experiences.", Error = ex.Message });
             }
         }
-
-        /// <summary>
-        /// Gets only experience IDs for a specific user
-        /// </summary>
         [HttpGet("user/{userId:int}/ids")]
         public async Task<IActionResult> GetExperienceIdsByUserId(int userId)
         {
@@ -140,9 +118,6 @@ namespace JobApplicationTracker.Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Helper method to map DTO to DataModel
-        /// </summary>
         private static ExperienceDataModel MapDtoToDataModel(ExperienceDto dto)
         {
             return new ExperienceDataModel
