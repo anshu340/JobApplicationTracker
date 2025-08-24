@@ -26,8 +26,6 @@ namespace JobApplicationTracker.Data.Dto
 
         public string? Location { get; set; }
 
-        public int? CompanyId { get; set; }
-
         public int? UserType { get; set; }
 
 

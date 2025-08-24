@@ -61,7 +61,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[Application](
 	[ApplicationId] [int] IDENTITY(1,1) NOT NULL,
-	[JobSeekerId] [int] NOT NULL,
+	[UserId] [int] NOT NULL,
 	[JobId] [int] NOT NULL,
 	[ApplicationStatusId] [int] NOT NULL,
 	[AppliedAt] [datetime2](7) NOT NULL,

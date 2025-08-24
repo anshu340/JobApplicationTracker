@@ -64,6 +64,7 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             DateOfBirth = user.DateOfBirth,
             Skills = user.Skills,
             Education = user.Education
+
         };
 
         // Load experiences - if Experiences property is string type, keep the comma-separated IDs
@@ -95,8 +96,13 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                     WebsiteUrl = company.WebsiteUrl,
                     Location = company.Location,
                     Description = company.Description,
+
                     CompanyLogo = company.CompanyLogo,
                     ContactEmail = company.ContactEmail
+
+                    CompanyLogo = company.CompanyLogo, // ✅ ADDED: Include company logo
+                    ContactEmail = company.ContactEmail // ✅ ADDED: Include contact email
+
                 };
             }
         }
@@ -256,11 +262,14 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             parameters.Add("LastName", userDto.LastName ?? "");
             parameters.Add("Email", userDto.Email ?? "");
             parameters.Add("PasswordHash", userDto.PasswordHash ?? "");
-            parameters.Add("CompanyId", userDto.CompanyId);
             parameters.Add("PhoneNumber", userDto.PhoneNumber);
             parameters.Add("UserType", userDto.UserType);
             parameters.Add("Location", userDto.Location);
+
             parameters.Add("Experiences", userDto.Experiences); // Changed
+
+            parameters.Add("CompanyId", userDto.CompanyId);
+
             parameters.Add("CreatedAt", DateTime.UtcNow);
             parameters.Add("UpdatedAt", DateTime.UtcNow);
 
@@ -303,11 +312,13 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                 setClauses.Add("PasswordHash = @PasswordHash");
                 parameters.Add("PasswordHash", userDto.PasswordHash);
             }
+
             if (userDto.CompanyId.HasValue)
             {
                 setClauses.Add("CompanyId = @CompanyId");
                 parameters.Add("CompanyId", userDto.CompanyId);
             }
+
             if (!string.IsNullOrEmpty(userDto.PhoneNumber))
             {
                 setClauses.Add("PhoneNumber = @PhoneNumber");
@@ -323,6 +334,15 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
                 setClauses.Add("Location = @Location");
                 parameters.Add("Location", userDto.Location);
             }
+
+
+            if (userDto.CompanyId.HasValue)
+            {
+                setClauses.Add("CompanyId = @CompanyId");
+                parameters.Add("CompanyId", userDto.CompanyId);
+            }
+
+
             if (!string.IsNullOrEmpty(userDto.ProfilePicture))
             {
                 setClauses.Add("ProfilePicture = @ProfilePicture");
@@ -352,11 +372,13 @@ public class UsersRepository(IDatabaseConnectionService connectionService) : IUs
             {
                 setClauses.Add("Education = @Education");
                 parameters.Add("Education", userDto.Education);
+
             }
             if (!string.IsNullOrEmpty(userDto.Experiences)) // Changed
             {
                 setClauses.Add("Experiences = @Experiences");
                 parameters.Add("Experiences", userDto.Experiences);
+
             }
 
             setClauses.Add("UpdatedAt = @UpdatedAt");
