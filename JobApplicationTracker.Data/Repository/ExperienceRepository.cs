@@ -57,38 +57,40 @@ namespace JobApplicationTracker.Data.Repository
             {
                 throw new Exception($"Error retrieving experience by ID: {ex.Message}", ex);
             }
-        }
-
-        // Get experiences for a user using comma-separated string in Users table
+        }// Get experiences for a user using JSON array in Users table
         public async Task<IEnumerable<ExperienceDataModel>> GetExperiencesByUserIdAsync(int userId)
         {
             try
             {
                 await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-                // 1. Get comma-separated string of Experience IDs from Users table
+                // 1. Get JSON array string of Experience IDs from Users table
                 var query = "SELECT Experiences FROM Users WHERE UserId = @UserId";
                 var experienceIds = await connection.QueryFirstOrDefaultAsync<string>(query, new { UserId = userId });
 
                 if (string.IsNullOrWhiteSpace(experienceIds))
                     return Enumerable.Empty<ExperienceDataModel>();
 
-                // 2. Parse comma-separated IDs
-                var ids = experienceIds.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                      .Select(id => int.TryParse(id.Trim(), out var parsed) ? parsed : 0)
-                                      .Where(id => id > 0)
-                                      .ToList();
+                // 2. Parse JSON array - remove brackets and split by comma
+                var cleanedIds = experienceIds.Trim('[', ']');
+                if (string.IsNullOrWhiteSpace(cleanedIds))
+                    return Enumerable.Empty<ExperienceDataModel>();
+
+                var ids = cleanedIds.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                   .Select(id => int.TryParse(id.Trim(), out var parsed) ? parsed : 0)
+                                   .Where(id => id > 0)
+                                   .ToList();
 
                 if (!ids.Any())
                     return Enumerable.Empty<ExperienceDataModel>();
 
                 // 3. Get Experiences from Experiences table
                 var experiencesQuery = $@"
-                    SELECT ExperienceId, IsCurrentlyWorking, StartMonth, StartYear, EndMonth, EndYear, 
-                           Description, JobTitle, Organization, Location
-                    FROM Experiences
-                    WHERE ExperienceId IN ({string.Join(",", ids)})
-                    ORDER BY StartYear DESC, StartMonth DESC";
+            SELECT ExperienceId, IsCurrentlyWorking, StartMonth, StartYear, EndMonth, EndYear, 
+                   Description, JobTitle, Organization, Location
+            FROM Experiences
+            WHERE ExperienceId IN ({string.Join(",", ids)})
+            ORDER BY StartYear DESC, StartMonth DESC";
 
                 return await connection.QueryAsync<ExperienceDataModel>(experiencesQuery);
             }
@@ -97,7 +99,6 @@ namespace JobApplicationTracker.Data.Repository
                 throw new Exception($"Error retrieving user experiences: {ex.Message}", ex);
             }
         }
-
         // Single method that handles both INSERT and UPDATE
         public async Task<ResponseDto> SubmitExperienceAsync(ExperienceDataModel experience)
         {

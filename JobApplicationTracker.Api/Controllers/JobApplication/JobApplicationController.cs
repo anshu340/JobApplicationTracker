@@ -1,4 +1,4 @@
-using JobApplicationTracker.Data.DataModels;
+﻿using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Interface;
 using Microsoft.AspNetCore.Mvc;
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace JobApplicationTracker.Data.Dto
 {
-    public class ApplicationStatusesDto
+    public class ApplicationStatusDto
     {
         public int ApplicationStatusId { get; set; }
         public string StatusName { get; set; } = string.Empty;
