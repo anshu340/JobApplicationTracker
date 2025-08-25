@@ -14,18 +14,21 @@ public class ApplicationsRepository : IJobApplicationRepository
     {
         _connectionService = connectionService;
     }
+
     public async Task<IEnumerable<ApplicationsDataModel>> GetAllJobApplicationAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
         var sql = """
-              SELECT JobApplicationId, 
+              SELECT ApplicationId, 
                      JobId, 
-                     JobSeekerId, 
-                     CoverLetter, 
-                     StatusId, 
-                     AppliedAt, 
-                     UpdatedAt
+                     UserId, 
+                     ApplicationStatusId,
+                     AppliedAt,
+                     CoverLetterText,
+                     CoverLetterUrl,
+                     Feedback,
+                     LastUpdatedAt
               FROM JobApplications
               """;
 
@@ -36,24 +39,26 @@ public class ApplicationsRepository : IJobApplicationRepository
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-        // write the SQL query to fetch a job application by ID
-        var sql = @"
-                  SELECT   JobApplicationId,
+        var sql = """
+                  SELECT   ApplicationId,
                            JobId,
-                           JobSeekerId,
-                           CoverLetter,
-                           StatusId,
+                           UserId,
+                           ApplicationStatusId,
                            AppliedAt,
-                           UpdatedAt
+                           CoverLetterText,
+                           CoverLetterUrl,
+                           Feedback,
+                           LastUpdatedAt
                   FROM JobApplications
                   WHERE ApplicationId = @JobApplicationId
-                  ";
-       
+                  """;
+
         var parameters = new DynamicParameters();
         parameters.Add("@JobApplicationId", jobApplicationId, DbType.Int32);
 
         return await connection.QueryFirstOrDefaultAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
     }
+
     public async Task<ResponseDto> SubmitJobApplicationAsync(ApplicationsDataModel jobApplicationDto)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
@@ -64,39 +69,38 @@ public class ApplicationsRepository : IJobApplicationRepository
         {
             // Insert new job application (assumes ApplicationId is auto-incremented)
             sql = """
-                    INSERT INTO Applications (JobId, JobSeekerUserId, CoverLetter, StatusId, AppliedAt, UpdatedAt)
-
-                    VALUES (@JobId, @JobSeekerUserId, @CoverLetter, @StatusId, @AppliedAt, @UpdatedAt);
-
+                    INSERT INTO JobApplications (JobId, UserId, CoverLetterText, CoverLetterUrl, ApplicationStatusId, AppliedAt, LastUpdatedAt, Feedback)
+                    VALUES (@JobId, @UserId, @CoverLetterText, @CoverLetterUrl, @ApplicationStatusId, @AppliedAt, @LastUpdatedAt, @Feedback);
                     SELECT CAST(SCOPE_IDENTITY() AS INT);
-
                     """;
         }
         else
         {
             // Update existing job application
             sql = """
-                    UPDATE Applications
+                    UPDATE JobApplications
                     SET 
                         JobId = @JobId,
-                        JobSeekerId = @JobSeekerId,
-                        CoverLetter = @CoverLetter,
-                        StatusId = @StatusId,
-                        UpdatedAt = @UpdatedAt
+                        UserId = @UserId,
+                        CoverLetterText = @CoverLetterText,
+                        CoverLetterUrl = @CoverLetterUrl,
+                        ApplicationStatusId = @ApplicationStatusId,
+                        LastUpdatedAt = @LastUpdatedAt,
+                        Feedback = @Feedback
                     WHERE ApplicationId = @ApplicationId
                     """;
         }
 
         var parameters = new DynamicParameters();
-        parameters.Add("@JobApplicationId", jobApplicationDto.ApplicationId, DbType.Int32);
+        parameters.Add("@ApplicationId", jobApplicationDto.ApplicationId, DbType.Int32);
         parameters.Add("@JobId", jobApplicationDto.JobId, DbType.Int32);
-        parameters.Add("@JobSeekerId", jobApplicationDto.JobSeekerId, DbType.Int32);
-        parameters.Add("@CoverLetter", jobApplicationDto.CoverLetterText, DbType.String);
-        parameters.Add("@StatusId", jobApplicationDto.ApplicationStatusId, DbType.Int32);
-        parameters.Add("@AppliedAt", DateTime.UtcNow, DbType.DateTime);
-
-        // Set UpdatedAt for both insert and update
-        parameters.Add("@UpdatedAt", DateTime.UtcNow, DbType.DateTime);
+        parameters.Add("@UserId", jobApplicationDto.UserId, DbType.Int32);
+        parameters.Add("@CoverLetterText", jobApplicationDto.CoverLetterText, DbType.String);
+        parameters.Add("@CoverLetterUrl", jobApplicationDto.CoverLetterUrl, DbType.String);
+        parameters.Add("@ApplicationStatusId", jobApplicationDto.ApplicationStatusId, DbType.Int32);
+        parameters.Add("@Feedback", jobApplicationDto.Feedback, DbType.String);
+        parameters.Add("@AppliedAt", jobApplicationDto.AppliedAt ?? DateTime.UtcNow, DbType.DateTime);
+        parameters.Add("@LastUpdatedAt", DateTime.UtcNow, DbType.DateTime);
 
         var affectedRows = 0;
 
@@ -114,19 +118,15 @@ public class ApplicationsRepository : IJobApplicationRepository
         return new ResponseDto
         {
             IsSuccess = affectedRows > 0,
-            Message = affectedRows > 0 ? "Jobs application submitted successfully." : "Failed to submit job application.",
-
+            Message = affectedRows > 0 ? "Job application submitted successfully." : "Failed to submit job application.",
         };
     }
-
-
 
     public async Task<ResponseDto> DeleteJobApplicationAsync(int jobApplicationId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-        // write the SQL query to delete a job application by ID
-        var sql = """DELETE FROM JobApplications WHERE JobApplicationId = JobApplicationId""";
+        var sql = """DELETE FROM JobApplications WHERE ApplicationId = @JobApplicationId""";
 
         var parameters = new DynamicParameters();
         parameters.Add("@JobApplicationId", jobApplicationId, DbType.Int32);
@@ -145,7 +145,7 @@ public class ApplicationsRepository : IJobApplicationRepository
         return new ResponseDto
         {
             IsSuccess = true,
-            Message = "Jobs application deleted successfully."
+            Message = "Job application deleted successfully."
         };
     }
 }
