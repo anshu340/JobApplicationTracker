@@ -1,14 +1,42 @@
-﻿namespace JobApplicationTracker.Data.DataModels;
+﻿using JobApplicationTracker.Data.Enums;
+
+namespace JobApplicationTracker.Data.DataModels;
 
 public class ApplicationsDataModel
 {
     public int ApplicationId { get; set; }
-    public int UserId { get; set; } // Changed from JobSeekerId to UserId
-    public int JobId { get; set; } // Foreign Key
-    public int ApplicationStatusId { get; set; } // Foreign Key
-    public DateTime? AppliedAt { get; set; } // Nullable in DB, though defaults exist
-    public string? CoverLetterText { get; set; }
-    public string? CoverLetterUrl { get; set; }
-    public string? Feedback { get; set; }
-    public DateTime? LastUpdatedAt { get; set; } // Nullable in DB, though defaults exist
+    public int UserId { get; set; }
+    public int JobId { get; set; }
+    public int ApplicationStatus { get; set; }
+    public DateTime ApplicationDate { get; set; }
+    public string? CoverLetter { get; set; }
+    public string? ResumeFile { get; set; }
+    public decimal? SalaryExpectation { get; set; }
+    public DateTime? AvailableStartDate { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    // Helper property for type safety using your enum
+    public ApplicationStatus Status
+    {
+        get => (ApplicationStatus)ApplicationStatus;
+        set => ApplicationStatus = (int)value;
+    }
+
+    // Helper method to get status name
+    public string GetStatusName()
+    {
+        return ApplicationStatus switch
+        {
+            1 => "Applied",
+            2 => "Phone Screen",
+            3 => "Rejected",
+            _ => "Unknown"
+        };
+    }
+
+    // Helper method to validate if the status is valid
+    public bool IsValidStatus()
+    {
+        return ApplicationStatus >= 1 && ApplicationStatus <= 3;
+    }
 }

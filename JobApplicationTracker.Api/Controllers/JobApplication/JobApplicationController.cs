@@ -1,31 +1,53 @@
 ﻿using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Interface;
+using JobApplicationTracker.Data.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.JobApplication;
 
 [Route("api/jobapplication")]
-public class
-    JobsApplicationController(IJobApplicationRepository jobApplicationService) : ControllerBase
+[ApiController]
+public class JobsApplicationController(IJobApplicationRepository jobApplicationService) : ControllerBase
 {
     [HttpGet]
     [Route("/getalljobapplication")]
     public async Task<IActionResult> GetAllJobs()
     {
-        var jobApp = await jobApplicationService.GetAllJobApplicationAsync();
-        return Ok(jobApp);
+        try
+        {
+            var jobApp = await jobApplicationService.GetAllJobApplicationAsync();
+            return Ok(jobApp);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"GetAllJobs error: {ex.Message}");
+            return StatusCode(500, new { message = "An error occurred while retrieving job applications.", error = ex.Message });
+        }
     }
 
     [HttpGet]
     [Route("/getjobapplicationbyid")]
     public async Task<IActionResult> GetJobApplicationById(int id)
     {
-        var jobApp = await jobApplicationService.GetJobApplicationByIdAsync(id);
-        if (jobApp == null)
+        if (id <= 0)
         {
-            return NotFound();
+            return BadRequest(new { message = "Valid application ID is required." });
         }
-        return Ok(jobApp);
+
+        try
+        {
+            var jobApp = await jobApplicationService.GetJobApplicationByIdAsync(id);
+            if (jobApp == null)
+            {
+                return NotFound(new { message = $"Job application with ID {id} not found." });
+            }
+            return Ok(jobApp);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"GetJobApplicationById error: {ex.Message}");
+            return StatusCode(500, new { message = "An error occurred while retrieving the job application.", error = ex.Message });
+        }
     }
 
     [HttpPost]
@@ -34,18 +56,101 @@ public class
     {
         if (jobApplicationDto == null)
         {
-            return BadRequest();
+            return BadRequest(new { message = "Job application data is required." });
         }
 
-        var response = await jobApplicationService.SubmitJobApplicationAsync(jobApplicationDto);
-        return response.IsSuccess ? Ok(response) : BadRequest(response);
+        // Basic validation
+        if (jobApplicationDto.UserId <= 0)
+        {
+            return BadRequest(new { message = "Valid UserId is required." });
+        }
+
+        if (jobApplicationDto.JobId <= 0)
+        {
+            return BadRequest(new { message = "Valid JobId is required." });
+        }
+
+        // Validate ApplicationStatus using enum
+        if (jobApplicationDto.ApplicationStatus <= 0)
+        {
+            // Set default to Applied
+            jobApplicationDto.ApplicationStatus = (int)ApplicationStatus.Applied;
+            Console.WriteLine("ApplicationStatus not provided, defaulting to Applied");
+        }
+        else if (!jobApplicationDto.IsValidStatus())
+        {
+            return BadRequest(new
+            {
+                message = $"Invalid ApplicationStatus. Valid options are: {(int)ApplicationStatus.Applied} (Applied), {(int)ApplicationStatus.PhoneScreen} (Phone Screen), {(int)ApplicationStatus.Rejected} (Rejected)"
+            });
+        }
+
+        // Log the incoming request for debugging
+        Console.WriteLine($"Controller received: UserId={jobApplicationDto.UserId}, JobId={jobApplicationDto.JobId}, ApplicationStatus={jobApplicationDto.ApplicationStatus} ({jobApplicationDto.GetStatusName()})");
+
+        try
+        {
+            var response = await jobApplicationService.SubmitJobApplicationAsync(jobApplicationDto);
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            else
+            {
+                // Return more specific error codes based on the error message
+                if (response.Message.Contains("does not exist"))
+                {
+                    return NotFound(response);
+                }
+                return BadRequest(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SubmitJobApplication error: {ex.Message}");
+            return StatusCode(500, new
+            {
+                message = "An unexpected error occurred while submitting the job application.",
+                error = ex.Message
+            });
+        }
     }
 
     [HttpDelete]
     [Route("/deletejobapplication")]
     public async Task<IActionResult> DeleteJobApplication(int id)
     {
-        var response = await jobApplicationService.DeleteJobApplicationAsync(id);
-        return response.IsSuccess ? Ok(response) : BadRequest(response);
+        if (id <= 0)
+        {
+            return BadRequest(new { message = "Valid application ID is required." });
+        }
+
+        try
+        {
+            var response = await jobApplicationService.DeleteJobApplicationAsync(id);
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            else
+            {
+                if (response.Message.Contains("not found"))
+                {
+                    return NotFound(response);
+                }
+                return BadRequest(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DeleteJobApplication error: {ex.Message}");
+            return StatusCode(500, new
+            {
+                message = "An error occurred while deleting the job application.",
+                error = ex.Message
+            });
+        }
     }
 }
