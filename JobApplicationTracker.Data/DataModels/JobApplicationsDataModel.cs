@@ -29,8 +29,7 @@ public class ApplicationsDataModel
         {
             1 => "Applied",
             2 => "Phone Screen",
-            3 => "Rejected",
-            _ => "Unknown"
+            3 => "Rejected"
         };
     }
 

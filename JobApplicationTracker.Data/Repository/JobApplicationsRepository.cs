@@ -251,14 +251,14 @@ public class ApplicationsRepository : IJobApplicationRepository
             {
                 1 => "Applied",
                 2 => "Phone Screen",
-                3 => "Rejected",
-                _ => "Unknown"
+                3 => "Rejected"
             };
 
             return new ResponseDto
             {
                 IsSuccess = affectedRows > 0,
-                Message = affectedRows > 0 ? $"Job application submitted successfully with status: {statusName}" : "Failed to submit job application.",
+                Message = affectedRows > 0 ? "Job application submitted successfully" : "Failed to submit job application.",
+                Id = jobApplicationDto.ApplicationId
             };
         }
         catch (SqlException ex) when (ex.Number == 547) // Foreign key constraint violation
