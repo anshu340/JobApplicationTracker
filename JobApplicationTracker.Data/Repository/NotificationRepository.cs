@@ -1,159 +1,293 @@
-// using Dapper;
-// using JobApplicationTracker.Data.Interface;
-// using System.Data;
-// using JobApplicationTracker.Data.DataModels;
-// using JobApplicationTracker.Data.Dtos.Responses;
-//
-// namespace JobApplicationTracker.Data.Repository;
-//
-// public class NotificationsRepository : INotificationsRepository
-// {
-//     private readonly IDatabaseConnectionService _connectionService;
-//
-//     public NotificationsRepository(IDatabaseConnectionService connectionService)
-//     {
-//         _connectionService = connectionService;
-//     }
-//
-//     public async Task<IEnumerable<NotificationsDataModel>> GetAllNotificationsAsync()
-//     {
-//         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-//
-//         var sql = """
-//               SELECT NotificationId,
-//                      UserId,
-//                      Title,
-//                      Message,
-//                      NotificationTypeId,
-//                      IsRead,
-//                      CreatedAt,
-//                      LinkUrl 
-//               FROM Notifications
-//               """;
-//
-//         return await connection.QueryAsync<NotificationsDataModel>(sql).ConfigureAwait(false);
-//     }
-//
-//     public async Task<NotificationsDataModel?> GetNotificationsByIdAsync(Guid notificationsId) // Changed parameter to Guid
-//     {
-//         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-//
-//         // SQL query to fetch a notification by ID
-//         var sql = """
-//               SELECT NotificationId,
-//                      UserId,
-//                      Title,
-//                      Message,
-//                      NotificationTypeId,
-//                      IsRead,
-//                      CreatedAt,
-//                      LinkUrl 
-//               FROM Notifications
-//               WHERE NotificationId = @NotificationId
-//               """;
-//
-//         var parameters = new DynamicParameters();
-//         parameters.Add("@NotificationId", notificationsId, DbType.Guid); // Changed DbType to Guid
-//
-//         // Use QueryFirstOrDefaultAsync for single results, as it handles null if not found
-//         return await connection.QueryFirstOrDefaultAsync<NotificationsDataModel>(sql, parameters).ConfigureAwait(false);
-//     }
-//
-//     public async Task<ResponseDto> SubmitNotificationsAsync(NotificationsDataModel notificationsDto)
-//     {
-//         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-//
-//         string sql;
-//         int affectedRows;
-//
-//         // Check for Guid.Empty instead of <= 0 for new records
-//         if (notificationsDto.NotificationId <= 0)
-//         {
-//             sql = """
-//             INSERT INTO Notifications (UserId, Title, Message, NotificationTypeId, IsRead, CreatedAt, LinkUrl)
-//             VALUES (@UserId, @Title, @Message, @NotificationTypeId, @IsRead, @CreatedAt, @LinkUrl);
-//             SELECT NotificationId FROM Notifications WHERE NotificationId = SCOPE_IDENTITY(); 
-//             """;
-//         }
-//         else
-//         {
-//             // Update existing notification
-//             sql = """
-//             UPDATE Notifications
-//             SET
-//                 UserId = @UserId,
-//                 Title = @Title,
-//                 Message = @Message,
-//                 NotificationTypeId = @NotificationTypeId,
-//                 IsRead = @IsRead,
-//                 CreatedAt = @CreatedAt, -- Be careful: updating CreatedAt is unusual for an update. Consider an UpdatedAt column if you need to track last modification.
-//                 LinkUrl = @LinkUrl
-//             WHERE NotificationId = @NotificationId
-//             """;
-//         }
-//
-//         var parameters = new DynamicParameters();
-//         parameters.Add("@NotificationId", notificationsDto.NotificationId, DbType.Guid); // Changed DbType
-//         parameters.Add("@UserId", notificationsDto.UserId, DbType.Int32);
-//         parameters.Add("@Title", notificationsDto.Title, DbType.String);
-//         parameters.Add("@Message", notificationsDto.Message, DbType.String);
-//         parameters.Add("@NotificationTypeId", notificationsDto.NotificationTypeId, DbType.Int32);
-//         parameters.Add("@IsRead", notificationsDto.IsRead, DbType.Boolean);
-//         parameters.Add("@CreatedAt", notificationsDto.CreatedAt, DbType.DateTime2); // Use DateTime2 for better precision and alignment with SQL
-//         parameters.Add("@LinkUrl", notificationsDto.LinkUrl, DbType.String); // Add LinkUrl parameter
-//
-//         // Execute the command
-//         if (notificationsDto.NotificationId == Guid.Empty)
-//         {
-//             // For insert, we just execute. If the DB generates the ID,
-//             // we won't get it back easily with Dapper's ExecuteAsync.
-//             // If you *must* get the generated GUID back, you'd generate it in C#
-//             // before the insert and pass it to the DB, or use a specific SQL Server
-//             // OUTPUT clause and Dapper's QuerySingleOrDefault.
-//             affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
-//             // Since NEWID() is used, the ID is generated by the DB. We can't use SCOPE_IDENTITY.
-//             // If you want the GUID back, you should generate it in C# and pass it to the insert.
-//             // Example: notificationsDto.NotificationId = Guid.NewGuid();
-//             // then in SQL: INSERT INTO ... VALUES (@NotificationId, ...)
-//             // For now, `affectedRows` will tell you if the insert happened.
-//         }
-//         else
-//         {
-//             affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
-//         }
-//
-//         return new ResponseDto
-//         {
-//             IsSuccess = affectedRows > 0,
-//             Message = affectedRows > 0 ? "Notifications submitted successfully." : "Failed to submit notification."
-//         };
-//     }
-//
-//     public async Task<ResponseDto> DeleteNotificationsAsync(Guid notificationsId) // Changed parameter to Guid
-//     {
-//         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
-//
-//         // SQL query to delete a notification by ID
-//         var sql = """DELETE FROM Notifications WHERE NotificationId = @NotificationId""";
-//
-//         var parameters = new DynamicParameters();
-//         parameters.Add("@NotificationId", notificationsId, DbType.Guid); // Changed DbType to Guid
-//
-//         var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
-//
-//         if (affectedRows <= 0)
-//         {
-//             return new ResponseDto
-//             {
-//                 IsSuccess = false,
-//                 Message = "Failed to delete notification."
-//             };
-//         }
-//
-//         return new ResponseDto
-//         {
-//             IsSuccess = true,
-//             Message = "Notifications deleted successfully."
-//         };
-//     }
-// }
+using Dapper;
+using JobApplicationTracker.Data.Dto.Requests;
+using JobApplicationTracker.Data.Dto.Responses;
+using JobApplicationTracker.Data.Dtos.Responses;
+using JobApplicationTracker.Data.Interface;
+using System.Data;
+
+namespace JobApplicationTracker.Data.Repository
+{
+    public class NotificationRepository : INotificationRepository
+    {
+        private readonly IDatabaseConnectionService _connectionService;
+
+        public NotificationRepository(IDatabaseConnectionService connectionService)
+        {
+            _connectionService = connectionService;
+        }
+
+        public async Task<NotificationDto> CreateNotificationAsync(CreateNotificationDto dto)
+        {
+            try
+            {
+                await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+                var sql = @"
+                    INSERT INTO notifications 
+                        (UserId, NotificationTypeId, JobId, Title, Message, LinkUrl, IsRead, CreatedAt)
+                    VALUES 
+                        (@UserId, @NotificationTypeId, @JobId, @Title, @Message, @LinkUrl, 0, @CreatedAt);
+                    SELECT CAST(SCOPE_IDENTITY() AS INT);";
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@UserId", dto.UserId, DbType.Int32);
+                parameters.Add("@NotificationTypeId", dto.NotificationTypeId, DbType.Int32);
+                parameters.Add("@JobId", dto.JobId, DbType.Int32);
+                parameters.Add("@Title", dto.Title, DbType.String);
+                parameters.Add("@Message", dto.Message, DbType.String);
+                parameters.Add("@LinkUrl", dto.LinkUrl, DbType.String);
+                parameters.Add("@CreatedAt", DateTime.Now, DbType.DateTime);
+
+                var newId = await connection.QuerySingleAsync<int>(sql, parameters).ConfigureAwait(false);
+
+                return new NotificationDto
+                {
+                    NotificationId = newId,
+                    UserId = dto.UserId,
+                    NotificationTypeId = dto.NotificationTypeId,
+                    JobId = dto.JobId,
+                    Title = dto.Title,
+                    Message = dto.Message,
+                    LinkUrl = dto.LinkUrl,
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error creating notification: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<IEnumerable<NotificationDto>> GetUserNotificationsAsync(int userId)
+        {
+            try
+            {
+                await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+                var sql = @"
+                    SELECT NotificationId, UserId, NotificationTypeId, JobId, Title, Message, 
+                           IsRead, CreatedAt, LinkUrl
+                    FROM notifications
+                    WHERE UserId = @UserId
+                    ORDER BY CreatedAt DESC";
+
+                return await connection.QueryAsync<NotificationDto>(sql, new { UserId = userId }).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving user notifications: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<IEnumerable<NotificationDto>> GetUnreadNotificationsAsync(int userId)
+        {
+            try
+            {
+                await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+                var sql = @"
+                    SELECT NotificationId, UserId, NotificationTypeId, JobId, Title, Message, 
+                           IsRead, CreatedAt, LinkUrl
+                    FROM notifications
+                    WHERE UserId = @UserId AND (IsRead = 0 OR IsRead IS NULL)
+                    ORDER BY CreatedAt DESC";
+
+                return await connection.QueryAsync<NotificationDto>(sql, new { UserId = userId }).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving unread notifications: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<ResponseDto> MarkAsReadAsync(int notificationId)
+        {
+            try
+            {
+                await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+                var sql = "UPDATE notifications SET IsRead = 1 WHERE NotificationId = @NotificationId";
+
+                var affectedRows = await connection.ExecuteAsync(sql, new { NotificationId = notificationId }).ConfigureAwait(false);
+
+                return new ResponseDto
+                {
+                    IsSuccess = affectedRows > 0,
+                    Message = affectedRows > 0 ? "Notification marked as read." : "Notification not found.",
+                    Id = notificationId
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDto
+                {
+                    IsSuccess = false,
+                    Message = $"Error marking notification as read: {ex.Message}",
+                    Id = notificationId
+                };
+            }
+        }
+
+        public async Task<ResponseDto> MarkAllAsReadAsync(int userId)
+        {
+            try
+            {
+                await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+                var sql = "UPDATE notifications SET IsRead = 1 WHERE UserId = @UserId AND (IsRead = 0 OR IsRead IS NULL)";
+
+                var affectedRows = await connection.ExecuteAsync(sql, new { UserId = userId }).ConfigureAwait(false);
+
+                return new ResponseDto
+                {
+                    IsSuccess = affectedRows > 0,
+                    Message = $"{affectedRows} notifications marked as read.",
+                    Id = userId
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDto
+                {
+                    IsSuccess = false,
+                    Message = $"Error marking all notifications as read: {ex.Message}",
+                    Id = userId
+                };
+            }
+        }
+
+        public async Task<NotificationDto?> GetNotificationByIdAsync(int notificationId)
+        {
+            try
+            {
+                await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+                var sql = @"
+                    SELECT NotificationId, UserId, NotificationTypeId, JobId, Title, Message, 
+                           IsRead, CreatedAt, LinkUrl
+                    FROM notifications
+                    WHERE NotificationId = @NotificationId";
+
+                return await connection.QueryFirstOrDefaultAsync<NotificationDto>(
+                    sql, new { NotificationId = notificationId }).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving notification by ID: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<ResponseDto> DeleteNotificationAsync(int notificationId)
+        {
+            try
+            {
+                await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+                var sql = "DELETE FROM notifications WHERE NotificationId = @NotificationId";
+
+                var affectedRows = await connection.ExecuteAsync(sql, new { NotificationId = notificationId }).ConfigureAwait(false);
+
+                return new ResponseDto
+                {
+                    IsSuccess = affectedRows > 0,
+                    Message = affectedRows > 0 ? "Notification deleted successfully." : "Notification not found.",
+                    Id = notificationId
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDto
+                {
+                    IsSuccess = false,
+                    Message = $"Error deleting notification: {ex.Message}",
+                    Id = notificationId
+                };
+            }
+        }
+
+        public async Task<IEnumerable<UsersDtoResponse>> GetUsersBySkillsAsync(string jobSkills)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(jobSkills))
+                    return Enumerable.Empty<UsersDtoResponse>();
+
+                await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+                // Split job skills by comma and clean them
+                var skillsList = jobSkills.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                         .Select(s => s.Trim())
+                                         .Where(s => !string.IsNullOrEmpty(s))
+                                         .ToList();
+
+                if (!skillsList.Any())
+                    return Enumerable.Empty<UsersDtoResponse>();
+
+                // Create LIKE conditions for each skill
+                var conditions = skillsList.Select((skill, index) => $"Skills LIKE @skill{index}").ToList();
+                var whereClause = string.Join(" OR ", conditions);
+
+                var sql = $@"
+                    SELECT UserId, FirstName, LastName, Email, UserType, PhoneNumber, 
+                           CreatedAt, UpdatedAt, ProfilePicture, ResumeUrl, PortfolioUrl, 
+                           LinkedinProfile, Location, Headline, Bio, Skills, Education, Experiences
+                    FROM users
+                    WHERE ({whereClause}) AND Email IS NOT NULL AND Email != ''
+                    ORDER BY FirstName, LastName";
+
+                var parameters = new DynamicParameters();
+                for (int i = 0; i < skillsList.Count; i++)
+                {
+                    parameters.Add($"@skill{i}", $"%{skillsList[i]}%", DbType.String);
+                }
+
+                var users = await connection.QueryAsync<UsersDtoResponse>(sql, parameters).ConfigureAwait(false);
+
+                // Remove duplicates based on UserId
+                return users.GroupBy(u => u.UserId).Select(g => g.First()).ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving users by skills: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<JobDto?> GetJobByIdAsync(int jobId)
+        {
+            try
+            {
+                await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+                var sql = @"
+                    SELECT JobId, PostedByUserId, JobType, Description, Requirements, Location, 
+                           EmpolymentType, IsPublished, SalaryRangeMin, SalaryRangeMax, 
+                           ExperienceLevel, Status, PostedAt, ApplicationDeadline, Skills
+                    FROM job
+                    WHERE JobId = @JobId";
+
+                return await connection.QueryFirstOrDefaultAsync<JobDto>(sql, new { JobId = jobId }).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving job by ID: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<int> GetUnreadCountAsync(int userId)
+        {
+            try
+            {
+                await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+                var sql = "SELECT COUNT(*) FROM notifications WHERE UserId = @UserId AND (IsRead = 0 OR IsRead IS NULL)";
+
+                return await connection.QuerySingleAsync<int>(sql, new { UserId = userId }).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting unread count: {ex.Message}", ex);
+            }
+        }
+    }
+}
