@@ -49,6 +49,46 @@ public class JobsApplicationController(IJobApplicationRepository jobApplicationS
         }
     }
 
+    // NEW ENDPOINT: Get applications by company ID
+    [HttpGet]
+    [Route("/getapplicationsbycompanyid")]
+    public async Task<IActionResult> GetApplicationsByCompanyId(int companyId)
+    {
+        if (companyId <= 0)
+        {
+            return BadRequest(new { message = "Valid company ID is required." });
+        }
+
+        try
+        {
+            var applications = await jobApplicationService.GetApplicationsByCompanyIdAsync(companyId);
+
+            if (!applications.Any())
+            {
+                return Ok(new
+                {
+                    message = $"No applications found for company ID {companyId}.",
+                    data = applications
+                });
+            }
+
+            return Ok(new
+            {
+                message = $"Found {applications.Count()} applications for company ID {companyId}.",
+                data = applications
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"GetApplicationsByCompanyId error: {ex.Message}");
+            return StatusCode(500, new
+            {
+                message = "An error occurred while retrieving applications for the company.",
+                error = ex.Message
+            });
+        }
+    }
+
     [HttpPost]
     [Route("/submitjobapplication")]
     public async Task<IActionResult> SubmitJobApplication([FromBody] ApplicationsDataModel jobApplicationDto)
@@ -68,18 +108,12 @@ public class JobsApplicationController(IJobApplicationRepository jobApplicationS
         {
             return BadRequest(new { message = "Valid JobId is required." });
         }
-
-        // Validate ApplicationStatus - assuming valid status IDs are 1, 2, 3, etc.
         if (jobApplicationDto.ApplicationStatus <= 0)
         {
-            // Set default to Applied (assuming 1 = Applied)
             jobApplicationDto.ApplicationStatus = 1;
             Console.WriteLine("ApplicationStatus not provided, defaulting to Applied (1)");
         }
-        // You might want to add additional validation here based on your ApplicationStatus table
-        // For example, check if the status ID exists in the database
 
-        // Log the incoming request for debugging
         Console.WriteLine($"Controller received: UserId={jobApplicationDto.UserId}, JobId={jobApplicationDto.JobId}, ApplicationStatus={jobApplicationDto.ApplicationStatus}");
 
         try

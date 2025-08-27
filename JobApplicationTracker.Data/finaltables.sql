@@ -55,7 +55,7 @@ CREATE TABLE JobApplications (
     ApplicationStatus INT NOT NULL ,
     ApplicationDate DATETIME2 NOT NULL,
     CoverLetter NVARCHAR(MAX) NULL,
-    ResumeFile NVARCHAR(500) NULL,
+    ResumeFile NVARCHAR(MAX) NULL,
     SalaryExpectation DECIMAL(10,2) NULL,
     AvailableStartDate DATETIME2 NULL,
     CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE()

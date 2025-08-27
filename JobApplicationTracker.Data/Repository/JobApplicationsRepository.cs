@@ -50,6 +50,23 @@ public class ApplicationsRepository : IJobApplicationRepository
         return count > 0;
     }
 
+    // Add method to validate CompanyId exists
+    private async Task<bool> CompanyExistsAsync(int companyId)
+    {
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        var sql = "SELECT COUNT(1) FROM Company WHERE CompanyId = @CompanyId";
+        var parameters = new DynamicParameters();
+        parameters.Add("@CompanyId", companyId, DbType.Int32);
+
+        var count = await connection.QuerySingleAsync<int>(sql, parameters).ConfigureAwait(false);
+
+        // Debug logging
+        Console.WriteLine($"Checking CompanyId {companyId}: Found {count} records");
+
+        return count > 0;
+    }
+
     // Add method to validate ApplicationStatus exists
     private async Task<bool> ApplicationStatusExistsAsync(int statusId)
     {
@@ -121,6 +138,54 @@ public class ApplicationsRepository : IJobApplicationRepository
         return await connection.QueryFirstOrDefaultAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
     }
 
+    // NEW METHOD: Get applications by CompanyId
+    public async Task<IEnumerable<ApplicationsDataModel>> GetApplicationsByCompanyIdAsync(int companyId)
+    {
+        // First validate that the company exists
+        if (!await CompanyExistsAsync(companyId))
+        {
+            return Enumerable.Empty<ApplicationsDataModel>();
+        }
+
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        var sql = """
+                  SELECT ja.ApplicationId,
+                         ja.JobId,
+                         ja.UserId,
+                         ja.ApplicationStatus,
+                         ja.ApplicationDate,
+                         ja.CoverLetter,
+                         ja.ResumeFile,
+                         ja.SalaryExpectation,
+                         ja.AvailableStartDate,
+                         ja.CreatedAt
+                  FROM JobApplications ja
+                  INNER JOIN Job j ON ja.JobId = j.JobId
+                  INNER JOIN Companys c ON j.CompanyId = c.CompanyId
+                  WHERE c.CompanyId = @CompanyId
+                  ORDER BY ja.ApplicationDate DESC
+                  """;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@CompanyId", companyId, DbType.Int32);
+
+        try
+        {
+            var applications = await connection.QueryAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
+
+            // Debug logging
+            Console.WriteLine($"Found {applications.Count()} applications for CompanyId {companyId}");
+
+            return applications;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting applications for CompanyId {companyId}: {ex.Message}");
+            throw;
+        }
+    }
+
     public async Task<ResponseDto> SubmitJobApplicationAsync(ApplicationsDataModel jobApplicationDto)
     {
         // Validate input
@@ -171,7 +236,6 @@ public class ApplicationsRepository : IJobApplicationRepository
             };
         }
 
-        // Validate ApplicationStatus (hardcoded valid range)
         if (jobApplicationDto.ApplicationStatus < 1 || jobApplicationDto.ApplicationStatus > 3)
         {
             return new ResponseDto
