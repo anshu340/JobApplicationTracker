@@ -8,6 +8,7 @@ public interface IJobApplicationRepository
     Task<IEnumerable<ApplicationsDataModel>> GetAllJobApplicationAsync();
     Task<ApplicationsDataModel> GetJobApplicationByIdAsync(int jobApplicationId);
     Task<IEnumerable<ApplicationsDataModel>> GetApplicationsByCompanyIdAsync(int companyId);
+    Task<IEnumerable<ApplicationsDataModel>> GetJobApplicationsByUserIdAsync(int userId); // NEW METHOD
     Task<ResponseDto> SubmitJobApplicationAsync(ApplicationsDataModel jobApplicationDto);
     Task<ResponseDto> DeleteJobApplicationAsync(int jobApplicationId);
 }

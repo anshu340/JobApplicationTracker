@@ -50,12 +50,12 @@ public class ApplicationsRepository : IJobApplicationRepository
         return count > 0;
     }
 
-    // Add method to validate CompanyId exists
+    // FIXED: Add method to validate CompanyId exists - changed from 'Company' to 'Companies'
     private async Task<bool> CompanyExistsAsync(int companyId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-        var sql = "SELECT COUNT(1) FROM Company WHERE CompanyId = @CompanyId";
+        var sql = "SELECT COUNT(1) FROM Companies WHERE CompanyId = @CompanyId";
         var parameters = new DynamicParameters();
         parameters.Add("@CompanyId", companyId, DbType.Int32);
 
@@ -138,7 +138,34 @@ public class ApplicationsRepository : IJobApplicationRepository
         return await connection.QueryFirstOrDefaultAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
     }
 
-    // NEW METHOD: Get applications by CompanyId
+    // NEW METHOD: Get job applications by UserId (following SkillsRepository pattern)
+    public async Task<IEnumerable<ApplicationsDataModel>> GetJobApplicationsByUserIdAsync(int userId)
+    {
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        var sql = """
+                  SELECT ApplicationId,
+                         JobId,
+                         UserId,
+                         ApplicationStatus,
+                         ApplicationDate,
+                         CoverLetter,
+                         ResumeFile,
+                         SalaryExpectation,
+                         AvailableStartDate,
+                         CreatedAt
+                  FROM JobApplications
+                  WHERE UserId = @UserId
+                  ORDER BY ApplicationDate DESC
+                  """;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@UserId", userId, DbType.Int32);
+
+        return await connection.QueryAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
+    }
+
+    // FIXED: Get applications by CompanyId - now using 'Companies' table consistently
     public async Task<IEnumerable<ApplicationsDataModel>> GetApplicationsByCompanyIdAsync(int companyId)
     {
         // First validate that the company exists
@@ -162,7 +189,7 @@ public class ApplicationsRepository : IJobApplicationRepository
                          ja.CreatedAt
                   FROM JobApplications ja
                   INNER JOIN Job j ON ja.JobId = j.JobId
-                  INNER JOIN Companys c ON j.CompanyId = c.CompanyId
+                  INNER JOIN Companies c ON j.CompanyId = c.CompanyId
                   WHERE c.CompanyId = @CompanyId
                   ORDER BY ja.ApplicationDate DESC
                   """;
@@ -186,6 +213,7 @@ public class ApplicationsRepository : IJobApplicationRepository
         }
     }
 
+    // UPDATED: Modified to follow SkillsRepository pattern for insert/update logic
     public async Task<ResponseDto> SubmitJobApplicationAsync(ApplicationsDataModel jobApplicationDto)
     {
         // Validate input
@@ -198,10 +226,16 @@ public class ApplicationsRepository : IJobApplicationRepository
             };
         }
 
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        // Check if ApplicationId exists (similar to SkillsRepository pattern)
+        var existsQuery = "SELECT COUNT(1) FROM JobApplications WHERE ApplicationId = @ApplicationId";
+        var exists = await connection.ExecuteScalarAsync<int>(existsQuery, new { jobApplicationDto.ApplicationId });
+
         // Set default ApplicationStatus to "Applied" if not provided or invalid
         if (jobApplicationDto.ApplicationStatus <= 0)
         {
-            jobApplicationDto.ApplicationStatus = 1; // Default to "Applied" (hardcoded)
+            jobApplicationDto.ApplicationStatus = 1; // Default to "Applied"
             Console.WriteLine("ApplicationStatus was 0 or negative, defaulting to 1 (Applied)");
         }
 
@@ -211,7 +245,6 @@ public class ApplicationsRepository : IJobApplicationRepository
         // Validate required foreign key references
         if (!await UserExistsAsync(jobApplicationDto.UserId))
         {
-            // Get available UserIds for debugging
             await using var userConnection = await _connectionService.GetDatabaseConnectionAsync();
             var availableUserIds = await userConnection.QueryAsync<int>("SELECT TOP 5 UserId FROM Users ORDER BY UserId").ConfigureAwait(false);
             var userIdList = string.Join(", ", availableUserIds);
@@ -254,23 +287,37 @@ public class ApplicationsRepository : IJobApplicationRepository
             };
         }
 
-        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+        int applicationIdResult = 0;
+        int affectedRows = 0;
 
-        string sql;
-
-        if (jobApplicationDto.ApplicationId <= 0)
+        try
         {
-            // Insert new job application
-            sql = """
+            if (jobApplicationDto.ApplicationId <= 0 || exists == 0)
+            {
+                // Insert new job application (following SkillsRepository pattern)
+                var sql = """
                     INSERT INTO JobApplications (JobId, UserId, CoverLetter, ResumeFile, ApplicationStatus, ApplicationDate, SalaryExpectation, AvailableStartDate)
-                    VALUES (@JobId, @UserId, @CoverLetter, @ResumeFile, @ApplicationStatus, @ApplicationDate, @SalaryExpectation, @AvailableStartDate);
-                    SELECT CAST(SCOPE_IDENTITY() AS INT);
+                    OUTPUT INSERTED.ApplicationId
+                    VALUES (@JobId, @UserId, @CoverLetter, @ResumeFile, @ApplicationStatus, @ApplicationDate, @SalaryExpectation, @AvailableStartDate)
                     """;
-        }
-        else
-        {
-            // Update existing job application
-            sql = """
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@JobId", jobApplicationDto.JobId, DbType.Int32);
+                parameters.Add("@UserId", jobApplicationDto.UserId, DbType.Int32);
+                parameters.Add("@CoverLetter", jobApplicationDto.CoverLetter, DbType.String);
+                parameters.Add("@ResumeFile", jobApplicationDto.ResumeFile, DbType.String);
+                parameters.Add("@ApplicationStatus", jobApplicationDto.ApplicationStatus, DbType.Int32);
+                parameters.Add("@ApplicationDate", jobApplicationDto.ApplicationDate != default ? jobApplicationDto.ApplicationDate : DateTime.UtcNow, DbType.DateTime);
+                parameters.Add("@SalaryExpectation", jobApplicationDto.SalaryExpectation, DbType.Decimal);
+                parameters.Add("@AvailableStartDate", jobApplicationDto.AvailableStartDate, DbType.DateTime);
+
+                applicationIdResult = await connection.ExecuteScalarAsync<int>(sql, parameters);
+                affectedRows = applicationIdResult > 0 ? 1 : 0;
+            }
+            else
+            {
+                // Update existing job application (following SkillsRepository pattern)
+                var sql = """
                     UPDATE JobApplications
                     SET 
                         JobId = @JobId,
@@ -283,49 +330,33 @@ public class ApplicationsRepository : IJobApplicationRepository
                         AvailableStartDate = @AvailableStartDate
                     WHERE ApplicationId = @ApplicationId
                     """;
-        }
 
-        var parameters = new DynamicParameters();
-        parameters.Add("@ApplicationId", jobApplicationDto.ApplicationId, DbType.Int32);
-        parameters.Add("@JobId", jobApplicationDto.JobId, DbType.Int32);
-        parameters.Add("@UserId", jobApplicationDto.UserId, DbType.Int32);
-        parameters.Add("@CoverLetter", jobApplicationDto.CoverLetter, DbType.String);
-        parameters.Add("@ResumeFile", jobApplicationDto.ResumeFile, DbType.String);
-        parameters.Add("@ApplicationStatus", jobApplicationDto.ApplicationStatus, DbType.Int32);
-        parameters.Add("@ApplicationDate", jobApplicationDto.ApplicationDate != default ? jobApplicationDto.ApplicationDate : DateTime.UtcNow, DbType.DateTime);
-        parameters.Add("@SalaryExpectation", jobApplicationDto.SalaryExpectation, DbType.Decimal);
-        parameters.Add("@AvailableStartDate", jobApplicationDto.AvailableStartDate, DbType.DateTime);
+                var parameters = new DynamicParameters();
+                parameters.Add("@ApplicationId", jobApplicationDto.ApplicationId, DbType.Int32);
+                parameters.Add("@JobId", jobApplicationDto.JobId, DbType.Int32);
+                parameters.Add("@UserId", jobApplicationDto.UserId, DbType.Int32);
+                parameters.Add("@CoverLetter", jobApplicationDto.CoverLetter, DbType.String);
+                parameters.Add("@ResumeFile", jobApplicationDto.ResumeFile, DbType.String);
+                parameters.Add("@ApplicationStatus", jobApplicationDto.ApplicationStatus, DbType.Int32);
+                parameters.Add("@ApplicationDate", jobApplicationDto.ApplicationDate != default ? jobApplicationDto.ApplicationDate : DateTime.UtcNow, DbType.DateTime);
+                parameters.Add("@SalaryExpectation", jobApplicationDto.SalaryExpectation, DbType.Decimal);
+                parameters.Add("@AvailableStartDate", jobApplicationDto.AvailableStartDate, DbType.DateTime);
 
-        try
-        {
-            var affectedRows = 0;
-
-            if (jobApplicationDto.ApplicationId <= 0)
-            {
-                var newId = await connection.QuerySingleAsync<int>(sql, parameters).ConfigureAwait(false);
-                affectedRows = newId > 0 ? 1 : 0;
-                jobApplicationDto.ApplicationId = newId;
+                affectedRows = await connection.ExecuteAsync(sql, parameters);
+                applicationIdResult = jobApplicationDto.ApplicationId;
             }
-            else
-            {
-                affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
-            }
-
-            var statusName = jobApplicationDto.ApplicationStatus switch
-            {
-                1 => "Applied",
-                2 => "Phone Screen",
-                3 => "Rejected"
-            };
 
             return new ResponseDto
             {
                 IsSuccess = affectedRows > 0,
-                Message = affectedRows > 0 ? "Job application submitted successfully" : "Failed to submit job application.",
-                Id = jobApplicationDto.ApplicationId
+                StatusCode = affectedRows > 0 ? 0 : 1,
+                Message = affectedRows > 0
+                    ? "Job application submitted successfully."
+                    : (jobApplicationDto.ApplicationId > 0 ? $"Job application with ID {jobApplicationDto.ApplicationId} not found for update." : "Failed to insert job application."),
+                Id = applicationIdResult
             };
         }
-        catch (SqlException ex) when (ex.Number == 547) // Foreign key constraint violation
+        catch (SqlException ex) when (ex.Number == 547)
         {
             // More detailed error message
             var constraintName = ex.Message.Contains("FK_JobApplications_ApplicationStatus") ? "ApplicationStatus" :
@@ -335,6 +366,7 @@ public class ApplicationsRepository : IJobApplicationRepository
             return new ResponseDto
             {
                 IsSuccess = false,
+                StatusCode = 1,
                 Message = $"Foreign key constraint violation in {constraintName} table. Please ensure all referenced IDs exist. Error: {ex.Message}"
             };
         }
@@ -345,11 +377,13 @@ public class ApplicationsRepository : IJobApplicationRepository
             return new ResponseDto
             {
                 IsSuccess = false,
+                StatusCode = 1,
                 Message = $"An error occurred while submitting the job application: {ex.Message}"
             };
         }
     }
 
+    // UPDATED: Modified to follow SkillsRepository pattern for delete response
     public async Task<ResponseDto> DeleteJobApplicationAsync(int jobApplicationId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
@@ -367,14 +401,18 @@ public class ApplicationsRepository : IJobApplicationRepository
             {
                 return new ResponseDto
                 {
+                    Id = jobApplicationId,
                     IsSuccess = false,
-                    Message = "Job application not found or failed to delete."
+                    StatusCode = 1,
+                    Message = $"Job application with ID {jobApplicationId} not found or could not be deleted."
                 };
             }
 
             return new ResponseDto
             {
+                Id = jobApplicationId,
                 IsSuccess = true,
+                StatusCode = 0,
                 Message = "Job application deleted successfully."
             };
         }
@@ -383,7 +421,9 @@ public class ApplicationsRepository : IJobApplicationRepository
             Console.WriteLine($"Delete exception: {ex.Message}");
             return new ResponseDto
             {
+                Id = jobApplicationId,
                 IsSuccess = false,
+                StatusCode = 1,
                 Message = $"An error occurred while deleting the job application: {ex.Message}"
             };
         }

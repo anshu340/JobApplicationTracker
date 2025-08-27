@@ -49,7 +49,46 @@ public class JobsApplicationController(IJobApplicationRepository jobApplicationS
         }
     }
 
-    // NEW ENDPOINT: Get applications by company ID
+    // NEW ENDPOINT: Get job applications by user ID
+    [HttpGet]
+    [Route("/getjobapplicationsbyuserid")]
+    public async Task<IActionResult> GetJobApplicationsByUserId(int userId)
+    {
+        if (userId <= 0)
+        {
+            return BadRequest(new { message = "Valid user ID is required." });
+        }
+
+        try
+        {
+            var applications = await jobApplicationService.GetJobApplicationsByUserIdAsync(userId);
+
+            if (!applications.Any())
+            {
+                return Ok(new
+                {
+                    message = $"No job applications found for user ID {userId}.",
+                    data = applications
+                });
+            }
+
+            return Ok(new
+            {
+                message = $"Found {applications.Count()} job applications for user ID {userId}.",
+                data = applications
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"GetJobApplicationsByUserId error: {ex.Message}");
+            return StatusCode(500, new
+            {
+                message = "An error occurred while retrieving job applications for the user.",
+                error = ex.Message
+            });
+        }
+    }
+
     [HttpGet]
     [Route("/getapplicationsbycompanyid")]
     public async Task<IActionResult> GetApplicationsByCompanyId(int companyId)
