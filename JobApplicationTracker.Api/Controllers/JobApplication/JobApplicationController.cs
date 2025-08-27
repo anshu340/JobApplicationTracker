@@ -1,6 +1,5 @@
 ﻿using JobApplicationTracker.Data.DataModels;
 using JobApplicationTracker.Data.Interface;
-using JobApplicationTracker.Data.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationTracker.Api.Controllers.JobApplication;
@@ -70,23 +69,18 @@ public class JobsApplicationController(IJobApplicationRepository jobApplicationS
             return BadRequest(new { message = "Valid JobId is required." });
         }
 
-        // Validate ApplicationStatus using enum
+        // Validate ApplicationStatus - assuming valid status IDs are 1, 2, 3, etc.
         if (jobApplicationDto.ApplicationStatus <= 0)
         {
-            // Set default to Applied
-            jobApplicationDto.ApplicationStatus = (int)ApplicationStatus.Applied;
-            Console.WriteLine("ApplicationStatus not provided, defaulting to Applied");
+            // Set default to Applied (assuming 1 = Applied)
+            jobApplicationDto.ApplicationStatus = 1;
+            Console.WriteLine("ApplicationStatus not provided, defaulting to Applied (1)");
         }
-        else if (!jobApplicationDto.IsValidStatus())
-        {
-            return BadRequest(new
-            {
-                message = $"Invalid ApplicationStatus. Valid options are: {(int)ApplicationStatus.Applied} (Applied), {(int)ApplicationStatus.PhoneScreen} (Phone Screen), {(int)ApplicationStatus.Rejected} (Rejected)"
-            });
-        }
+        // You might want to add additional validation here based on your ApplicationStatus table
+        // For example, check if the status ID exists in the database
 
         // Log the incoming request for debugging
-        Console.WriteLine($"Controller received: UserId={jobApplicationDto.UserId}, JobId={jobApplicationDto.JobId}, ApplicationStatus={jobApplicationDto.ApplicationStatus} ({jobApplicationDto.GetStatusName()})");
+        Console.WriteLine($"Controller received: UserId={jobApplicationDto.UserId}, JobId={jobApplicationDto.JobId}, ApplicationStatus={jobApplicationDto.ApplicationStatus}");
 
         try
         {

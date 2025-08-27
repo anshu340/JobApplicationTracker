@@ -1,4 +1,4 @@
-﻿using JobApplicationTracker.Data.Enums;
+﻿//using JobApplicationTracker.Data.Enums;
 
 namespace JobApplicationTracker.Data.DataModels;
 
@@ -16,26 +16,26 @@ public class ApplicationsDataModel
     public DateTime CreatedAt { get; set; }
 
     // Helper property for type safety using your enum
-    public ApplicationStatus Status
-    {
-        get => (ApplicationStatus)ApplicationStatus;
-        set => ApplicationStatus = (int)value;
-    }
+    //public ApplicationStatus Status
+    //{
+    //    get => (ApplicationStatus)ApplicationStatus;
+    //    set => ApplicationStatus = (int)value;
+    //}
 
-    // Helper method to get status name
-    public string GetStatusName()
-    {
-        return ApplicationStatus switch
-        {
-            1 => "Applied",
-            2 => "Phone Screen",
-            3 => "Rejected"
-        };
-    }
+    //// Helper method to get status name
+    //public string GetStatusName()
+    //{
+    //    return ApplicationStatus switch
+    //    {
+    //        1 => "Applied",
+    //        2 => "Phone Screen",
+    //        3 => "Rejected"
+    //    };
+    //}
 
-    // Helper method to validate if the status is valid
-    public bool IsValidStatus()
-    {
-        return ApplicationStatus >= 1 && ApplicationStatus <= 3;
-    }
+    //// Helper method to validate if the status is valid
+    //public bool IsValidStatus()
+    //{
+    //    return ApplicationStatus >= 1 && ApplicationStatus <= 3;
+    //}
 }
