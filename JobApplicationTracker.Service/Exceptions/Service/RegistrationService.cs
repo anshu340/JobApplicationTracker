@@ -40,79 +40,190 @@ public class RegistrationService(
             }
         }
 
-
-
-        if (request.CompanyDto != null)
+        // ✅ UPDATED: Handle registration based on UserType
+        switch (request.UserType)
         {
-            var createdCompanyId = await companiesRepository.CreateCompanyAsync(request.CompanyDto);
-            //add login if company created
+            case (int)UserTypes.Company:
+                return await HandleCompanyRegistration(request);
 
-            var companyUser = new UsersDataModel
-            {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                PhoneNumber = request.PhoneNumber,
-                PasswordHash = request.Password,
-                CompanyId = createdCompanyId,
-                Email = request.Email,
-                UserType = (int)UserTypes.Company,
-                CreatedAt = request.CreateDateTime ?? DateTime.Now,
-                UpdatedAt = DateTime.Now
+            case (int)UserTypes.Staff:
+                return await HandleStaffRegistration(request);
 
-            };
+            case (int)UserTypes.User:
+                return await HandleUserRegistration(request);
 
-            var createdUser = await userRepository.SubmitUsersAsync(companyUser);
-            if (createdUser.Id < 1)
-            {
+            case (int)UserTypes.Admin:
+                return await HandleAdminRegistration(request);
+
+            default:
                 return new ResponseDto
                 {
                     IsSuccess = false,
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                    Message = "Registration failed. Try again later.!"
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Invalid user type specified."
                 };
-            }
-
-            return new ResponseDto
-            {
-                IsSuccess = true,
-                StatusCode = StatusCodes.Status200OK,
-                Message = "Registered successfully."
-            };
         }
-        else
+    }
+
+    private async Task<ResponseDto> HandleCompanyRegistration(RegisterDto request)
+    {
+        if (request.CompanyDto == null)
         {
-
-            // Handle job seeker (no company)
-            var newUser = new UsersDataModel
-            {
-                Email = request.Email,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                PhoneNumber = request.PhoneNumber,
-                PasswordHash = request.Password,
-                Location = request.Location,
-                UserType = (int)UserTypes.User,
-                CreatedAt = request.CreateDateTime ?? DateTime.Now,
-                UpdatedAt = DateTime.Now
-            };
-
-            var user = await userRepository.SubmitUsersAsync(newUser);
-            if (user.Id < 1)
-            {
-                return new ResponseDto
-                {
-                    IsSuccess = false,
-                    StatusCode = StatusCodes.Status500InternalServerError,
-                    Message = "Registration failed. Try again later.!"
-                };
-            }
-
             return new ResponseDto
             {
-                IsSuccess = true,
-                StatusCode = StatusCodes.Status200OK,
-                Message = "Registered successfully."
+                IsSuccess = false,
+                StatusCode = StatusCodes.Status400BadRequest,
+                Message = "Company information is required for company registration."
             };
         }
+
+        var createdCompanyId = await companiesRepository.CreateCompanyAsync(request.CompanyDto);
+
+        var companyUser = new UsersDataModel
+        {
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            PhoneNumber = request.PhoneNumber,
+            PasswordHash = request.Password,
+            CompanyId = createdCompanyId,
+            Email = request.Email,
+            UserType = (int)UserTypes.Company,
+            Location = request.Location,
+            CreatedAt = request.CreateDateTime ?? DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+
+        var createdUser = await userRepository.SubmitUsersAsync(companyUser);
+
+        if (createdUser.Id < 1)
+        {
+            return new ResponseDto
+            {
+                IsSuccess = false,
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Message = "Company registration failed. Try again later.!"
+            };
+        }
+
+        return new ResponseDto
+        {
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Message = "Company registered successfully.",
+            Id = createdUser.Id
+        };
+    }
+    private async Task<ResponseDto> HandleStaffRegistration(RegisterDto request)
+    {
+        // ✅ Validate CompanyId is provided
+        if (!request.CompanyId.HasValue || request.CompanyId.Value <= 0)
+        {
+            return new ResponseDto
+            {
+                IsSuccess = false,
+                StatusCode = StatusCodes.Status400BadRequest,
+                Message = "Company ID is required for staff registration."
+            };
+        }
+
+        // ✅ IMPORTANT: Verify that the company exists using your existing method
+        if (!await companiesRepository.CompanyExistsAsync(request.CompanyId.Value))
+        {
+            return new ResponseDto
+            {
+                IsSuccess = false,
+                StatusCode = StatusCodes.Status400BadRequest,
+                Message = $"Company with ID {request.CompanyId.Value} does not exist. Please provide a valid company ID."
+            };
+        }
+
+        // ✅ Create staff user - company is verified to exist
+        var staffUser = new UsersDataModel
+        {
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            PhoneNumber = request.PhoneNumber,
+            PasswordHash = request.Password,
+            CompanyId = request.CompanyId.Value,
+            Email = request.Email,
+            UserType = (int)UserTypes.Staff,
+            Location = request.Location,
+            CreatedAt = request.CreateDateTime ?? DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+
+        var createdUser = await userRepository.SubmitUsersAsync(staffUser);
+
+        return new ResponseDto
+        {
+            IsSuccess = createdUser.Id > 0,
+            StatusCode = createdUser.Id > 0
+                ? StatusCodes.Status200OK
+                : StatusCodes.Status500InternalServerError,
+            Message = createdUser.Id > 0
+                ? "Staff registered successfully."
+                : "Staff registration failed. Try again later!",
+            Id = createdUser.Id  // ✅ Also return the created user ID
+        };
+    }
+    private async Task<ResponseDto> HandleUserRegistration(RegisterDto request)
+    {
+        // Handle regular user (job seeker) registration
+        var newUser = new UsersDataModel
+        {
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            PhoneNumber = request.PhoneNumber,
+            PasswordHash = request.Password,
+            Location = request.Location,
+            UserType = (int)UserTypes.User,
+            CreatedAt = request.CreateDateTime ?? DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+
+        var user = await userRepository.SubmitUsersAsync(newUser);
+
+        return new ResponseDto
+        {
+            IsSuccess = user.Id > 0,
+            StatusCode = user.Id > 0
+                ? StatusCodes.Status200OK
+                : StatusCodes.Status500InternalServerError,
+            Message = user.Id > 0
+                ? "User registered successfully."
+                : "User registration failed. Try again later.!",
+            Id = user.Id
+        };
+    }
+
+    private async Task<ResponseDto> HandleAdminRegistration(RegisterDto request)
+    {
+        // ✅ OPTIONAL: Handle Admin registration (you might want to restrict this)
+        var adminUser = new UsersDataModel
+        {
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            PhoneNumber = request.PhoneNumber,
+            PasswordHash = request.Password,
+            Location = request.Location,
+            UserType = (int)UserTypes.Admin,
+            CreatedAt = request.CreateDateTime ?? DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+
+        var user = await userRepository.SubmitUsersAsync(adminUser);
+
+        return new ResponseDto
+        {
+            IsSuccess = user.Id > 0,
+            StatusCode = user.Id > 0
+                ? StatusCodes.Status200OK
+                : StatusCodes.Status500InternalServerError,
+            Message = user.Id > 0
+                ? "Admin registered successfully."
+                : "Admin registration failed. Try again later.!"
+        };
     }
 }

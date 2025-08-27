@@ -28,7 +28,6 @@ namespace JobApplicationTracker.Data.Dto.Responses
         public DateTime? DateOfBirth { get; set; }
         public string? Skills { get; set; }
         public string? Education { get; set; }
-
         public string? Experiences { get; set; } 
         public string? PreferredJobTypes { get; set; }
         public string? PreferredExperienceLevels { get; set; }

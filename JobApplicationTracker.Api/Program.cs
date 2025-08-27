@@ -1,3 +1,4 @@
+
 ﻿using JobApplicationTracker.Api.Data.Service;
 using JobApplicationTracker.Api.GlobalExceptionHandler;
 using JobApplicationTracker.Business.Interface;
@@ -5,6 +6,9 @@ using JobApplicationTracker.Business.Services;
 using JobApplicationTracker.Data;
 using JobApplicationTracker.Data.Config;
 using JobApplicationTracker.Data.Database;
+
+﻿using JobApplicationTracker.Api.GlobalExceptionHandler;
+
 using JobApplicationTracker.Data.Interface;
 using JobApplicationTracker.Data.Repository;
 using JobApplicationTracker.Service;
@@ -20,7 +24,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -142,6 +145,7 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IJobsRepository, JobRepository>();
 builder.Services.AddScoped<IJobTypeRepository, JobTypeRepository>();
+
 builder.Services.AddScoped<INotificationsTypesRepository, NotificationTypesRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
@@ -162,15 +166,11 @@ builder.Services.AddSingleton<IDatabaseConnectionService, DatabaseConnectionServ
 
 
 builder.Services.AddScoped<IEducationRepository, EducationRepository>();
+builder.Services.AddScoped<IExperienceRepository, ExperienceRepository>();
+builder.Services.AddScoped<IApplicationStatusRepository, ApplicationStatusRepository>();
 
 // Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
-
-
-
-// Calling the extension method to register all services from Service and Data layers
-builder.Services.AddServiceLayer(builder.Configuration);
-
 
 // add global exception handler service
 // builder.Services.AddExceptionHandler<AppExceptionHandler>();
@@ -188,7 +188,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Jobs Applications Tracker API V1");
-        options.RoutePrefix = string.Empty; 
+        options.RoutePrefix = string.Empty; // This makes Swagger UI the root
     });
 }
 

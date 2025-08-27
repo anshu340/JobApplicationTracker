@@ -8,6 +8,7 @@ public class UsersDataModel
     public int UserType { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public string? Experiences { get; set; }
     public string? FirstName { get; set; }  // Made nullable
     public string? LastName { get; set; }   // Made nullable
     public string? ProfilePicture { get; set; }
@@ -18,7 +19,6 @@ public class UsersDataModel
     public DateTime? DateOfBirth { get; set; }
     public string? Skills { get; set; }
     public string? Education { get; set; }
-    public string? Experiences { get; set; }
 
     public UsersDataModel()
     {
