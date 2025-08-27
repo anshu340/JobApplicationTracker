@@ -12,7 +12,6 @@ public interface IJobsRepository
     Task<ResponseDto> SubmitJobAsync(JobsDataModel jobsDto);
     Task<ResponseDto> DeleteJobAsync(int jobsId);
 
-    // ✅ Add these new methods for publish functionality
     Task<ResponseDto> PublishJobAsync(int jobId);
     Task<ResponseDto> UnpublishJobAsync(int jobId);
 }

@@ -9,7 +9,7 @@ namespace JobApplicationTracker.Data.Dto.Requests
 {
     public class JobDto
     {
-        public int JobId { get; set; } 
+        public int JobId { get; set; }
         public int PostedByUserId { get; set; }
         public string JobType { get; set; }
         public string Description { get; set; }
@@ -23,6 +23,6 @@ namespace JobApplicationTracker.Data.Dto.Requests
         public string Status { get; set; } = string.Empty;
         public DateTime PostedAt { get; set; }
         public DateTime ApplicationDeadline { get; set; }
-        public string Skills { get; set; } 
+        public string Skills { get; set; }
     }
 }

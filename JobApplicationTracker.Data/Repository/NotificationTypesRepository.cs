@@ -17,7 +17,7 @@ public class NotificationTypesRepository : INotificationsTypesRepository
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
-        var sql = @"SELECT NotificationTypeId, TypeName, Description ,Priority FROM NotificationTypes";
+        var sql = @"SELECT NotificationTypeId, TypeName, Description FROM NotificationTypes";
 
         return await connection.QueryAsync< NotificationTypesDataModel >(sql).ConfigureAwait(false);
     }
@@ -28,7 +28,7 @@ public class NotificationTypesRepository : INotificationsTypesRepository
         // SQL query to fetch a notification type by ID
         var sql = @"
               SELECT 
-              NotificationTypeId, TypeName, Description, Priority 
+              NotificationTypeId, TypeName, Description
               FROM NotificationTypes
               WHERE NotificationTypeId = @NotificationTypeId
               ";
@@ -48,8 +48,8 @@ public class NotificationTypesRepository : INotificationsTypesRepository
         {
             // Insert new notification type (assumes NotificationTypeId is auto-incremented)
             sql = """
-        INSERT INTO NotificationTypes (TypeName, Description, Priority)
-        VALUES (@TypeName, @Description, @Priority);
+        INSERT INTO NotificationTypes (TypeName, Description)
+        VALUES (@TypeName, @Description);
         """;
         }
         else
@@ -60,7 +60,6 @@ public class NotificationTypesRepository : INotificationsTypesRepository
         SET 
             TypeName = @TypeName,
             Description = @Description,
-            Priority = @Priority
         WHERE NotificationTypeId = @NotificationTypeId;
         """;
         }
@@ -69,7 +68,7 @@ public class NotificationTypesRepository : INotificationsTypesRepository
         parameters.Add("@NotificationTypeId", notificationTypesDto.NotificationTypeId, DbType.Int32);
         parameters.Add("@TypeName", notificationTypesDto.TypeName, DbType.String);
         parameters.Add("@Description", notificationTypesDto.Description, DbType.String);
-        parameters.Add("@Priority", notificationTypesDto.Priority, DbType.Int32); // Assuming Priority is an integer
+        
 
         var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
 
