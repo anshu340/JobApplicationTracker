@@ -179,7 +179,7 @@ CREATE TABLE [dbo].[Job](
 	[Views] [int] NOT NULL,
 	[EmpolymentType] [varchar](50) NULL,
 	[JobType] [nvarchar](255) NULL,
-	[Skills] [varchar](50) NULL,
+	[Skills] [varchar](max) NULL,
 	[IsPublished] [bit] NOT NULL DEFAULT 0,
 PRIMARY KEY CLUSTERED 
 (
@@ -214,24 +214,47 @@ GO
 
 /****** Object:  Table [dbo].[Notifications]    Script Date: 8/15/2025 11:43:02 AM ******/
 
+USE [JobApplicationTrackerDB]
+GO
+
+/****** Object:  Table [dbo].[Notifications]    Script Date: 8/27/2025 11:27:13 AM ******/
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
+
 CREATE TABLE [dbo].[Notifications](
-	[notificationId] [uniqueidentifier] NOT NULL,
-	[userId] [int] NOT NULL,
-	[notificationTypeId] [int] NOT NULL,
-	[title] [nvarchar](255) NOT NULL,
-	[message] [nvarchar](max) NOT NULL,
-	[isRead] [bit] NULL,
-	[createdAt] [datetime2](7) NULL,
-	[linkUrl] [nvarchar](255) NULL,
+	[NotificationId] [int] IDENTITY(1,1) NOT NULL,
+	[UserId] [int] NOT NULL,
+	[NotificationTypeId] [int] NOT NULL,
+	[JobId] [int] NULL,
+	[Title] [nvarchar](255) NOT NULL,
+	[Message] [nvarchar](max) NOT NULL,
+	[IsRead] [bit] NULL,
+	[CreatedAt] [datetime] NULL,
+	LinkUrl NVARCHAR(500) NULL
 PRIMARY KEY CLUSTERED 
 (
-	[notificationId] ASC
+	[NotificationId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+GO
+
+ALTER TABLE [dbo].[Notifications] ADD  DEFAULT (getdate()) FOR [CreatedAt]
+GO
+
+ALTER TABLE [dbo].[Notifications]  WITH CHECK ADD FOREIGN KEY([JobId])
+REFERENCES [dbo].[Job] ([JobId])
+GO
+
+ALTER TABLE [dbo].[Notifications]  WITH CHECK ADD FOREIGN KEY([NotificationTypeId])
+REFERENCES [dbo].[NotificationTypes] ([NotificationTypeId])
+GO
+
+ALTER TABLE [dbo].[Notifications]  WITH CHECK ADD FOREIGN KEY([UserId])
+REFERENCES [dbo].[Users] ([UserId])
 GO
 
 /****** Object:  Table [dbo].[NotificationTypes]    Script Date: 8/15/2025 12:32:07 PM ******/
@@ -246,7 +269,6 @@ CREATE TABLE [dbo].[NotificationTypes](
 	[NotificationTypeId] [int] IDENTITY(1,1) NOT NULL,
 	[TypeName] [nvarchar](50) NOT NULL,
 	[Description] [nvarchar](max) NULL,
-	[Priority] [int] NOT NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[NotificationTypeId] ASC

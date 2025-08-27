@@ -1,15 +1,17 @@
-﻿using JobApplicationTracker.Api.GlobalExceptionHandler;
+﻿using JobApplicationTracker.Api.Data.Service;
+using JobApplicationTracker.Api.GlobalExceptionHandler;
+using JobApplicationTracker.Business.Interface;
+using JobApplicationTracker.Business.Services;
+using JobApplicationTracker.Data;
 using JobApplicationTracker.Data.Config;
 using JobApplicationTracker.Data.Database;
 using JobApplicationTracker.Data.Interface;
-using JobApplicationTracker.Data;
 using JobApplicationTracker.Data.Repository;
 using JobApplicationTracker.Service;
 using JobApplicationTracker.Service.Configuration;
 using JobApplicationTracker.Service.Services;
 using JobApplicationTracker.Service.Services.Interfaces;
 using JobApplicationTracker.Service.Services.Service;
-
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
@@ -140,9 +142,10 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IJobsRepository, JobRepository>();
 builder.Services.AddScoped<IJobTypeRepository, JobTypeRepository>();
-
-
-
+builder.Services.AddScoped<INotificationsTypesRepository, NotificationTypesRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IExperienceRepository, ExperienceRepository>();
 
 // In your Program.cs, add this AFTER the AddServiceLayer call:
