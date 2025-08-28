@@ -680,8 +680,108 @@ public class ApplicationsRepository : IJobApplicationRepository
             };
         }
     }
+    public async Task<IEnumerable<ApplicationsDataModel>> GetAcceptedJobApplicationsByUserIdAsync(int userId)
+    {
+        if (userId <= 0)
+        {
+            return Enumerable.Empty<ApplicationsDataModel>();
+        }
 
+        // Validate that the user exists
+        if (!await UserExistsAsync(userId))
+        {
+            return Enumerable.Empty<ApplicationsDataModel>();
+        }
 
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        var sql = """
+              SELECT ApplicationId,
+                     JobId,
+                     UserId,
+                     ApplicationStatus,
+                     ApplicationDate,
+                     CoverLetter,
+                     ResumeFile,
+                     SalaryExpectation,
+                     AvailableStartDate,
+                     CreatedAt
+              FROM JobApplications
+              WHERE UserId = @UserId AND ApplicationStatus = @AcceptedStatusId
+              ORDER BY ApplicationDate DESC
+              """;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@UserId", userId, DbType.Int32);
+        parameters.Add("@AcceptedStatusId", 2, DbType.Int32); // 2 = Approve/Accepted status
+
+        try
+        {
+            var applications = await connection.QueryAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
+
+            // Debug logging
+            Console.WriteLine($"Found {applications.Count()} accepted applications for UserId {userId}");
+
+            return applications;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting accepted applications for UserId {userId}: {ex.Message}");
+            throw;
+        }
+    }
+
+    // Get rejected job applications by UserId (status = 3)
+    public async Task<IEnumerable<ApplicationsDataModel>> GetRejectedJobApplicationsByUserIdAsync(int userId)
+    {
+        if (userId <= 0)
+        {
+            return Enumerable.Empty<ApplicationsDataModel>();
+        }
+
+        // Validate that the user exists
+        if (!await UserExistsAsync(userId))
+        {
+            return Enumerable.Empty<ApplicationsDataModel>();
+        }
+
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        var sql = """
+              SELECT ApplicationId,
+                     JobId,
+                     UserId,
+                     ApplicationStatus,
+                     ApplicationDate,
+                     CoverLetter,
+                     ResumeFile,
+                     SalaryExpectation,
+                     AvailableStartDate,
+                     CreatedAt
+              FROM JobApplications
+              WHERE UserId = @UserId AND ApplicationStatus = @RejectedStatusId
+              ORDER BY ApplicationDate DESC
+              """;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@UserId", userId, DbType.Int32);
+        parameters.Add("@RejectedStatusId", 3, DbType.Int32); // 3 = Rejected status
+
+        try
+        {
+            var applications = await connection.QueryAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
+
+            // Debug logging
+            Console.WriteLine($"Found {applications.Count()} rejected applications for UserId {userId}");
+
+            return applications;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting rejected applications for UserId {userId}: {ex.Message}");
+            throw;
+        }
+    }
     public async Task<ResponseDto> DeleteJobApplicationAsync(int jobApplicationId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();

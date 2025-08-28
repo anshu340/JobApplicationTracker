@@ -260,6 +260,84 @@ public class JobsApplicationController(IJobApplicationRepository jobApplicationS
             });
         }
     }
+
+    [HttpGet]
+    [Route("/getacceptedjobapplicationsbyuserid")]
+    public async Task<IActionResult> GetAcceptedJobApplicationsByUserId(int userId)
+    {
+        if (userId <= 0)
+        {
+            return BadRequest(new { message = "Valid user ID is required." });
+        }
+
+        try
+        {
+            var applications = await jobApplicationService.GetAcceptedJobApplicationsByUserIdAsync(userId);
+
+            if (!applications.Any())
+            {
+                return Ok(new
+                {
+                    message = $"No accepted job applications found for user ID {userId}.",
+                    data = applications
+                });
+            }
+
+            return Ok(new
+            {
+                message = $"Found {applications.Count()} accepted job applications for user ID {userId}.",
+                data = applications
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"GetAcceptedJobApplicationsByUserId error: {ex.Message}");
+            return StatusCode(500, new
+            {
+                message = "An error occurred while retrieving accepted job applications for the user.",
+                error = ex.Message
+            });
+        }
+    }
+
+    [HttpGet]
+    [Route("/getrejectedjobapplicationsbyuserid")]
+    public async Task<IActionResult> GetRejectedJobApplicationsByUserId(int userId)
+    {
+        if (userId <= 0)
+        {
+            return BadRequest(new { message = "Valid user ID is required." });
+        }
+
+        try
+        {
+            var applications = await jobApplicationService.GetRejectedJobApplicationsByUserIdAsync(userId);
+
+            if (!applications.Any())
+            {
+                return Ok(new
+                {
+                    message = $"No rejected job applications found for user ID {userId}.",
+                    data = applications
+                });
+            }
+
+            return Ok(new
+            {
+                message = $"Found {applications.Count()} rejected job applications for user ID {userId}.",
+                data = applications
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"GetRejectedJobApplicationsByUserId error: {ex.Message}");
+            return StatusCode(500, new
+            {
+                message = "An error occurred while retrieving rejected job applications for the user.",
+                error = ex.Message
+            });
+        }
+    }
     [HttpDelete]
     [Route("/deletejobapplication")]
     public async Task<IActionResult> DeleteJobApplication(int id)
