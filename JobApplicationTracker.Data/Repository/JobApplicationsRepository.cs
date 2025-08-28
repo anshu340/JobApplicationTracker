@@ -269,12 +269,13 @@ public class ApplicationsRepository : IJobApplicationRepository
             };
         }
 
+        // Updated validation to reflect new status options: 1 (Applied), 2 (Approve), 3 (Rejected)
         if (jobApplicationDto.ApplicationStatus < 1 || jobApplicationDto.ApplicationStatus > 3)
         {
             return new ResponseDto
             {
                 IsSuccess = false,
-                Message = $"Application status with ID {jobApplicationDto.ApplicationStatus} is not valid. Valid options are: 1 (Applied), 2 (Phone Screen), 3 (Rejected)"
+                Message = $"Application status with ID {jobApplicationDto.ApplicationStatus} is not valid. Valid options are: 1 (Applied), 2 (Approve), 3 (Rejected)"
             };
         }
 
@@ -283,7 +284,7 @@ public class ApplicationsRepository : IJobApplicationRepository
             return new ResponseDto
             {
                 IsSuccess = false,
-                Message = $"Application status with ID {jobApplicationDto.ApplicationStatus} does not exist in database. Valid options are: 1 (Applied), 2 (Phone Screen), 3 (Rejected)"
+                Message = $"Application status with ID {jobApplicationDto.ApplicationStatus} does not exist in database. Valid options are: 1 (Applied), 2 (Approve), 3 (Rejected)"
             };
         }
 
@@ -383,7 +384,304 @@ public class ApplicationsRepository : IJobApplicationRepository
         }
     }
 
-    // UPDATED: Modified to follow SkillsRepository pattern for delete response
+    public async Task<ResponseDto> AcceptJobApplicationAsync(int jobApplicationId)
+    {
+        if (jobApplicationId <= 0)
+        {
+            return new ResponseDto
+            {
+                IsSuccess = false,
+                StatusCode = 1,
+                Message = "Valid application ID is required."
+            };
+        }
+
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        // First check if the application exists
+        var existsQuery = "SELECT COUNT(1) FROM JobApplications WHERE ApplicationId = @ApplicationId";
+        var exists = await connection.ExecuteScalarAsync<int>(existsQuery, new { ApplicationId = jobApplicationId });
+
+        if (exists == 0)
+        {
+            return new ResponseDto
+            {
+                Id = jobApplicationId,
+                IsSuccess = false,
+                StatusCode = 1,
+                Message = $"Job application with ID {jobApplicationId} not found."
+            };
+        }
+
+        // Check current status to provide better feedback
+        var currentStatusQuery = "SELECT ApplicationStatus FROM JobApplications WHERE ApplicationId = @ApplicationId";
+        var currentStatus = await connection.ExecuteScalarAsync<int>(currentStatusQuery, new { ApplicationId = jobApplicationId });
+
+        try
+        {
+            // Update status to Approve (using status ID 2 based on your updated ApplicationStatus table)
+            var sql = """
+            UPDATE JobApplications 
+            SET ApplicationStatus = @ApproveStatusId
+            WHERE ApplicationId = @ApplicationId
+            """;
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@ApplicationId", jobApplicationId, DbType.Int32);
+            parameters.Add("@ApproveStatusId", 2, DbType.Int32); // Changed from 4 to 2 to match your updated ApplicationStatus
+
+            var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
+
+            if (affectedRows > 0)
+            {
+                return new ResponseDto
+                {
+                    Id = jobApplicationId,
+                    IsSuccess = true,
+                    StatusCode = 0,
+                    Message = "Job application approved successfully."
+                };
+            }
+            else
+            {
+                return new ResponseDto
+                {
+                    Id = jobApplicationId,
+                    IsSuccess = false,
+                    StatusCode = 1,
+                    Message = "Failed to approve job application."
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Accept application exception: {ex.Message}");
+            return new ResponseDto
+            {
+                Id = jobApplicationId,
+                IsSuccess = false,
+                StatusCode = 1,
+                Message = $"An error occurred while approving the job application: {ex.Message}"
+            };
+        }
+    }
+
+    // Reject job application method
+    public async Task<ResponseDto> RejectJobApplicationAsync(int jobApplicationId, string? rejectionReason = null)
+    {
+        if (jobApplicationId <= 0)
+        {
+            return new ResponseDto
+            {
+                IsSuccess = false,
+                StatusCode = 1,
+                Message = "Valid application ID is required."
+            };
+        }
+
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        // First check if the application exists
+        var existsQuery = "SELECT COUNT(1) FROM JobApplications WHERE ApplicationId = @ApplicationId";
+        var exists = await connection.ExecuteScalarAsync<int>(existsQuery, new { ApplicationId = jobApplicationId });
+
+        if (exists == 0)
+        {
+            return new ResponseDto
+            {
+                Id = jobApplicationId,
+                IsSuccess = false,
+                StatusCode = 1,
+                Message = $"Job application with ID {jobApplicationId} not found."
+            };
+        }
+
+        try
+        {
+            // Update status to Rejected (using existing status ID 3)
+            var sql = """
+            UPDATE JobApplications 
+            SET ApplicationStatus = @RejectedStatusId
+            WHERE ApplicationId = @ApplicationId
+            """;
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@ApplicationId", jobApplicationId, DbType.Int32);
+            parameters.Add("@RejectedStatusId", 3, DbType.Int32); // Status ID 3 remains the same for Rejected
+
+            var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
+
+            if (affectedRows > 0)
+            {
+                var message = "Job application rejected successfully.";
+                if (!string.IsNullOrEmpty(rejectionReason))
+                {
+                    message += $" Reason: {rejectionReason}";
+                    // Note: If you want to store rejection reasons, you'll need to add a RejectionReason column to your table
+                }
+
+                return new ResponseDto
+                {
+                    Id = jobApplicationId,
+                    IsSuccess = true,
+                    StatusCode = 0,
+                    Message = message
+                };
+            }
+            else
+            {
+                return new ResponseDto
+                {
+                    Id = jobApplicationId,
+                    IsSuccess = false,
+                    StatusCode = 1,
+                    Message = "Failed to reject job application."
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Reject application exception: {ex.Message}");
+            return new ResponseDto
+            {
+                Id = jobApplicationId,
+                IsSuccess = false,
+                StatusCode = 1,
+                Message = $"An error occurred while rejecting the job application: {ex.Message}"
+            };
+        }
+    }
+
+    // Bulk approve applications method (updated to use "Approve" instead of "Accept")
+    public async Task<ResponseDto> BulkApproveApplicationsAsync(IEnumerable<int> applicationIds)
+    {
+        if (applicationIds == null || !applicationIds.Any())
+        {
+            return new ResponseDto
+            {
+                IsSuccess = false,
+                StatusCode = 1,
+                Message = "At least one application ID is required."
+            };
+        }
+
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        try
+        {
+            var validIds = applicationIds.Where(id => id > 0).ToList();
+            if (!validIds.Any())
+            {
+                return new ResponseDto
+                {
+                    IsSuccess = false,
+                    StatusCode = 1,
+                    Message = "No valid application IDs provided."
+                };
+            }
+
+            var sql = """
+            UPDATE JobApplications 
+            SET ApplicationStatus = @ApproveStatusId
+            WHERE ApplicationId IN @ApplicationIds
+            """;
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@ApproveStatusId", 2, DbType.Int32); // Changed from 4 to 2 for "Approve"
+            parameters.Add("@ApplicationIds", validIds);
+
+            var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
+
+            return new ResponseDto
+            {
+                IsSuccess = affectedRows > 0,
+                StatusCode = affectedRows > 0 ? 0 : 1,
+                Message = affectedRows > 0
+                    ? $"{affectedRows} job applications approved successfully."
+                    : "No applications were updated. Please verify the application IDs exist."
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Bulk approve applications exception: {ex.Message}");
+            return new ResponseDto
+            {
+                IsSuccess = false,
+                StatusCode = 1,
+                Message = $"An error occurred while approving job applications: {ex.Message}"
+            };
+        }
+    }
+
+    // Bulk reject applications method (bonus feature)
+    public async Task<ResponseDto> BulkRejectApplicationsAsync(IEnumerable<int> applicationIds, string? rejectionReason = null)
+    {
+        if (applicationIds == null || !applicationIds.Any())
+        {
+            return new ResponseDto
+            {
+                IsSuccess = false,
+                StatusCode = 1,
+                Message = "At least one application ID is required."
+            };
+        }
+
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        try
+        {
+            var validIds = applicationIds.Where(id => id > 0).ToList();
+            if (!validIds.Any())
+            {
+                return new ResponseDto
+                {
+                    IsSuccess = false,
+                    StatusCode = 1,
+                    Message = "No valid application IDs provided."
+                };
+            }
+
+            var sql = """
+            UPDATE JobApplications 
+            SET ApplicationStatus = @RejectedStatusId
+            WHERE ApplicationId IN @ApplicationIds
+            """;
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@RejectedStatusId", 3, DbType.Int32);
+            parameters.Add("@ApplicationIds", validIds);
+
+            var affectedRows = await connection.ExecuteAsync(sql, parameters).ConfigureAwait(false);
+
+            var message = affectedRows > 0
+                ? $"{affectedRows} job applications rejected successfully."
+                : "No applications were updated. Please verify the application IDs exist.";
+
+            if (!string.IsNullOrEmpty(rejectionReason) && affectedRows > 0)
+            {
+                message += $" Reason: {rejectionReason}";
+            }
+
+            return new ResponseDto
+            {
+                IsSuccess = affectedRows > 0,
+                StatusCode = affectedRows > 0 ? 0 : 1,
+                Message = message
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Bulk reject applications exception: {ex.Message}");
+            return new ResponseDto
+            {
+                IsSuccess = false,
+                StatusCode = 1,
+                Message = $"An error occurred while rejecting job applications: {ex.Message}"
+            };
+        }
+    }
+
+
     public async Task<ResponseDto> DeleteJobApplicationAsync(int jobApplicationId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();

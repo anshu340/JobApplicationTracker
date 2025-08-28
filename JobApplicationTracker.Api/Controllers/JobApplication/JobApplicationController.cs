@@ -1,4 +1,5 @@
 ﻿using JobApplicationTracker.Data.DataModels;
+using JobApplicationTracker.Data.Dto.Requests;
 using JobApplicationTracker.Data.Interface;
 using Microsoft.AspNetCore.Mvc;
 
@@ -184,6 +185,81 @@ public class JobsApplicationController(IJobApplicationRepository jobApplicationS
         }
     }
 
+
+    [HttpPost]
+    [Route("/acceptjobapplication")]
+    public async Task<IActionResult> AcceptJobApplication(int id)
+    {
+        if (id <= 0)
+        {
+            return BadRequest(new { message = "Valid application ID is required." });
+        }
+
+        try
+        {
+            var response = await jobApplicationService.AcceptJobApplicationAsync(id);
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            else
+            {
+                if (response.Message.Contains("not found"))
+                {
+                    return NotFound(response);
+                }
+                return BadRequest(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AcceptJobApplication error: {ex.Message}");
+            return StatusCode(500, new
+            {
+                message = "An error occurred while accepting the job application.",
+                error = ex.Message
+            });
+        }
+    }
+
+    [HttpPost]
+    [Route("/rejectjobapplication")]
+    public async Task<IActionResult> RejectJobApplication(int id, [FromBody] RejectApplicationRequest? request = null)
+    {
+        if (id <= 0)
+        {
+            return BadRequest(new { message = "Valid application ID is required." });
+        }
+
+        try
+        {
+            var rejectionReason = request?.RejectionReason;
+            var response = await jobApplicationService.RejectJobApplicationAsync(id, rejectionReason);
+
+            if (response.IsSuccess)
+            {
+                return Ok(response);
+            }
+            else
+            {
+                if (response.Message.Contains("not found"))
+                {
+                    return NotFound(response);
+                }
+                return BadRequest(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"RejectJobApplication error: {ex.Message}");
+            return StatusCode(500, new
+            {
+                message = "An error occurred while rejecting the job application.",
+                error = ex.Message
+            });
+        }
+    }
     [HttpDelete]
     [Route("/deletejobapplication")]
     public async Task<IActionResult> DeleteJobApplication(int id)
