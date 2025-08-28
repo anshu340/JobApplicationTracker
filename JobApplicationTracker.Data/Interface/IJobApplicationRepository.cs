@@ -13,4 +13,6 @@ public interface IJobApplicationRepository
     Task<ResponseDto> DeleteJobApplicationAsync(int jobApplicationId);
     Task<ResponseDto> AcceptJobApplicationAsync(int jobApplicationId);
     Task<ResponseDto> RejectJobApplicationAsync(int jobApplicationId, string? rejectionReason = null);
+    //Task<IEnumerable<ApplicationsDataModel>> GetAcceptedJobApplicationsByUserIdAsync(int userId);
+    //Task<IEnumerable<ApplicationsDataModel>> GetRejectedJobApplicationsByUserIdAsync(int userId);
 }
