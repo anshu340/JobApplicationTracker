@@ -92,6 +92,38 @@ public class ApplicationsRepository : IJobApplicationRepository
         return count > 0;
     }
 
+    private async Task<bool> HasUserAlreadyAppliedAsync(int userId, int jobId, int? excludeApplicationId = null)
+    {
+        await using var connection = await _connectionService.GetDatabaseConnectionAsync();
+
+        var sql = "SELECT ApplicationId, ApplicationStatus, ApplicationDate FROM JobApplications WHERE UserId = @UserId AND JobId = @JobId";
+        var parameters = new DynamicParameters();
+        parameters.Add("@UserId", userId, DbType.Int32);
+        parameters.Add("@JobId", jobId, DbType.Int32);
+
+        // When updating an existing application, exclude it from the duplicate check
+        if (excludeApplicationId.HasValue && excludeApplicationId.Value > 0)
+        {
+            sql += " AND ApplicationId != @ExcludeApplicationId";
+            parameters.Add("@ExcludeApplicationId", excludeApplicationId.Value, DbType.Int32);
+        }
+
+        var existingApplications = await connection.QueryAsync<dynamic>(sql, parameters).ConfigureAwait(false);
+
+        // Enhanced debug logging
+        Console.WriteLine($"=== DUPLICATE CHECK DEBUG ===");
+        Console.WriteLine($"Checking - UserId: {userId}, JobId: {jobId}, ExcludeId: {excludeApplicationId}");
+        Console.WriteLine($"Found {existingApplications.Count()} existing applications:");
+
+        foreach (var app in existingApplications)
+        {
+            Console.WriteLine($"  - ApplicationId: {app.ApplicationId}, Status: {app.ApplicationStatus}, Date: {app.ApplicationDate}");
+        }
+        Console.WriteLine($"=== END DEBUG ===");
+
+        return existingApplications.Any();
+    }
+
     public async Task<IEnumerable<JobApplicationsDataModel>> GetAllJobApplicationAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
@@ -213,7 +245,7 @@ public class ApplicationsRepository : IJobApplicationRepository
         }
     }
 
-    // UPDATED: Modified to follow SkillsRepository pattern for insert/update logic
+    // Updated SubmitJobApplicationAsync method with duplicate check
     public async Task<ResponseDto> SubmitJobApplicationAsync(JobApplicationsDataModel jobApplicationDto)
     {
         // Validate input
@@ -226,11 +258,17 @@ public class ApplicationsRepository : IJobApplicationRepository
             };
         }
 
+        // Enhanced debug logging at the start
+        Console.WriteLine($"=== SUBMIT APPLICATION DEBUG ===");
+        Console.WriteLine($"Input: ApplicationId={jobApplicationDto.ApplicationId}, UserId={jobApplicationDto.UserId}, JobId={jobApplicationDto.JobId}");
+
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
         // Check if ApplicationId exists (similar to SkillsRepository pattern)
         var existsQuery = "SELECT COUNT(1) FROM JobApplications WHERE ApplicationId = @ApplicationId";
         var exists = await connection.ExecuteScalarAsync<int>(existsQuery, new { jobApplicationDto.ApplicationId });
+
+        Console.WriteLine($"Existing application check: ApplicationId {jobApplicationDto.ApplicationId} exists = {exists > 0}");
 
         // Set default ApplicationStatus to "Applied" if not provided or invalid
         if (jobApplicationDto.ApplicationStatus <= 0)
@@ -269,6 +307,24 @@ public class ApplicationsRepository : IJobApplicationRepository
             };
         }
 
+        // FIXED: Determine if this is an update or new application
+        bool isUpdate = jobApplicationDto.ApplicationId > 0 && exists > 0;
+        int? excludeApplicationId = isUpdate ? jobApplicationDto.ApplicationId : null;
+
+        Console.WriteLine($"Operation type: {(isUpdate ? "UPDATE" : "INSERT")} - ExcludeApplicationId: {excludeApplicationId}");
+
+        // Check for duplicate applications BEFORE validating status
+        if (await HasUserAlreadyAppliedAsync(jobApplicationDto.UserId, jobApplicationDto.JobId, excludeApplicationId))
+        {
+            return new ResponseDto
+            {
+                IsSuccess = false,
+                Message = $"you already applied for this job"
+            };
+        }
+
+        Console.WriteLine("Duplicate check passed - proceeding with application submission");
+
         // Updated validation to reflect new status options: 1 (Applied), 2 (Approve), 3 (Rejected)
         if (jobApplicationDto.ApplicationStatus < 1 || jobApplicationDto.ApplicationStatus > 3)
         {
@@ -293,14 +349,15 @@ public class ApplicationsRepository : IJobApplicationRepository
 
         try
         {
-            if (jobApplicationDto.ApplicationId <= 0 || exists == 0)
+            if (!isUpdate)
             {
-                // Insert new job application (following SkillsRepository pattern)
+                // Insert new job application
+                Console.WriteLine("Executing INSERT operation");
                 var sql = """
-                    INSERT INTO JobApplications (JobId, UserId, CoverLetter, ResumeFile, ApplicationStatus, ApplicationDate, SalaryExpectation, AvailableStartDate)
-                    OUTPUT INSERTED.ApplicationId
-                    VALUES (@JobId, @UserId, @CoverLetter, @ResumeFile, @ApplicationStatus, @ApplicationDate, @SalaryExpectation, @AvailableStartDate)
-                    """;
+                INSERT INTO JobApplications (JobId, UserId, CoverLetter, ResumeFile, ApplicationStatus, ApplicationDate, SalaryExpectation, AvailableStartDate)
+                OUTPUT INSERTED.ApplicationId
+                VALUES (@JobId, @UserId, @CoverLetter, @ResumeFile, @ApplicationStatus, @ApplicationDate, @SalaryExpectation, @AvailableStartDate)
+                """;
 
                 var parameters = new DynamicParameters();
                 parameters.Add("@JobId", jobApplicationDto.JobId, DbType.Int32);
@@ -314,23 +371,26 @@ public class ApplicationsRepository : IJobApplicationRepository
 
                 applicationIdResult = await connection.ExecuteScalarAsync<int>(sql, parameters);
                 affectedRows = applicationIdResult > 0 ? 1 : 0;
+
+                Console.WriteLine($"INSERT result: ApplicationId={applicationIdResult}, AffectedRows={affectedRows}");
             }
             else
             {
-                // Update existing job application (following SkillsRepository pattern)
+                // Update existing job application
+                Console.WriteLine("Executing UPDATE operation");
                 var sql = """
-                    UPDATE JobApplications
-                    SET 
-                        JobId = @JobId,
-                        UserId = @UserId,
-                        CoverLetter = @CoverLetter,
-                        ResumeFile = @ResumeFile,
-                        ApplicationStatus = @ApplicationStatus,
-                        ApplicationDate = @ApplicationDate,
-                        SalaryExpectation = @SalaryExpectation,
-                        AvailableStartDate = @AvailableStartDate
-                    WHERE ApplicationId = @ApplicationId
-                    """;
+                UPDATE JobApplications
+                SET 
+                    JobId = @JobId,
+                    UserId = @UserId,
+                    CoverLetter = @CoverLetter,
+                    ResumeFile = @ResumeFile,
+                    ApplicationStatus = @ApplicationStatus,
+                    ApplicationDate = @ApplicationDate,
+                    SalaryExpectation = @SalaryExpectation,
+                    AvailableStartDate = @AvailableStartDate
+                WHERE ApplicationId = @ApplicationId
+                """;
 
                 var parameters = new DynamicParameters();
                 parameters.Add("@ApplicationId", jobApplicationDto.ApplicationId, DbType.Int32);
@@ -345,7 +405,11 @@ public class ApplicationsRepository : IJobApplicationRepository
 
                 affectedRows = await connection.ExecuteAsync(sql, parameters);
                 applicationIdResult = jobApplicationDto.ApplicationId;
+
+                Console.WriteLine($"UPDATE result: AffectedRows={affectedRows}");
             }
+
+            Console.WriteLine($"=== END SUBMIT DEBUG ===");
 
             return new ResponseDto
             {
@@ -353,7 +417,7 @@ public class ApplicationsRepository : IJobApplicationRepository
                 StatusCode = affectedRows > 0 ? 0 : 1,
                 Message = affectedRows > 0
                     ? "Job application submitted successfully."
-                    : (jobApplicationDto.ApplicationId > 0 ? $"Job application with ID {jobApplicationDto.ApplicationId} not found for update." : "Failed to insert job application."),
+                    : (isUpdate ? $"Job application with ID {jobApplicationDto.ApplicationId} not found for update." : "Failed to insert job application."),
                 Id = applicationIdResult
             };
         }
