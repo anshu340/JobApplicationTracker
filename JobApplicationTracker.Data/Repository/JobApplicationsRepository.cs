@@ -92,7 +92,7 @@ public class ApplicationsRepository : IJobApplicationRepository
         return count > 0;
     }
 
-    public async Task<IEnumerable<ApplicationsDataModel>> GetAllJobApplicationAsync()
+    public async Task<IEnumerable<JobApplicationsDataModel>> GetAllJobApplicationAsync()
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -110,10 +110,10 @@ public class ApplicationsRepository : IJobApplicationRepository
               FROM JobApplications
               """;
 
-        return await connection.QueryAsync<ApplicationsDataModel>(sql).ConfigureAwait(false);
+        return await connection.QueryAsync<JobApplicationsDataModel>(sql).ConfigureAwait(false);
     }
 
-    public async Task<ApplicationsDataModel> GetJobApplicationByIdAsync(int jobApplicationId)
+    public async Task<JobApplicationsDataModel> GetJobApplicationByIdAsync(int jobApplicationId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -135,11 +135,11 @@ public class ApplicationsRepository : IJobApplicationRepository
         var parameters = new DynamicParameters();
         parameters.Add("@JobApplicationId", jobApplicationId, DbType.Int32);
 
-        return await connection.QueryFirstOrDefaultAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryFirstOrDefaultAsync<JobApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
     }
 
     // NEW METHOD: Get job applications by UserId (following SkillsRepository pattern)
-    public async Task<IEnumerable<ApplicationsDataModel>> GetJobApplicationsByUserIdAsync(int userId)
+    public async Task<IEnumerable<JobApplicationsDataModel>> GetJobApplicationsByUserIdAsync(int userId)
     {
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
 
@@ -162,16 +162,16 @@ public class ApplicationsRepository : IJobApplicationRepository
         var parameters = new DynamicParameters();
         parameters.Add("@UserId", userId, DbType.Int32);
 
-        return await connection.QueryAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
+        return await connection.QueryAsync<JobApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
     }
 
     // FIXED: Get applications by CompanyId - now using 'Companies' table consistently
-    public async Task<IEnumerable<ApplicationsDataModel>> GetApplicationsByCompanyIdAsync(int companyId)
+    public async Task<IEnumerable<JobApplicationsDataModel>> GetApplicationsByCompanyIdAsync(int companyId)
     {
         // First validate that the company exists
         if (!await CompanyExistsAsync(companyId))
         {
-            return Enumerable.Empty<ApplicationsDataModel>();
+            return Enumerable.Empty<JobApplicationsDataModel>();
         }
 
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
@@ -199,7 +199,7 @@ public class ApplicationsRepository : IJobApplicationRepository
 
         try
         {
-            var applications = await connection.QueryAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
+            var applications = await connection.QueryAsync<JobApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
 
             // Debug logging
             Console.WriteLine($"Found {applications.Count()} applications for CompanyId {companyId}");
@@ -214,7 +214,7 @@ public class ApplicationsRepository : IJobApplicationRepository
     }
 
     // UPDATED: Modified to follow SkillsRepository pattern for insert/update logic
-    public async Task<ResponseDto> SubmitJobApplicationAsync(ApplicationsDataModel jobApplicationDto)
+    public async Task<ResponseDto> SubmitJobApplicationAsync(JobApplicationsDataModel jobApplicationDto)
     {
         // Validate input
         if (jobApplicationDto == null)
@@ -680,17 +680,17 @@ public class ApplicationsRepository : IJobApplicationRepository
             };
         }
     }
-    public async Task<IEnumerable<ApplicationsDataModel>> GetAcceptedJobApplicationsByUserIdAsync(int userId)
+    public async Task<IEnumerable<JobApplicationsDataModel>> GetAcceptedJobApplicationsByUserIdAsync(int userId)
     {
         if (userId <= 0)
         {
-            return Enumerable.Empty<ApplicationsDataModel>();
+            return Enumerable.Empty<JobApplicationsDataModel>();
         }
 
         // Validate that the user exists
         if (!await UserExistsAsync(userId))
         {
-            return Enumerable.Empty<ApplicationsDataModel>();
+            return Enumerable.Empty<JobApplicationsDataModel>();
         }
 
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
@@ -717,7 +717,7 @@ public class ApplicationsRepository : IJobApplicationRepository
 
         try
         {
-            var applications = await connection.QueryAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
+            var applications = await connection.QueryAsync<JobApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
 
             // Debug logging
             Console.WriteLine($"Found {applications.Count()} accepted applications for UserId {userId}");
@@ -732,17 +732,17 @@ public class ApplicationsRepository : IJobApplicationRepository
     }
 
     // Get rejected job applications by UserId (status = 3)
-    public async Task<IEnumerable<ApplicationsDataModel>> GetRejectedJobApplicationsByUserIdAsync(int userId)
+    public async Task<IEnumerable<JobApplicationsDataModel>> GetRejectedJobApplicationsByUserIdAsync(int userId)
     {
         if (userId <= 0)
         {
-            return Enumerable.Empty<ApplicationsDataModel>();
+            return Enumerable.Empty<JobApplicationsDataModel>();
         }
 
         // Validate that the user exists
         if (!await UserExistsAsync(userId))
         {
-            return Enumerable.Empty<ApplicationsDataModel>();
+            return Enumerable.Empty<JobApplicationsDataModel>();
         }
 
         await using var connection = await _connectionService.GetDatabaseConnectionAsync();
@@ -769,7 +769,7 @@ public class ApplicationsRepository : IJobApplicationRepository
 
         try
         {
-            var applications = await connection.QueryAsync<ApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
+            var applications = await connection.QueryAsync<JobApplicationsDataModel>(sql, parameters).ConfigureAwait(false);
 
             // Debug logging
             Console.WriteLine($"Found {applications.Count()} rejected applications for UserId {userId}");

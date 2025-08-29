@@ -131,7 +131,7 @@ public class JobsApplicationController(IJobApplicationRepository jobApplicationS
 
     [HttpPost]
     [Route("/submitjobapplication")]
-    public async Task<IActionResult> SubmitJobApplication([FromBody] ApplicationsDataModel jobApplicationDto)
+    public async Task<IActionResult> SubmitJobApplication([FromBody] JobApplicationsDataModel jobApplicationDto)
     {
         if (jobApplicationDto == null)
         {

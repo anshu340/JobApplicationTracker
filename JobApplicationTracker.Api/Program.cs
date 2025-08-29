@@ -145,28 +145,17 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IJobsRepository, JobRepository>();
 builder.Services.AddScoped<IJobTypeRepository, JobTypeRepository>();
-
+builder.Services.AddScoped<IJobsRepository, JobRepository>();
+builder.Services.AddScoped<IJobApplicationRepository, ApplicationsRepository>();
 builder.Services.AddScoped<INotificationsTypesRepository, NotificationTypesRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IExperienceRepository, ExperienceRepository>();
-
-// In your Program.cs, add this AFTER the AddServiceLayer call:
-
-// Calling the extension method to register all services from Service and Data layers
-
-
-// Calling the extension method to register all services from Service and Data layers
 builder.Services.AddServiceLayer(builder.Configuration);
-builder.Services.AddScoped<IJobsRepository, JobRepository>();
-
 builder.Services.Configure<DatabaseConfig>(builder.Configuration.GetSection("DatabaseConfig"));
 builder.Services.AddSingleton<IDatabaseConnectionService, DatabaseConnectionService>();
-
-
 builder.Services.AddScoped<IEducationRepository, EducationRepository>();
-builder.Services.AddScoped<IExperienceRepository, ExperienceRepository>();
 builder.Services.AddScoped<IApplicationStatusRepository, ApplicationStatusRepository>();
 
 // Calling the extension method to register all services from Service and Data layers

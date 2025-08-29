@@ -1,8 +1,6 @@
-﻿//using JobApplicationTracker.Data.Enums;
+﻿namespace JobApplicationTracker.Data.DataModels;
 
-namespace JobApplicationTracker.Data.DataModels;
-
-public class ApplicationsDataModel
+public class JobApplicationsDataModel
 {
     public int ApplicationId { get; set; }
     public int UserId { get; set; }
